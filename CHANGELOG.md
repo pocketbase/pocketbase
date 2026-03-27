@@ -2,6 +2,9 @@
 
 - Fixed OAuth2 client secret reset when marshalizing a cached collection model.
 
+- Bumped all Go deps.
+    _This should silent recent spam reports and security scanners regarding [CVE-2026-33809](https://www.cve.org/CVERecord?id=CVE-2026-33809) `golang.org/x/image` bug (it is not an issue in PocketBase because we don't support TIFF thumbs)._
+
 
 ## v0.36.7
 
