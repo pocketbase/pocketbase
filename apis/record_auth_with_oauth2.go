@@ -18,6 +18,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"golang.org/x/oauth2"
 )
 
@@ -213,16 +214,31 @@ func (form *recordOAuth2LoginForm) checkProviderName(value any) error {
 	return nil
 }
 
+// @todo evaluate if it is still worth keeping as this exists only for backward-compatibility with pre v0.23 versions
 func oldCanAssignUsername(txApp core.App, collection *core.Collection, username string) bool {
+	field := collection.Fields.GetByName(collection.OAuth2.MappedFields.Username)
+	if field == nil {
+		return false
+	}
+
+	// ensure that the value matches the pattern of the username field (if text)
+	if txtField, ok := field.(*core.TextField); ok && txtField.ValidatePlainValue(username) != nil {
+		return false
+	}
+
 	// ensure that username is unique
-	index, hasUniqueue := dbutils.FindSingleColumnUniqueIndex(collection.Indexes, collection.OAuth2.MappedFields.Username)
+	index, hasUniqueue := dbutils.FindSingleColumnUniqueIndex(collection.Indexes, field.GetName())
 	if hasUniqueue {
+		// it is not required because collection fields are already sanitized
+		// but normalize as an extra precaution in case of a custom validator
+		colName := inflector.Columnify(field.GetName())
+
 		var expr dbx.Expression
 		if strings.EqualFold(index.Columns[0].Collate, "nocase") {
 			// case-insensitive search
-			expr = dbx.NewExp("username = {:username} COLLATE NOCASE", dbx.Params{"username": username})
+			expr = dbx.NewExp("[["+colName+"]] = {:username} COLLATE NOCASE", dbx.Params{"username": username})
 		} else {
-			expr = dbx.HashExp{"username": username}
+			expr = dbx.HashExp{colName: username}
 		}
 
 		var exists int
@@ -232,10 +248,7 @@ func oldCanAssignUsername(txApp core.App, collection *core.Collection, username 
 		}
 	}
 
-	// ensure that the value matches the pattern of the username field (if text)
-	txtField, _ := collection.Fields.GetByName(collection.OAuth2.MappedFields.Username).(*core.TextField)
-
-	return txtField != nil && txtField.ValidatePlainValue(username) == nil
+	return true
 }
 
 func oauth2Submit(e *core.RecordAuthWithOAuth2RequestEvent, optExternalAuth *core.ExternalAuth) error {
