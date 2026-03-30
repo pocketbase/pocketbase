@@ -55,6 +55,7 @@ func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	extracted := struct {
 		Id            string `json:"id"`
 		Username      string `json:"username"`
+		GlobalName    string `json:"global_name"`
 		Discriminator string `json:"discriminator"`
 		Avatar        string `json:"avatar"`
 		Email         string `json:"email"`
@@ -68,12 +69,22 @@ func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	// https://discord.com/developers/docs/reference#image-formatting
 	avatarURL := fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", extracted.Id, extracted.Avatar)
 
-	// Concatenate the user's username and discriminator into a single username string
-	username := fmt.Sprintf("%s#%s", extracted.Username, extracted.Discriminator)
+	// Discord migrated to unique usernames without discriminators.
+	// Legacy accounts still have a non-zero discriminator (e.g. "1234").
+	username := extracted.Username
+	if extracted.Discriminator != "" && extracted.Discriminator != "0" {
+		username = fmt.Sprintf("%s#%s", extracted.Username, extracted.Discriminator)
+	}
+
+	// Prefer global_name (display name) for Name, fall back to username.
+	name := extracted.GlobalName
+	if name == "" {
+		name = username
+	}
 
 	user := &AuthUser{
 		Id:           extracted.Id,
-		Name:         username,
+		Name:         name,
 		Username:     extracted.Username,
 		AvatarURL:    avatarURL,
 		RawUser:      rawUser,
