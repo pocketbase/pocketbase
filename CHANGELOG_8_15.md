@@ -326,7 +326,7 @@
 
 - Added "tags" support for all Record and Model related event hooks.
 
-    The "tags" allow registering event handlers that will be called only on matching table name(s) or colleciton id(s)/name(s).
+    The "tags" allow registering event handlers that will be called only on matching table name(s) or collection id(s)/name(s).
     For example:
     ```go
     app.OnRecordBeforeCreateRequest("articles").Add(func(e *core.RecordCreateEvent) error {
@@ -840,7 +840,7 @@ Please check the individual SDK package changelog and apply the necessary change
     </tr>
   </table>
 
-- All datetime stings are now returned in ISO8601 format - with _Z_ suffix and space as separator between the date and time part:
+- All datetime strings are now returned in ISO8601 format - with _Z_ suffix and space as separator between the date and time part:
   <table class="d-table" width="100%">
     <tr>
       <th>Old</th>

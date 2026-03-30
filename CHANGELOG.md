@@ -676,7 +676,7 @@ and the minor performance boost that you may get when used on large records is n
 
 - Eagerly interrupt waiting for the email alert send in case it takes longer than 15s.
 
-- Normalized the hidden fields filter checks and allow targetting hidden fields in the List API rule.
+- Normalized the hidden fields filter checks and allow targeting hidden fields in the List API rule.
 
 - Fixed "Unique identify fields" input not refreshing on unique indexes change ([#6184](https://github.com/pocketbase/pocketbase/issues/6184)).
 
@@ -768,7 +768,7 @@ and the minor performance boost that you may get when used on large records is n
 - Added support for passing more than one id in the `Hook.Unbind` method for consistency with the router.
 
 - Added collection rules change list in the confirmation popup
-  (_to avoid getting anoying during development, the rules confirmation currently is enabled only when using https_).
+  (_to avoid getting annoying during development, the rules confirmation currently is enabled only when using https_).
 
 
 ## v0.23.1
@@ -811,7 +811,7 @@ There are a lot of changes but to highlight some of the most notable ones:
 - Option to specify custom `DBConnect` function as part of the app configuration to allow different `database/sql` SQLite drivers (_turso/libsql, sqlcipher, etc._) and custom builds.
   _Note that we no longer loads the `mattn/go-sqlite3` driver by default when building with `CGO_ENABLED=1` to avoid `multiple definition` linker errors in case different CGO SQLite drivers or builds are used. You can find an example how to enable it back if you want to in the [new documentation](https://pocketbase.io/docs/go-overview/#github-commattngo-sqlite3)._
 - New hooks allowing better control over the execution chain and error handling (_including wrapping an entire hook chain in a single DB transaction_).
-- Various `Record` model improvements (_support for get/set modifiers, simplfied file upload by treating the file(s) as regular field value like `record.Set("document", file)`, etc._).
+- Various `Record` model improvements (_support for get/set modifiers, simplified file upload by treating the file(s) as regular field value like `record.Set("document", file)`, etc._).
 - Dedicated fields structs with safer defaults to make it easier creating/updating collections programmatically.
 - Option to mark field as "Hidden", disallowing regular users to read or modify it (_there is also a dedicated Record hook to hide/unhide Record fields programmatically from a single place_).
 - Option to customize the default system collection fields (`id`, `email`, `password`, etc.).

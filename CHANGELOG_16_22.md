@@ -94,7 +94,7 @@
 
 - Refresh the old collections state in the Import UI after successful import submission ([#5861](https://github.com/pocketbase/pocketbase/issues/5861)).
 
-- Added randomized throttle on failed filter list requests as a very rudimentary measure since some security researches raised concern regarding the possibity of eventual side-channel attacks.
+- Added randomized throttle on failed filter list requests as a very rudimentary measure since some security researches raised concern regarding the possibility of eventual side-channel attacks.
 
 
 ## v0.22.24
@@ -496,7 +496,7 @@
   A negative or zero value means no tests timeout.
   If a single API test takes more than 3s to complete it will have a log message visible when the test fails or when `go test -v` flag is used.
 
-- Added timestamp at the beginning of the generated JSVM types file to avoid creating it everytime with the app startup.
+- Added timestamp at the beginning of the generated JSVM types file to avoid creating it every time with the app startup.
 
 
 ## v0.20.0
@@ -876,7 +876,7 @@
 
 - ⚠️ Deprecated `RelationOptions.DisplayFields` in favor of the new `SchemaField.Presentable` option to avoid the duplication when a single collection is referenced more than once and/or by multiple other collections.
 
-- ⚠️ Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send ([#3121](https://github.com/pocketbase/pocketbase/issues/3121)).
+- ⚠️ Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successful email send ([#3121](https://github.com/pocketbase/pocketbase/issues/3121)).
 
 - ⚠️ Skip API `fields` json transformations for non 20x responses ([#3176](https://github.com/pocketbase/pocketbase/issues/3176)).
 
