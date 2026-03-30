@@ -67,7 +67,10 @@ func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	// build a full avatar URL using the avatar hash provided in the API response
 	// https://discord.com/developers/docs/reference#image-formatting
-	avatarURL := fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", extracted.Id, extracted.Avatar)
+	var avatarURL string
+	if extracted.Avatar != "" {
+		avatarURL = fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", extracted.Id, extracted.Avatar)
+	}
 
 	name := extracted.GlobalName
 	if name == "" {
