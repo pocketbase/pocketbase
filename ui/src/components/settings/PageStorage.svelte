@@ -100,7 +100,7 @@
                 <div class="loader" />
             {:else}
                 <S3Fields
-                    toggleLabel="Use S3 storage"
+                    toggleLabel="Use cloud storage"
                     originalConfig={originalFormSettings.s3}
                     bind:config={formSettings.s3}
                     bind:isTesting

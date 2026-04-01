@@ -243,7 +243,7 @@
                     <div class="clearfix m-b-base" />
 
                     <S3Fields
-                        toggleLabel="Store backups in S3 storage"
+                        toggleLabel="Store backups in cloud storage"
                         testFilesystem="backups"
                         configKey="backups.s3"
                         originalConfig={originalFormSettings.backups?.s3}

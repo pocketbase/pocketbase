@@ -5,9 +5,33 @@
     import tooltip from "@/actions/tooltip";
     import { removeError } from "@/stores/errors";
     import Field from "@/components/base/Field.svelte";
+    import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
 
     const testRequestKey = "s3_test_request";
+
+    const PROVIDERS = [
+        {
+            label: "AWS S3",
+            value: "s3",
+            endpointPlaceholder: "https://s3.amazonaws.com",
+            regionPlaceholder: "us-east-1",
+            accessKeyLabel: "Access key",
+            secretLabel: "Secret",
+            defaults: {},
+        },
+        {
+            label: "Backblaze B2",
+            value: "b2",
+            endpointPlaceholder: "https://s3.{region}.backblazeb2.com",
+            regionPlaceholder: "us-west-004",
+            accessKeyLabel: "Application Key ID",
+            secretLabel: "Application Key",
+            defaults: {
+                forcePathStyle: true,
+            },
+        },
+    ];
 
     export let originalConfig = {};
     export let config = {};
@@ -20,6 +44,38 @@
     let testTimeoutId = null;
     let testDebounceId = null;
     let maskSecret = false;
+    let selectedProvider = "s3";
+    let prevProvider = "s3";
+    let prevRegion = "";
+
+    $: currentPreset = PROVIDERS.find((p) => p.value === selectedProvider) || PROVIDERS[0];
+
+    // react to provider changes
+    $: if (selectedProvider !== prevProvider) {
+        onProviderChange(selectedProvider);
+        prevProvider = selectedProvider;
+    }
+
+    // auto-fill endpoint when region changes for B2
+    $: if (selectedProvider === "b2" && config.region && config.region !== prevRegion) {
+        if (!config.endpoint || /^https:\/\/s3\.[^.]*\.backblazeb2\.com$/.test(config.endpoint)) {
+            config.endpoint = `https://s3.${config.region}.backblazeb2.com`;
+        }
+        prevRegion = config.region;
+    }
+
+    function onProviderChange(newProvider) {
+        const preset = PROVIDERS.find((p) => p.value === newProvider);
+        if (!preset) return;
+
+        for (const [key, value] of Object.entries(preset.defaults)) {
+            config[key] = value;
+        }
+
+        if (newProvider === "b2" && config.region && !config.endpoint) {
+            config.endpoint = `https://s3.${config.region}.backblazeb2.com`;
+        }
+    }
 
     $: if (originalConfig?.enabled) {
         refreshMaskSecret();
@@ -82,6 +138,12 @@
     }
 
     onMount(() => {
+        if (config.endpoint?.includes("backblazeb2.com")) {
+            selectedProvider = "b2";
+        }
+        prevProvider = selectedProvider;
+        prevRegion = config.region || "";
+
         return () => {
             clearTimeout(testTimeoutId);
             clearTimeout(testDebounceId);
@@ -98,10 +160,16 @@
 
 {#if config.enabled}
     <div class="grid" transition:slide={{ duration: 150 }}>
+        <div class="col-lg-12">
+            <Field class="form-field" let:uniqueId>
+                <label for={uniqueId}>Provider</label>
+                <ObjectSelect id={uniqueId} items={PROVIDERS} bind:keyOfSelected={selectedProvider} />
+            </Field>
+        </div>
         <div class="col-lg-6">
             <Field class="form-field required" name="{configKey}.endpoint" let:uniqueId>
                 <label for={uniqueId}>Endpoint</label>
-                <input type="text" id={uniqueId} required bind:value={config.endpoint} />
+                <input type="text" id={uniqueId} required placeholder={currentPreset.endpointPlaceholder} bind:value={config.endpoint} />
             </Field>
         </div>
         <div class="col-lg-3">
@@ -113,18 +181,18 @@
         <div class="col-lg-3">
             <Field class="form-field required" name="{configKey}.region" let:uniqueId>
                 <label for={uniqueId}>Region</label>
-                <input type="text" id={uniqueId} required bind:value={config.region} />
+                <input type="text" id={uniqueId} required placeholder={currentPreset.regionPlaceholder} bind:value={config.region} />
             </Field>
         </div>
         <div class="col-lg-6">
             <Field class="form-field required" name="{configKey}.accessKey" let:uniqueId>
-                <label for={uniqueId}>Access key</label>
+                <label for={uniqueId}>{currentPreset.accessKeyLabel}</label>
                 <input type="text" id={uniqueId} required bind:value={config.accessKey} />
             </Field>
         </div>
         <div class="col-lg-6">
             <Field class="form-field required" name="{configKey}.secret" let:uniqueId>
-                <label for={uniqueId}>Secret</label>
+                <label for={uniqueId}>{currentPreset.secretLabel}</label>
                 <RedactedPasswordInput
                     required
                     id={uniqueId}
