@@ -440,7 +440,7 @@ func safeHTTPClient() (*http.Client, error) {
 				ip.IsLinkLocalUnicast() ||
 				ip.IsLinkLocalMulticast() ||
 				ip.IsMulticast() {
-				return fmt.Errorf("address %q is invalid or not allowed", ip.String())
+				return fmt.Errorf("address %q is invalid or resolve to disallowed IP", address)
 			}
 
 			return nil
