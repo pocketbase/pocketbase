@@ -10,13 +10,13 @@ In case the vulnerability is confirmed, within another couple days I'll try to s
 
 ### Please:
 
-- DO NOT use LLM as part of your report or email communication - it is extremely frustrating to spend an hour or more reading a wall of generated text, writing an elaborate reply and in the end to just receive another generic LLM prompt response in return.
+- DO NOT use LLM as part of your report or email communication - it is extremely frustrating to spend an hour or more reading a wall of generated text, writing an elaborate reply and then to receive another generic LLM prompt response in return.
 
 - DO NOT reserve and publish MITRE CVE number on your own _(I prefer to do it through the GitHub Security advisory)_ and try to communicate first privately the details to better understand how the code is being used and whether the supposed vulnerability can be actually exploited in any real practical scenarios. Otherwise you are risking needlessly causing scaremongering and annoyance for users that rely on security scanners as part of their CI/CD pipeline.
 
 - Wait before publicly disclosing and sharing details about the found vulnerability, **ideally at least 5 days after the fix**, to make it harder to exploit and give enough time for users to patch their instances _(you are free to provide a PoC and as much details as you want in your own blog/gist/etc.)_.
 
-### Below is a list of common vulnerabilities that were previously reported but are NOT considered a security issue:
+### Below is a short list of previous reports that are NOT considered security issues:
 
 <details>
 <summary><strong>Stored XSS</strong></summary>
@@ -67,9 +67,9 @@ Because PocketBase v0.23+ supports automatically uploading the OAuth2 avatar on 
 The entire OAuth2 flow relies that the application server (PocketBase) trusts the configured OAuth2 vendor.
 If you suspect that an OAuth2 vendor is malicious and cannot be trusted then you MUST NOT use that OAuth2 vendor at all and you should report it.
 
-If someone is able to tamper with the OAuth2 responses then the entire OAuth2 flow can be thrown out of the window because they will be practically able to authenticate as any of your existing users and the eventual avatar url probing request is the least of your problem.
+If someone is able to tamper with the OAuth2 responses then the entire OAuth2 flow can be thrown out of the window because they will be practically able to authenticate as any of your existing users and the eventual avatar URL probing request is the least of your problem.
 
-_Nonetheless, in future PocketBase releases there will be [extra `localhost` domain like checks](https://github.com/orgs/pocketbase/projects/2/views/1?pane=issue&itemId=159545722) when assigning the OAuth2 avatar url to a `file` field that will further minimize the risk of internal network probing requests in case of a vulnerable OAuth2 provider._
+~Nonetheless, in future PocketBase releases there will be [extra `localhost` domain like checks](https://github.com/orgs/pocketbase/projects/2/views/1?pane=issue&itemId=159545722) when assigning the OAuth2 avatar URL to a `file` field that will further minimize the risk of internal network probing requests in case of a vulnerable OAuth2 provider.~ _Done._
 </details>
 
 <details>

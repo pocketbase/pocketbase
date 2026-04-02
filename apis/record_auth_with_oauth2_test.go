@@ -45,12 +45,14 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 	t.Parallel()
 
 	// start a test server
-	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+	localServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		buf := new(bytes.Buffer)
 		png.Encode(buf, image.Rect(0, 0, 1, 1)) // tiny 1x1 png
 		http.ServeContent(res, req, "test_avatar.png", time.Now(), bytes.NewReader(buf.Bytes()))
 	}))
-	defer server.Close()
+	defer localServer.Close()
+
+	externalImageURL := "https://pocketbase.io/images/logo.svg"
 
 	scenarios := []tests.ApiScenario{
 		{
@@ -1176,7 +1178,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 							Id:        "oauth2_id",
 							Email:     "oauth2@example.com",
 							Username:  "oauth2_username",
-							AvatarURL: server.URL + "/oauth2_avatar.png",
+							AvatarURL: externalImageURL,
 						},
 						Token: &oauth2.Token{AccessToken: "abc"},
 					}
@@ -1208,7 +1210,98 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				`"username":"oauth2_username"`,
 				`"verified":true`,
 				`"rel":"0yxhwia2amd8gec"`,
-				`"avatar":"oauth2_avatar_`,
+				`"avatar":"logo_`,
+			},
+			NotExpectedContent: []string{
+				// hidden fields
+				`"tokenKey"`,
+				`"password"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                             0,
+				"OnRecordAuthWithOAuth2Request": 1,
+				"OnRecordAuthRequest":           1,
+				"OnRecordCreateRequest":         1,
+				"OnRecordEnrich":                2, // the auth response and from the create request
+				// ---
+				"OnModelCreate":              3, // record + authOrigins + externalAuths
+				"OnModelCreateExecute":       3,
+				"OnModelAfterCreateSuccess":  3,
+				"OnRecordCreate":             3,
+				"OnRecordCreateExecute":      3,
+				"OnRecordAfterCreateSuccess": 3,
+				// ---
+				"OnModelUpdate":              1, // created record verified state change
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				// ---
+				"OnModelValidate":  4,
+				"OnRecordValidate": 4,
+			},
+		},
+		{
+			Name:   "creating user (with mapped OAuth2 fields and local avatarURL->file field; ensures that safeHTTPClient is being used)",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/auth-with-oauth2",
+			Body: strings.NewReader(`{
+				"provider": "test",
+				"code":"123",
+				"redirectURL": "https://example.com",
+				"createData": {
+					"name": "test_name",
+					"emailVisibility": true,
+					"rel": "0yxhwia2amd8gec"
+				}
+			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				usersCol, err := app.FindCollectionByNameOrId("users")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// register the test provider
+				auth.Providers["test"] = func() auth.Provider {
+					return &oauth2MockProvider{
+						AuthUser: &auth.AuthUser{
+							Id:        "oauth2_id",
+							Email:     "oauth2@example.com",
+							Username:  "oauth2_username",
+							AvatarURL: localServer.URL + "/oauth2_avatar.png", // local/private file download is not allowed
+						},
+						Token: &oauth2.Token{AccessToken: "abc"},
+					}
+				}
+
+				// add the test provider in the collection
+				usersCol.MFA.Enabled = false
+				usersCol.OAuth2.Enabled = true
+				usersCol.OAuth2.Providers = []core.OAuth2ProviderConfig{{
+					Name:         "test",
+					ClientId:     "123",
+					ClientSecret: "456",
+				}}
+				usersCol.OAuth2.MappedFields = core.OAuth2KnownFields{
+					Username:  "name", // should be ignored because of the explicit submitted value
+					Id:        "username",
+					AvatarURL: "avatar",
+				}
+				if err := app.Save(usersCol); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"isNew":true`,
+				`"email":"oauth2@example.com"`,
+				`"emailVisibility":true`,
+				`"name":"test_name"`,
+				`"username":"oauth2_username"`,
+				`"verified":true`,
+				`"rel":"0yxhwia2amd8gec"`,
+				`"avatar":"`,
 			},
 			NotExpectedContent: []string{
 				// hidden fields
@@ -1343,7 +1436,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 							Email:     "oauth2@example.com",
 							Username:  "tESt2_username", // wouldn't match with existing because the related field index is case-sensitive
 							Name:      "oauth2_name",
-							AvatarURL: server.URL + "/oauth2_avatar.png",
+							AvatarURL: localServer.URL + "/oauth2_avatar.png", // allowed because it is not being downloaded
 						},
 						Token: &oauth2.Token{AccessToken: "abc"},
 					}
