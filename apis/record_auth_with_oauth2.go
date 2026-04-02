@@ -418,7 +418,7 @@ func sendOAuth2RecordCreateRequest(txApp core.App, e *core.RecordAuthWithOAuth2R
 // so if you plan using with untrusted user URL, consider performing additional whitelist checks.
 //
 // @todo Evaluate with the refactoring if worth exporting(+tests) and moving under the security package.
-func safeHTTPClient() (*http.Client, error) {
+func safeHTTPClient() *http.Client {
 	dialer := &net.Dialer{
 		// the same options as in http.DefaultTransport.DialContext
 		Timeout:   30 * time.Second,
@@ -447,7 +447,7 @@ func safeHTTPClient() (*http.Client, error) {
 		},
 	}
 
-	client := &http.Client{
+	return &http.Client{
 		Timeout: 180 * time.Second, // can be still cancelled with the request context
 		Transport: &http.Transport{
 			DialContext: dialer.DialContext,
@@ -459,8 +459,6 @@ func safeHTTPClient() (*http.Client, error) {
 			ExpectContinueTimeout: 1 * time.Second,
 		},
 	}
-
-	return client, nil
 }
 
 // safeFileFromURL downloads the file from the specified url (using safeHTTPClient)
@@ -473,10 +471,7 @@ func safeFileFromURL(ctx context.Context, url string) (*filesystem.File, error) 
 		return nil, err
 	}
 
-	client, err := safeHTTPClient()
-	if err != nil {
-		return nil, err
-	}
+	client := safeHTTPClient()
 
 	res, err := client.Do(req)
 	if err != nil {
