@@ -3,6 +3,7 @@ package core_test
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/mailer"
+	"github.com/pocketbase/pocketbase/tools/security"
 )
 
 func TestSettingsDelete(t *testing.T) {
@@ -21,6 +23,72 @@ func TestSettingsDelete(t *testing.T) {
 	err := app.Delete(app.Settings())
 	if err == nil {
 		t.Fatal("Exected settings delete to fail")
+	}
+}
+
+func TestSettings_DBExport(t *testing.T) {
+	scenarios := []struct {
+		name       string
+		encryption bool
+	}{
+		{"no encryption", false},
+		{"with encryption", true},
+	}
+
+	encryptionKey := strings.Repeat("a", 32)
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			app, _ := tests.NewTestApp()
+			defer app.Cleanup()
+
+			originalEnv := os.Getenv(app.EncryptionEnv())
+			defer func() {
+				os.Setenv(app.EncryptionEnv(), originalEnv)
+			}()
+
+			settings := &core.Settings{}
+			settings.Meta.AppName = "test_app_name"
+			settings.Logs.MaxDays = 123
+			settings.SMTP.Host = "smtp_host"
+			settings.SMTP.Username = "smtp_username"
+			settings.SMTP.Password = "" // ensures that empty password is exported
+			settings.S3.Endpoint = "s3_endpoint"
+			settings.S3.Secret = "s3_secret"
+			settings.Backups.Cron = "* * * * *"
+			settings.Backups.S3.Enabled = true
+			settings.Backups.S3.Secret = ""
+			settings.Batch.Timeout = 15
+			settings.RateLimits.Enabled = true
+			settings.TrustedProxy.UseLeftmostIP = true
+
+			if s.encryption {
+				os.Setenv(app.EncryptionEnv(), encryptionKey)
+			}
+
+			export, err := settings.DBExport(app)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var valueStr string
+
+			if s.encryption {
+				decrypted, err := security.Decrypt(export["value"].(string), encryptionKey)
+				if err != nil {
+					t.Fatalf("failed to decrypt test value: %v", err)
+				}
+
+				valueStr = string(decrypted)
+			} else {
+				valueStr = string(export["value"].([]byte))
+			}
+
+			expected := `{"smtp":{"enabled":false,"port":0,"host":"smtp_host","username":"smtp_username","authMethod":"","tls":false,"localName":"","password":""},"backups":{"cron":"* * * * *","cronMaxKeep":0,"s3":{"enabled":true,"bucket":"","region":"","endpoint":"","accessKey":"","forcePathStyle":false}},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"s3_endpoint","accessKey":"","secret":"s3_secret","forcePathStyle":false},"meta":{"appName":"test_app_name","appURL":"","senderName":"","senderAddress":"","hideControls":false},"rateLimits":{"rules":[],"enabled":true},"trustedProxy":{"headers":[],"useLeftmostIP":true},"batch":{"enabled":false,"maxRequests":0,"timeout":15,"maxBodySize":0},"logs":{"maxDays":123,"minLevel":0,"logIP":false,"logAuthId":false}}`
+			if valueStr != expected {
+				t.Fatalf("Expected exported settings\n%s\ngot\n%s", expected, valueStr)
+			}
+		})
 	}
 }
 

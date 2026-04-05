@@ -327,6 +327,8 @@ func (s *Settings) MarshalJSON() ([]byte, error) {
 	copy := s.settings
 	s.mu.RUnlock()
 
+	copy.SMTP.hidePassword = true
+
 	sensitiveFields := []*string{
 		&copy.SMTP.Password,
 		&copy.S3.Secret,
@@ -346,6 +348,12 @@ func (s *Settings) MarshalJSON() ([]byte, error) {
 // -------------------------------------------------------------------
 
 type SMTPConfig struct {
+	// @todo temp workaround to avoid introducing breaking changes;
+	// consider refactoring and/or normalizing with the other Settings sensitive fields
+	//
+	// hidePassword specifies whether to hide the password field from the struct JSON serialization.
+	hidePassword bool
+
 	Enabled  bool   `form:"enabled" json:"enabled"`
 	Port     int    `form:"port" json:"port"`
 	Host     string `form:"host" json:"host"`
@@ -390,6 +398,27 @@ func (c SMTPConfig) Validate() error {
 		),
 		validation.Field(&c.LocalName, is.Host),
 	)
+}
+
+// MarshalJSON implements the [json.Marshaler] interface.
+func (c SMTPConfig) MarshalJSON() ([]byte, error) {
+	type alias SMTPConfig
+
+	if c.hidePassword {
+		v := struct {
+			alias
+			Password string `json:"password,omitempty"`
+		}{alias(c), ""}
+
+		return json.Marshal(v)
+	}
+
+	v := struct {
+		alias
+		Password string `json:"password"`
+	}{alias(c), c.Password}
+
+	return json.Marshal(v)
 }
 
 // -------------------------------------------------------------------

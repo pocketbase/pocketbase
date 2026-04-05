@@ -2,9 +2,13 @@
 
 - Updated the Discord `AuthUser.Name` field to use `global_name` ([#7603](https://github.com/pocketbase/pocketbase/pull/7603); thanks @HansHans135).
 
+- Fixed settings SMTP password clear persistence.
+
+- Added extra OAuth2 checks when downloading the avatar URL to prevent internal network probing requests in case of a malicious/vulnerable vendor.
+
 - (@todo) Bumped min Go GitHub action version to 1.26.2 because it comes with several [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.2).
 
-- Other minor improvements _(updated `$apis.static` JSVM documentation, added extra OAuth2 checks when downloading the avatar URL to prevent internal network probing requests in case of a malicious/vulnerable vendor, etc.)_.
+- Other minor improvements _(updated `$apis.static` JSVM documentation, fixed comment typos, etc.)_.
 
 
 ## v0.36.8
