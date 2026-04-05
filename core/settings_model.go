@@ -358,7 +358,7 @@ type SMTPConfig struct {
 	Port     int    `form:"port" json:"port"`
 	Host     string `form:"host" json:"host"`
 	Username string `form:"username" json:"username"`
-	Password string `form:"password" json:"password,omitempty"`
+	Password string `form:"password" json:"password"`
 
 	// SMTP AUTH - PLAIN (default) or LOGIN
 	AuthMethod string `form:"authMethod" json:"authMethod"`
@@ -413,12 +413,7 @@ func (c SMTPConfig) MarshalJSON() ([]byte, error) {
 		return json.Marshal(v)
 	}
 
-	v := struct {
-		alias
-		Password string `json:"password"`
-	}{alias(c), c.Password}
-
-	return json.Marshal(v)
+	return json.Marshal(alias(c))
 }
 
 // -------------------------------------------------------------------
