@@ -415,7 +415,7 @@
             return;
         }
 
-        confirm(`Do you really want to sent verification email to ${original.email}?`, () => {
+        confirm(`Do you really want to send verification email to ${original.email}?`, () => {
             return ApiClient.collection(collection.id)
                 .requestVerification(original.email)
                 .then(() => {
@@ -432,7 +432,7 @@
             return;
         }
 
-        confirm(`Do you really want to sent password reset email to ${original.email}?`, () => {
+        confirm(`Do you really want to send password reset email to ${original.email}?`, () => {
             return ApiClient.collection(collection.id)
                 .requestPasswordReset(original.email)
                 .then(() => {
