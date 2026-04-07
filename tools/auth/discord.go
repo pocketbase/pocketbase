@@ -36,7 +36,7 @@ func NewDiscordProvider() *Discord {
 
 // FetchAuthUser returns an AuthUser instance from Discord's user api.
 //
-// API reference:  https://discord.com/developers/docs/resources/user#user-object
+// API reference: https://discord.com/developers/docs/resources/user#user-object
 func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserData(token)
 	if err != nil {
@@ -50,6 +50,7 @@ func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	extracted := struct {
 		Id            string `json:"id"`
+		GlobalName    string `json:"global_name"`
 		Username      string `json:"username"`
 		Discriminator string `json:"discriminator"`
 		Avatar        string `json:"avatar"`
@@ -64,12 +65,22 @@ func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	// https://discord.com/developers/docs/reference#image-formatting
 	avatarUrl := fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", extracted.Id, extracted.Avatar)
 
-	// Concatenate the user's username and discriminator into a single username string
-	username := fmt.Sprintf("%s#%s", extracted.Username, extracted.Discriminator)
+	name := extracted.GlobalName
+	if name == "" {
+		// fallback to username+discriminator
+		//
+		// Note: Discord migrated to unique usernames without discriminators.
+		// Legacy accounts still have a non-zero discriminator (e.g. "1234").
+		// See https://support.discord.com/hc/en-us/articles/12620128861463-New-Usernames-Display-Names.
+		name = extracted.Username
+		if extracted.Discriminator != "" && extracted.Discriminator != "0" {
+			name += "#" + extracted.Discriminator
+		}
+	}
 
 	user := &AuthUser{
 		Id:           extracted.Id,
-		Name:         username,
+		Name:         name,
 		Username:     extracted.Username,
 		AvatarUrl:    avatarUrl,
 		RawUser:      rawUser,
