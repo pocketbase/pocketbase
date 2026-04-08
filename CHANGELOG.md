@@ -6,9 +6,11 @@
 
 - Added extra OAuth2 checks when downloading the avatar URL to prevent internal network probing requests in case of a malicious/vulnerable vendor.
 
-- (@todo) Bumped min Go GitHub action version to 1.26.2 because it comes with several [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.2).
+- Updated `modernc.org/sqlite` to v1.48.2 _(vfs and other minor fixes)_.
 
-- Other minor improvements _(updated `$apis.static` JSVM documentation, fixed comment typos, etc.)_.
+- Updated min Go GitHub action version to 1.26.2 because it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.2).
+
+- Other small improvements _(updated `$apis.static` JSVM documentation, fixed comment typos, etc.)_.
 
 
 ## v0.36.8
