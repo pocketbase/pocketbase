@@ -6,6 +6,8 @@
 
 - (_Backported from v0.36.9_) Updated the Discord `AuthUser.Name` field to use `global_name`.
 
+- (_Backported from v0.36.9_) Updated `modernc.org/sqlite` to v1.48.2 _(vfs and other error path related fixes)_.
+
 - (_Backported from v0.36.9_) Bumped min Go GitHub action version to 1.26.2 because it comes with several [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.2).
 
 
