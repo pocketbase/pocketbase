@@ -10,7 +10,7 @@
 
 - Updated min Go GitHub action version to 1.26.2 because it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.2).
 
-- Other small improvements _(updated `$apis.static` JSVM documentation, fixed comment typos, etc.)_.
+- Other small improvements _(updated `$apis.static` JSVM documentation, fixed comment typos, added missing file close on seek error, etc.)_.
 
 
 ## v0.36.8
