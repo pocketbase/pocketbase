@@ -85,9 +85,9 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 		{"/norate", 0, false, 200},
 
 		{"/rate/a", 0, false, 200},
-		{"/rate/a", 850, false, 200}, // (fixed window check) wait enough to ensure that it can't fit 2 requests in 1s
-		{"/rate/a", 850, false, 200},
-		{"/rate/a", 850, false, 200},
+		{"/rate/a", 700, false, 200}, // (fixed window check) wait enough to ensure that it can't fit more than 2 requests in 1s
+		{"/rate/a", 800, false, 200},
+		{"/rate/a", 800, false, 200},
 		{"/rate/a", 0, false, 200},
 		{"/rate/a", 0, false, 429},
 		{"/rate/a", 0, false, 429},
