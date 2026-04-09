@@ -385,6 +385,7 @@ func (drv *driver) NewRangeReader(ctx context.Context, key string, offset, lengt
 
 	if offset > 0 {
 		if _, err := f.Seek(offset, io.SeekStart); err != nil {
+			f.Close()
 			return nil, err
 		}
 	}
