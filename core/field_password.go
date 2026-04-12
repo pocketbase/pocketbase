@@ -40,7 +40,7 @@ var (
 //
 //	// set directly a bcrypt hash of "123456" as field value
 //	// (record.GetString("password") returns empty string)
-//	record.SetRaw("password", "$2a$10$.5Elh8fgxypNUWhpUUr/xOa2sZm0VIaE0qWuGGl9otUfobb46T1Pq")
+//	record.SetRaw("password", "$2a$10$<bcrypt-hash-of-123456>")
 //
 // The following additional getter keys are available:
 //
