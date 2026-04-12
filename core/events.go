@@ -501,6 +501,20 @@ type RecordAuthWithOTPRequestEvent struct {
 	OTP    *OTP
 }
 
+// RecordAuthWithWebAuthnRequestEvent is triggered during the WebAuthn/Passkey
+// login completion flow, before the auth token is issued.
+//
+// The Credential field contains the WebAuthn credential model that was used
+// for authentication. It may be nil if credential lookup failed.
+type RecordAuthWithWebAuthnRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record     *Record
+	Credential *WebAuthnCredential
+}
+
 type RecordAuthRequestEvent struct {
 	hook.Event
 	*RequestEvent

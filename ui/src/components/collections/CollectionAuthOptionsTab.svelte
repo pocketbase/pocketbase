@@ -5,6 +5,7 @@
     import MFAAccordion from "@/components/collections/MFAAccordion.svelte";
     import OAuth2Accordion from "@/components/collections/OAuth2Accordion.svelte";
     import OTPAccordion from "@/components/collections/OTPAccordion.svelte";
+    import WebAuthnAccordion from "@/components/collections/WebAuthnAccordion.svelte";
     import PasswordAuthAccordion from "@/components/collections/PasswordAuthAccordion.svelte";
     import EmailTestPopup from "@/components/settings/EmailTestPopup.svelte";
 
@@ -91,6 +92,8 @@
     {/if}
 
     <OTPAccordion bind:collection />
+
+    <WebAuthnAccordion bind:collection />
 
     <MFAAccordion bind:collection />
 </div>

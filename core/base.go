@@ -172,6 +172,7 @@ type BaseApp struct {
 	onRecordConfirmEmailChangeRequest   *hook.Hook[*RecordConfirmEmailChangeRequestEvent]
 	onRecordRequestOTPRequest           *hook.Hook[*RecordCreateOTPRequestEvent]
 	onRecordAuthWithOTPRequest          *hook.Hook[*RecordAuthWithOTPRequestEvent]
+	onRecordAuthWithWebAuthnRequest     *hook.Hook[*RecordAuthWithWebAuthnRequestEvent]
 
 	// record crud API event hooks
 	onRecordsListRequest  *hook.Hook[*RecordsListRequestEvent]
@@ -320,6 +321,7 @@ func (app *BaseApp) initHooks() {
 	app.onRecordConfirmEmailChangeRequest = &hook.Hook[*RecordConfirmEmailChangeRequestEvent]{}
 	app.onRecordRequestOTPRequest = &hook.Hook[*RecordCreateOTPRequestEvent]{}
 	app.onRecordAuthWithOTPRequest = &hook.Hook[*RecordAuthWithOTPRequestEvent]{}
+	app.onRecordAuthWithWebAuthnRequest = &hook.Hook[*RecordAuthWithWebAuthnRequestEvent]{}
 
 	// record crud API event hooks
 	app.onRecordsListRequest = &hook.Hook[*RecordsListRequestEvent]{}
@@ -1111,6 +1113,10 @@ func (app *BaseApp) OnRecordAuthWithOTPRequest(tags ...string) *hook.TaggedHook[
 	return hook.NewTaggedHook(app.onRecordAuthWithOTPRequest, tags...)
 }
 
+func (app *BaseApp) OnRecordAuthWithWebAuthnRequest(tags ...string) *hook.TaggedHook[*RecordAuthWithWebAuthnRequestEvent] {
+	return hook.NewTaggedHook(app.onRecordAuthWithWebAuthnRequest, tags...)
+}
+
 // -------------------------------------------------------------------
 // Record CRUD API event hooks
 // -------------------------------------------------------------------
@@ -1382,6 +1388,7 @@ func (app *BaseApp) registerBaseHooks() {
 	app.registerMFAHooks()
 	app.registerOTPHooks()
 	app.registerAuthOriginHooks()
+	app.registerWebAuthnCredentialHooks()
 }
 
 // getLoggerMinLevel returns the logger min level based on the

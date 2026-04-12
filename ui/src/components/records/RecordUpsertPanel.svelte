@@ -10,6 +10,7 @@
     import Toggler from "@/components/base/Toggler.svelte";
     import AutodateIcon from "@/components/records/AutodateIcon.svelte";
     import ExternalAuthsList from "@/components/records/ExternalAuthsList.svelte";
+    import WebAuthnCredentialsList from "@/components/records/WebAuthnCredentialsList.svelte";
     import AuthFields from "@/components/records/fields/AuthFields.svelte";
     import BoolField from "@/components/records/fields/BoolField.svelte";
     import DateField from "@/components/records/fields/DateField.svelte";
@@ -33,6 +34,7 @@
     const formId = "record_" + CommonHelper.randomString(5);
     const tabFormKey = "form";
     const tabProviderKey = "providers";
+    const tabPasskeysKey = "passkeys";
 
     export let collection;
 
@@ -623,6 +625,14 @@
                 >
                     Authorized providers
                 </button>
+                <button
+                    type="button"
+                    class="tab-item"
+                    class:active={activeTab === tabPasskeysKey}
+                    on:click={() => (activeTab = tabPasskeysKey)}
+                >
+                    Passkeys
+                </button>
             </div>
         {/if}
     </svelte:fragment>
@@ -740,6 +750,9 @@
         {#if isAuthCollection && !isSuperusersCollection && !isNew}
             <div class="tab-item" class:active={activeTab === tabProviderKey}>
                 <ExternalAuthsList {record} />
+            </div>
+            <div class="tab-item" class:active={activeTab === tabPasskeysKey}>
+                <WebAuthnCredentialsList {record} {collection} />
             </div>
         {/if}
     </div>

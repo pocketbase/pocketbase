@@ -158,6 +158,7 @@ const (
 	RequestInfoContextOAuth2        = "oauth2"
 	RequestInfoContextOTP           = "otp"
 	RequestInfoContextPasswordAuth  = "password"
+	RequestInfoContextWebAuthn      = "webauthn"
 )
 
 // RequestInfo defines a HTTP request data struct, usually used

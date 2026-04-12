@@ -19,6 +19,7 @@
     let passwordAuthSubmitting = false;
     let otpRequestSubmitting = false;
     let otpAuthSubmitting = false;
+    let webauthnSubmitting = false;
     let isLoading = false;
 
     let mfaId = "";
@@ -26,6 +27,7 @@
     let lastOTPId = "";
     let otpEmail = "";
     let otpPassword = "";
+    let webauthnIdentity = "";
 
     $: {
         totalSteps = 1;
@@ -36,6 +38,10 @@
         }
 
         if (authMethods?.otp?.enabled) {
+            totalSteps++;
+        }
+
+        if (authMethods?.webauthn?.enabled) {
             totalSteps++;
         }
 
@@ -147,6 +153,99 @@
         }
 
         otpAuthSubmitting = false;
+    }
+
+    // Helper to convert base64url string to ArrayBuffer
+    function base64urlToBuffer(base64url) {
+        const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+        const pad = base64.length % 4 === 0 ? "" : "=".repeat(4 - (base64.length % 4));
+        const binary = atob(base64 + pad);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+
+    // Helper to convert ArrayBuffer to base64url string
+    function bufferToBase64url(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        for (const byte of bytes) {
+            binary += String.fromCharCode(byte);
+        }
+        return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    }
+
+    async function authWithWebAuthn() {
+        if (webauthnSubmitting || !webauthnIdentity) {
+            return;
+        }
+
+        webauthnSubmitting = true;
+
+        try {
+            // Step 1: Get login options from server
+            const beginResp = await ApiClient.send("/api/collections/_superusers/auth-with-webauthn/login-begin", {
+                method: "POST",
+                body: { identity: webauthnIdentity },
+            });
+
+            const options = beginResp.options;
+            const sessionToken = beginResp.sessionToken;
+
+            // Convert challenge and allowCredentials IDs from base64url to ArrayBuffer
+            options.publicKey.challenge = base64urlToBuffer(options.publicKey.challenge);
+            if (options.publicKey.allowCredentials) {
+                for (const cred of options.publicKey.allowCredentials) {
+                    cred.id = base64urlToBuffer(cred.id);
+                }
+            }
+
+            // Step 2: Invoke browser WebAuthn API
+            const assertion = await navigator.credentials.get(options);
+
+            // Step 3: Encode the response back to base64url for the server
+            const authData = {
+                id: assertion.id,
+                rawId: bufferToBase64url(assertion.rawId),
+                type: assertion.type,
+                response: {
+                    authenticatorData: bufferToBase64url(assertion.response.authenticatorData),
+                    clientDataJSON: bufferToBase64url(assertion.response.clientDataJSON),
+                    signature: bufferToBase64url(assertion.response.signature),
+                    userHandle: assertion.response.userHandle
+                        ? bufferToBase64url(assertion.response.userHandle)
+                        : "",
+                },
+            };
+
+            // Step 4: Complete login
+            const result = await ApiClient.send("/api/collections/_superusers/auth-with-webauthn/login-finish", {
+                method: "POST",
+                body: {
+                    identity: webauthnIdentity,
+                    sessionToken: sessionToken,
+                    ...authData,
+                },
+            });
+
+            // Store the auth token
+            ApiClient.authStore.save(result.token, result.record);
+            removeAllToasts();
+            setErrors({});
+            replace("/");
+        } catch (err) {
+            if (err?.name === "NotAllowedError") {
+                addErrorToast("Passkey authentication was cancelled or not allowed.");
+            } else if (err?.name === "SecurityError") {
+                addErrorToast("WebAuthn requires a secure context (HTTPS).");
+            } else {
+                ApiClient.error(err);
+            }
+        }
+
+        webauthnSubmitting = false;
     }
 </script>
 
@@ -281,5 +380,30 @@
                 </button>
             </div>
         {/if}
+    {/if}
+
+    {#if !isLoading && authMethods?.webauthn?.enabled && !mfaId}
+        <hr class="m-t-base m-b-base" />
+
+        <form class="block" on:submit|preventDefault={authWithWebAuthn}>
+            <div class="content txt-center m-b-sm">
+                <p class="txt-hint">Or sign in with a passkey</p>
+            </div>
+
+            <Field class="form-field required" name="webauthnIdentity" let:uniqueId>
+                <label for={uniqueId}>Email or username</label>
+                <input type="text" id={uniqueId} bind:value={webauthnIdentity} required />
+            </Field>
+
+            <button
+                type="submit"
+                class="btn btn-lg btn-block"
+                class:btn-disabled={webauthnSubmitting}
+                class:btn-loading={webauthnSubmitting}
+            >
+                <i class="ri-fingerprint-line" />
+                <span class="txt">Sign in with Passkey</span>
+            </button>
+        </form>
     {/if}
 </FullPage>

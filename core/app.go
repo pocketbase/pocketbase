@@ -1439,6 +1439,14 @@ type App interface {
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordAuthWithOTPRequest(tags ...string) *hook.TaggedHook[*RecordAuthWithOTPRequestEvent]
 
+	// OnRecordAuthWithWebAuthnRequest hook is triggered on each Record
+	// auth with WebAuthn/Passkey API request.
+	//
+	// If the optional "tags" list (Collection ids or names) is specified,
+	// then all event handlers registered via the created hook will be
+	// triggered and called only if their event data origin matches the tags.
+	OnRecordAuthWithWebAuthnRequest(tags ...string) *hook.TaggedHook[*RecordAuthWithWebAuthnRequestEvent]
+
 	// ---------------------------------------------------------------
 	// Record CRUD API event hooks
 	// ---------------------------------------------------------------

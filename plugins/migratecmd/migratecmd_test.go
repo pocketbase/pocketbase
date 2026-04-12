@@ -177,7 +177,10 @@ migrate((app) => {
     "verificationToken": {
       "duration": 259200
     },
-    "viewRule": "id = \"1\""
+    "viewRule": "id = \"1\"",
+    "webauthn": {
+      "enabled": false
+    }
   });
 
   return app.save(collection);
@@ -353,7 +356,10 @@ func init() {
 			"verificationToken": {
 				"duration": 259200
 			},
-			"viewRule": "id = \"1\""
+			"viewRule": "id = \"1\"",
+			"webauthn": {
+				"enabled": false
+			}
 		}` + "`" + `
 
 		collection := &core.Collection{}
@@ -618,7 +624,10 @@ migrate((app) => {
     "verificationToken": {
       "duration": 259200
     },
-    "viewRule": "id = \"1\""
+    "viewRule": "id = \"1\"",
+    "webauthn": {
+      "enabled": false
+    }
   });
 
   return app.save(collection);
@@ -797,7 +806,10 @@ func init() {
 			"verificationToken": {
 				"duration": 259200
 			},
-			"viewRule": "id = \"1\""
+			"viewRule": "id = \"1\"",
+			"webauthn": {
+				"enabled": false
+			}
 		}` + "`" + `
 
 		collection := &core.Collection{}

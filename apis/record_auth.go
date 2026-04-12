@@ -43,6 +43,36 @@ func bindRecordAuthApi(app core.App, rg *router.RouterGroup[*core.RequestEvent])
 		collectionPathRateLimit("", "authWithOTP", "auth"),
 	)
 
+	sub.POST("/auth-with-webauthn/register-begin", recordWebAuthnRegisterBegin).Bind(
+		collectionPathRateLimit("", "webauthnRegisterBegin"),
+		RequireSameCollectionContextAuth(""),
+	)
+	sub.POST("/auth-with-webauthn/register-finish", recordWebAuthnRegisterFinish).Bind(
+		collectionPathRateLimit("", "webauthnRegisterFinish"),
+		RequireSameCollectionContextAuth(""),
+	)
+	sub.POST("/auth-with-webauthn/login-begin", recordWebAuthnLoginBegin).Bind(
+		collectionPathRateLimit("", "webauthnLoginBegin", "auth"),
+	)
+	sub.POST("/auth-with-webauthn/login-finish", recordWebAuthnLoginFinish).Bind(
+		collectionPathRateLimit("", "webauthnLoginFinish", "auth"),
+	)
+
+	// WebAuthn credential management (owner can list/delete own credentials)
+	sub.GET("/auth-with-webauthn/credentials", recordWebAuthnListCredentials).Bind(
+		collectionPathRateLimit("", "webauthnListCredentials"),
+		RequireSameCollectionContextAuth(""),
+	)
+	sub.DELETE("/auth-with-webauthn/credentials/{credentialId}", recordWebAuthnDeleteCredential).Bind(
+		collectionPathRateLimit("", "webauthnDeleteCredential"),
+		RequireSameCollectionContextAuth(""),
+	)
+
+	// WebAuthn admin recovery (superuser can clear all credentials for a user)
+	sub.DELETE("/auth-with-webauthn/credentials-by-record/{id}", recordWebAuthnAdminClearCredentials).Bind(
+		RequireSuperuserAuth(),
+	)
+
 	sub.POST("/request-password-reset", recordRequestPasswordReset).Bind(
 		collectionPathRateLimit("", "requestPasswordReset"),
 	)
