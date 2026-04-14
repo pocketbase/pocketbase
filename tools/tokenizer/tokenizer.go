@@ -35,7 +35,9 @@ func NewFromBytes(b []byte) *Tokenizer {
 
 // New creates new Tokenizer from the provided reader with DefaultSeparators.
 func New(r io.Reader) *Tokenizer {
-	t := &Tokenizer{r: bufio.NewReader(r)}
+	// Use a small buffer size since tokenizer inputs are typically short strings.
+	// The default bufio.NewReader allocates 4096 bytes which is wasteful.
+	t := &Tokenizer{r: bufio.NewReaderSize(r, 256)}
 
 	t.Separators(DefaultSeparators...)
 
