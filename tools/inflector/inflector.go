@@ -82,35 +82,54 @@ func Sanitize(str string, removePattern string) (string, error) {
 	return exp.ReplaceAllString(str, ""), nil
 }
 
+// isWordChar reports whether c is a word character (letter or digit).
+// Underscore is intentionally excluded as it is treated as a separator.
+func isWordChar(c rune) bool {
+	return unicode.IsLetter(c) || unicode.IsDigit(c)
+}
+
 // Snakecase removes all non word characters and converts any english text into a snakecase.
 // "ABBREVIATIONS" are preserved, eg. "myTestDB" will become "my_test_db".
 func Snakecase(str string) string {
 	var result strings.Builder
+	result.Grow(len(str) + 4) // slight over-estimate for underscores
 
-	// split at any non word character and underscore
-	words := snakecaseSplitRegex.Split(str, -1)
+	var prevWasWord bool
+	var prevWasUpper bool
+	var prevRune rune
 
-	for _, word := range words {
-		if word == "" {
+	for _, c := range str {
+		if !isWordChar(c) {
+			// non-word character (includes underscore) acts as separator
+			if prevWasWord {
+				prevWasWord = false
+			}
+			prevWasUpper = false
+			prevRune = c
 			continue
 		}
 
-		if result.Len() > 0 {
-			result.WriteString("_")
-		}
+		isUpper := unicode.IsUpper(c)
 
-		for i, c := range word {
-			if unicode.IsUpper(c) && i > 0 &&
-				// is not a following uppercase character
-				!unicode.IsUpper(rune(word[i-1])) {
-				result.WriteString("_")
+		if !prevWasWord {
+			// first word char after a separator or start
+			if result.Len() > 0 {
+				result.WriteByte('_')
 			}
-
-			result.WriteRune(c)
+		} else if isUpper && !prevWasUpper {
+			// camelCase boundary: lowercase->uppercase
+			result.WriteByte('_')
 		}
+
+		result.WriteRune(unicode.ToLower(c))
+		prevWasWord = true
+		prevWasUpper = isUpper
+		prevRune = c
 	}
 
-	return strings.ToLower(result.String())
+	_ = prevRune // suppress unused variable warning
+
+	return result.String()
 }
 
 // Camelize converts the provided string to its "CamelCased" version
