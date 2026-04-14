@@ -7,9 +7,6 @@ import (
 	"unicode/utf8"
 )
 
-var columnifyRemoveRegex = regexp.MustCompile(`[^\w\.\*\-\_\@\#]+`)
-var snakecaseSplitRegex = regexp.MustCompile(`[\W_]+`)
-
 // UcFirst converts the first character of a string into uppercase.
 func UcFirst(str string) string {
 	if str == "" {
