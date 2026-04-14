@@ -8,7 +8,6 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
-	"strings"
 )
 
 // S256Challenge creates base64 encoded sha256 challenge string derived from code.
@@ -18,7 +17,8 @@ import (
 func S256Challenge(code string) string {
 	h := sha256.New()
 	h.Write([]byte(code))
-	return strings.TrimRight(base64.URLEncoding.EncodeToString(h.Sum(nil)), "=")
+	// RawURLEncoding omits padding by default, avoiding strings.TrimRight overhead
+	return base64.RawURLEncoding.EncodeToString(h.Sum(nil))
 }
 
 // MD5 creates md5 hash from the provided plain text.
