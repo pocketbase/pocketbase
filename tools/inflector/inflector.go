@@ -29,9 +29,29 @@ func UcFirst(str string) string {
 	return string(upper) + str[size:]
 }
 
+// isColumnifyAllowed reports whether c is a valid db identifier character:
+// word characters (\w), '.', '*', '-', '_', '@', '#'.
+func isColumnifyAllowed(c rune) bool {
+	if c == '.' || c == '*' || c == '-' || c == '_' || c == '@' || c == '#' {
+		return true
+	}
+	// \w equivalent: letters, digits, underscore (underscore already handled above)
+	return unicode.IsLetter(c) || unicode.IsDigit(c)
+}
+
 // Columnify strips invalid db identifier characters.
 func Columnify(str string) string {
-	return columnifyRemoveRegex.ReplaceAllString(str, "")
+	var b strings.Builder
+	b.Grow(len(str))
+	for _, c := range str {
+		if isColumnifyAllowed(c) {
+			b.WriteRune(c)
+		}
+	}
+	if b.Len() == len(str) {
+		return str // no characters were stripped, avoid allocation
+	}
+	return b.String()
 }
 
 // Sentenize converts and normalizes string into a sentence.
