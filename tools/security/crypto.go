@@ -7,7 +7,7 @@ import (
 	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/base64"
-	"fmt"
+	"encoding/hex"
 	"strings"
 )
 
@@ -25,35 +25,35 @@ func S256Challenge(code string) string {
 func MD5(text string) string {
 	h := md5.New()
 	h.Write([]byte(text))
-	return fmt.Sprintf("%x", h.Sum(nil))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // SHA256 creates sha256 hash as defined in FIPS 180-4 from the provided text.
 func SHA256(text string) string {
 	h := sha256.New()
 	h.Write([]byte(text))
-	return fmt.Sprintf("%x", h.Sum(nil))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // SHA512 creates sha512 hash as defined in FIPS 180-4 from the provided text.
 func SHA512(text string) string {
 	h := sha512.New()
 	h.Write([]byte(text))
-	return fmt.Sprintf("%x", h.Sum(nil))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // HS256 creates a HMAC hash with sha256 digest algorithm.
 func HS256(text string, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(text))
-	return fmt.Sprintf("%x", h.Sum(nil))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // HS512 creates a HMAC hash with sha512 digest algorithm.
 func HS512(text string, secret string) string {
 	h := hmac.New(sha512.New, []byte(secret))
 	h.Write([]byte(text))
-	return fmt.Sprintf("%x", h.Sum(nil))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // Equal compares two hash strings for equality without leaking timing information.
