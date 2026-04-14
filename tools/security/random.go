@@ -2,7 +2,6 @@ package security
 
 import (
 	cryptoRand "crypto/rand"
-	"math/big"
 	mathRand "math/rand/v2"
 )
 
@@ -18,17 +17,31 @@ func RandomString(length int) string {
 // RandomStringWithAlphabet generates a cryptographically random string
 // with the specified length and characters set.
 //
-// It panics if for some reason rand.Int returns a non-nil error.
+// It panics if for some reason rand.Read returns a non-nil error.
 func RandomStringWithAlphabet(length int, alphabet string) string {
 	b := make([]byte, length)
-	max := big.NewInt(int64(len(alphabet)))
+	alphaLen := byte(len(alphabet))
 
-	for i := range b {
-		n, err := cryptoRand.Int(cryptoRand.Reader, max)
-		if err != nil {
-			panic(err)
+	// Compute the largest multiple of alphaLen that fits in a byte
+	// to ensure uniform distribution via rejection sampling.
+	maxValid := 256 - (256 % int(alphaLen))
+
+	// Read random bytes in bulk instead of one crypto/rand.Int per character.
+	// Use rejection sampling to maintain uniform distribution.
+	randomBytes := make([]byte, length)
+	if _, err := cryptoRand.Read(randomBytes); err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < length; i++ {
+		// Rejection sampling: if the random byte falls in the biased range,
+		// request a new one until it doesn't.
+		for int(randomBytes[i]) >= maxValid {
+			if _, err := cryptoRand.Read(randomBytes[i : i+1]); err != nil {
+				panic(err)
+			}
 		}
-		b[i] = alphabet[n.Int64()]
+		b[i] = alphabet[randomBytes[i]%alphaLen]
 	}
 
 	return string(b)
