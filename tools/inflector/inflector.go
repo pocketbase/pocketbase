@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 var columnifyRemoveRegex = regexp.MustCompile(`[^\w\.\*\-\_\@\#]+`)
@@ -15,9 +16,17 @@ func UcFirst(str string) string {
 		return ""
 	}
 
-	s := []rune(str)
+	r, size := utf8.DecodeRuneInString(str)
+	if r == utf8.RuneError {
+		return str
+	}
 
-	return string(unicode.ToUpper(s[0])) + string(s[1:])
+	upper := unicode.ToUpper(r)
+	if upper == r {
+		return str // already uppercase, no allocation needed
+	}
+
+	return string(upper) + str[size:]
 }
 
 // Columnify strips invalid db identifier characters.
