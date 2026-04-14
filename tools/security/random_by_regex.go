@@ -4,7 +4,6 @@ import (
 	cryptoRand "crypto/rand"
 	"errors"
 	"fmt"
-	"math/big"
 	"regexp/syntax"
 	"strings"
 )
@@ -173,7 +172,30 @@ func randomRuneFromPairs(pairs []rune) (rune, error) {
 }
 
 func randomNumber(maxSoft int) (int, error) {
-	randRange, err := cryptoRand.Int(cryptoRand.Reader, big.NewInt(int64(maxSoft)))
+	// Use crypto/rand.Read with rejection sampling instead of big.Int
+	// to avoid per-call big.Int allocation.
+	if maxSoft <= 0 {
+		return 0, nil
+	}
+	if maxSoft == 1 {
+		return 0, nil
+	}
 
-	return int(randRange.Int64()), err
+	// Find the smallest number of bytes needed
+	max := uint64(maxSoft)
+	// Compute the largest multiple of max that fits in the byte range
+	// to ensure uniform distribution.
+	var buf [8]byte
+	limit := (1<<64 - 1) - ((1<<64 - 1) % max) // overflow-safe: works for all max > 0
+
+	for {
+		if _, err := cryptoRand.Read(buf[:]); err != nil {
+			return 0, err
+		}
+		val := uint64(buf[0]) | uint64(buf[1])<<8 | uint64(buf[2])<<16 | uint64(buf[3])<<24 |
+			uint64(buf[4])<<32 | uint64(buf[5])<<40 | uint64(buf[6])<<48 | uint64(buf[7])<<56
+		if val < limit {
+			return int(val % max), nil
+		}
+	}
 }
