@@ -140,6 +140,7 @@ func Snakecase(str string) string {
 //	inflector.Camelize("send_email") // "SendEmail"
 func Camelize(str string) string {
 	var result strings.Builder
+	result.Grow(len(str))
 
 	var isPrevSpecial bool
 
