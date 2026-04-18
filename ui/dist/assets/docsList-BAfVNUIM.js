@@ -1,4 +1,4 @@
-import{t as e}from"./expandInfo-DGS0CLSa.js";import{t as n}from"./fieldsInfo-Bz62125-.js";import{t as r}from"./filterSyntax-UQrUrYb5.js";function i(i){let a=app.utils.getApiExampleURL(),o=i.listRule===null,s={collectionId:i.id,collectionName:i.name},c=[{title:200,value:JSON.stringify({page:1,perPage:30,totalPages:1,totalItems:2,items:[Object.assign(s,app.utils.getDummyFieldsData(i)),Object.assign(s,app.utils.getDummyFieldsData(i))]},null,2)},{title:400,value:`
+import{t as e}from"./expandInfo-DGS0CLSa.js";import{t as n}from"./fieldsInfo-Bz62125-.js";import{t as r}from"./filterSyntax-Df6AnI5x.js";function i(i){let a=app.utils.getApiExampleURL(),o=i.listRule===null,s={collectionId:i.id,collectionName:i.name},c=[{title:200,value:JSON.stringify({page:1,perPage:30,totalPages:1,totalItems:2,items:[Object.assign(s,app.utils.getDummyFieldsData(i)),Object.assign(s,app.utils.getDummyFieldsData(i))]},null,2)},{title:400,value:`
                 {
                   "status": 400,
                   "message": "Something went wrong while processing your request.",

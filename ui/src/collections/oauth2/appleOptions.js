@@ -19,7 +19,7 @@ window.app.oauth2.apple = function(providerInfo, namePrefix, data) {
                     });
                 },
             },
-            t.i({ className: "ri-key-line" }),
+            t.i({ className: "ri-key-line", ariaHidden: true }),
             t.span({ className: "txt" }, "Generate secret"),
         ),
     );
@@ -226,7 +226,7 @@ function appleSecretGeneratorModal(modalSettings = {}) {
                     type: "submit",
                     className: "btn expanded",
                 },
-                t.i({ className: "ri-key-line" }),
+                t.i({ className: "ri-key-line", ariaHidden: true }),
                 t.span({ className: "txt" }, "Generate secret"),
             ),
         ),

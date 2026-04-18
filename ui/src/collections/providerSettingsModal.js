@@ -94,7 +94,7 @@ function providerSettingsModal(providerConfig, settings) {
                         });
                     }
 
-                    return t.i({ className: app.utils.fallbackProviderIcon });
+                    return t.i({ className: app.utils.fallbackProviderIcon, ariaHidden: true });
                 },
             ),
             t.h6(

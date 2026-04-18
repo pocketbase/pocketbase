@@ -216,7 +216,7 @@ export function pageCollections(route) {
                         {
                             type: "button",
                             className: "btn circle transparent secondary tooltip-bottom btn-collection-settings",
-                            ariaDescription: app.attrs.tooltip("Collection settings"),
+                            ariaLabel: app.attrs.tooltip("Collection settings"),
                             onclick: () => {
                                 app.modals.openCollectionUpsert(app.store.activeCollection, {
                                     ontruncate: () => refreshRecordsList(),
@@ -231,7 +231,7 @@ export function pageCollections(route) {
                                 });
                             },
                         },
-                        t.i({ className: "ri-settings-3-line" }),
+                        t.i({ className: "ri-settings-3-line", ariaHidden: true }),
                     ),
                     app.components.refreshButton({
                         onclick: () => refreshRecordsList(),
@@ -249,7 +249,7 @@ export function pageCollections(route) {
                             className: "btn outline api-preview-btn",
                             onclick: () => app.modals.openApiPreview(app.store.activeCollection),
                         },
-                        t.i({ className: "ri-code-s-slash-line" }),
+                        t.i({ className: "ri-code-s-slash-line", ariaHidden: true }),
                         t.span({ className: "txt", textContent: "API preview" }),
                     ),
                     () => {
@@ -263,7 +263,7 @@ export function pageCollections(route) {
                                 className: "btn new-record-btn",
                                 onclick: () => app.modals.openRecordUpsert(app.store.activeCollection),
                             },
-                            t.i({ className: "ri-add-line" }),
+                            t.i({ className: "ri-add-line", ariaHidden: true }),
                             t.span({ className: "txt", textContent: "New Record" }),
                         );
                     },

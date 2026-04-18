@@ -101,13 +101,14 @@ export function pageConfirmEmailChange(route) {
                                     type: "button",
                                     tabIndex: -1,
                                     className: "btn sm transparent secondary circle tooltip-right",
-                                    ariaDescription: app.attrs.tooltip(() =>
+                                    ariaLabel: app.attrs.tooltip(() =>
                                         data.showPassword ? "Hide password" : "Show password"
                                     ),
                                     onclick: () => (data.showPassword = !data.showPassword),
                                 },
                                 t.i({
                                     className: () => (data.showPassword ? "ri-eye-off-line" : "ri-eye-line"),
+                                    ariaHidden: true,
                                 }),
                             ),
                         ),

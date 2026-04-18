@@ -418,12 +418,12 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                                     {
                                         type: "button",
                                         className: "btn sm secondary transparent circle m-l-auto",
-                                        ariaDescription: app.attrs.tooltip("Discard draft", "left"),
+                                        ariaLabel: app.attrs.tooltip("Discard draft", "left"),
                                         onclick: () => {
                                             deleteDraft();
                                         },
                                     },
-                                    t.i({ className: "ri-close-line" }),
+                                    t.i({ className: "ri-close-line", ariaHidden: true }),
                                 ),
                             ),
                         );
@@ -539,7 +539,7 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                         disabled: () => data.isFormDisabled,
                         onclick: () => data.isLocked = false,
                     },
-                    t.i({ className: "ri-lock-unlock-line" }),
+                    t.i({ className: "ri-lock-unlock-line", ariaHidden: true }),
                     t.span({ className: "txt" }, "Unlock to save"),
                 ),
                 t.div(
@@ -560,10 +560,11 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                         {
                             type: "button",
                             className: () => `btn p-5`,
+                            title: "Save options",
                             disabled: () => data.isLocked || data.isFormDisabled,
                             "html-popovertarget": uniqueId + "save_options",
                         },
-                        t.i({ className: "ri-arrow-up-s-line" }),
+                        t.i({ className: "ri-arrow-up-s-line", ariaHidden: true }),
                     ),
                     t.div(
                         { id: uniqueId + "save_options", className: "dropdown nowrap", popover: "auto" },
@@ -693,10 +694,11 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                                 {
                                     type: "button",
                                     className: "btn sm circle transparent",
+                                    title: "More options",
                                     disabled: () => data.isLoading,
                                     "html-popovertarget": uniqueId + "modal-header-dropdown",
                                 },
-                                t.i({ className: "ri-more-line" }),
+                                t.i({ className: "ri-more-line", ariaHidden: true }),
                             ),
                             t.div(
                                 {
@@ -742,7 +744,7 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                                             copyJSON(data.originalRecord);
                                         },
                                     },
-                                    t.i({ className: "ri-braces-line" }),
+                                    t.i({ className: "ri-braces-line", ariaHidden: true }),
                                     t.span({ className: "txt" }, "Copy JSON"),
                                 ),
                                 () => {
@@ -770,7 +772,7 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                                                     }
                                                 },
                                             },
-                                            t.i({ className: "ri-file-copy-line" }),
+                                            t.i({ className: "ri-file-copy-line", ariaHidden: true }),
                                             t.span({ className: "txt" }, "Duplicate"),
                                         ),
                                         t.hr(),
@@ -902,7 +904,7 @@ function resetTokenKeyDropdownItem(collection, data, modalSettings) {
                 );
             },
         },
-        t.i({ className: "ri-reset-left-line" }),
+        t.i({ className: "ri-reset-left-line", ariaHidden: true }),
         t.span({ className: "txt" }, "Reset issued tokens"),
     );
 }
@@ -947,7 +949,7 @@ function sendPasswordResetEmailDropdownItem(collection, data, modalSettings) {
                 );
             },
         },
-        t.i({ className: "ri-mail-lock-line" }),
+        t.i({ className: "ri-mail-lock-line", ariaHidden: true }),
         t.span({ className: "txt" }, "Send password reset email"),
     );
 }
@@ -992,7 +994,7 @@ function sendVerificationDropdownItem(collection, data, modalSettings) {
                 );
             },
         },
-        t.i({ className: "ri-mail-check-line" }),
+        t.i({ className: "ri-mail-check-line", ariaHidden: true }),
         t.span({ className: "txt" }, "Send verification email"),
     );
 }
@@ -1007,7 +1009,7 @@ function impersonateDropdownItem(collection, data, modalSettings) {
                 app.modals.openRecordImpersontate(data.originalRecord);
             },
         },
-        t.i({ className: "ri-id-card-line" }),
+        t.i({ className: "ri-id-card-line", ariaHidden: true }),
         t.span({ className: "txt" }, "Impersonate"),
     );
 }
@@ -1055,7 +1057,7 @@ function deleteDropdownItem(collection, data, modalSettings) {
                 );
             },
         },
-        t.i({ className: "ri-delete-bin-7-line" }),
+        t.i({ className: "ri-delete-bin-7-line", ariaHidden: true }),
         t.span({ className: "txt" }, "Delete"),
     );
 }
@@ -1080,7 +1082,7 @@ function authFieldEmail(collection, data) {
                 { className: "field" },
                 t.label(
                     { htmlFor: uniqueId },
-                    t.i({ className: app.fieldTypes.email.icon }),
+                    t.i({ className: app.fieldTypes.email.icon, ariaHidden: true }),
                     t.span({ className: "txt" }, () => emailField.name),
                 ),
                 t.input({
@@ -1232,7 +1234,7 @@ function authFieldPassword(collection, data) {
                     { className: "field" },
                     t.label(
                         { htmlFor: uniqueId + "_password" },
-                        t.i({ className: "ri-lock-line" }),
+                        t.i({ className: "ri-lock-line", ariaHidden: true }),
                         t.span({ className: "txt" }, "Password"),
                     ),
                     t.input({
@@ -1258,7 +1260,7 @@ function authFieldPassword(collection, data) {
                     { className: "field" },
                     t.label(
                         { htmlFor: uniqueId + "_password_confirm" },
-                        t.i({ className: "ri-lock-line" }),
+                        t.i({ className: "ri-lock-line", ariaHidden: true }),
                         t.span({ className: "txt" }, "Confirm"),
                     ),
                     t.input({
@@ -1397,7 +1399,7 @@ function authProvidersTab(collection, data) {
                                         });
                                     }
 
-                                    return t.i({ className: app.utils.fallbackProviderIcon });
+                                    return t.i({ className: app.utils.fallbackProviderIcon, ariaHidden: true });
                                 },
                             ),
                             t.div(
@@ -1414,10 +1416,10 @@ function authProvidersTab(collection, data) {
                                     {
                                         type: "button",
                                         className: "btn sm secondary transparent circle",
-                                        ariaDescription: app.attrs.tooltip("Unlink", "left"),
+                                        ariaLabel: app.attrs.tooltip("Unlink", "left"),
                                         onclick: () => confirmAndUnlink(externalAuth),
                                     },
-                                    t.i({ className: "ri-close-line" }),
+                                    t.i({ className: "ri-close-line", ariaHidden: true }),
                                 ),
                             ),
                         );

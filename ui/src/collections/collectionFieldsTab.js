@@ -73,7 +73,7 @@ export function collectionFieldsTab(upsertData) {
                         className: "label handle",
                         onclick: () => app.modals.openIndexUpsert(upsertData.collection),
                     },
-                    t.i({ className: "ri-add-line" }),
+                    t.i({ className: "ri-add-line", ariaHidden: true }),
                     t.span({ className: "txt" }, "New index"),
                 );
             },

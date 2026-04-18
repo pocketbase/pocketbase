@@ -50,7 +50,7 @@ export function emailTemplateAccordion(collection, key, propsArg = {}) {
         },
         t.summary(
             null,
-            t.i({ className: "ri-draft-line" }),
+            t.i({ className: "ri-draft-line", ariaHidden: true }),
             t.span({ className: "txt", textContent: () => props.title }),
             () => {
                 if (!app.utils.getByPath(app.store.errors, key)) {
@@ -58,6 +58,7 @@ export function emailTemplateAccordion(collection, key, propsArg = {}) {
                 }
 
                 return t.i({
+                    ariaHidden: true,
                     className: "ri-error-warning-fill txt-danger m-l-auto",
                     ariaDescription: app.attrs.tooltip("Has errors", "left"),
                 });

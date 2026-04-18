@@ -214,7 +214,7 @@ export function rateLimitAccordion(pageData) {
         },
         t.summary(
             null,
-            t.i({ className: "ri-pulse-fill" }),
+            t.i({ className: "ri-pulse-fill", ariaHidden: true }),
             t.span({ className: "txt" }, "Rate limiting"),
             t.div({ className: "flex-fill" }),
             () => {
@@ -397,7 +397,7 @@ export function rateLimitAccordion(pageData) {
                             className: "btn secondary sm",
                             onclick: () => newRule(),
                         },
-                        t.i({ className: "ri-add-line" }),
+                        t.i({ className: "ri-add-line", ariaHidden: true }),
                         t.span({ className: "txt" }, "Add rate limit rule"),
                     ),
                     t.button(

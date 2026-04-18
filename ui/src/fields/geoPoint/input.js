@@ -17,7 +17,7 @@ export function input(data) {
             { className: () => `field-list ${data.field.required ? "required" : ""}` },
             t.label(
                 { htmlFor: uniqueId },
-                t.i({ className: app.fieldTypes.geoPoint.icon }),
+                t.i({ className: app.fieldTypes.geoPoint.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => data.field.name),
             ),
             t.div(

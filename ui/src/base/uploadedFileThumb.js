@@ -77,7 +77,10 @@ window.app.components.uploadedFileThumb = function(propsArg = {}) {
                 });
             }
 
-            return t.i({ className: app.utils.fileTypeIcons[fileType] || "ri-file-line" });
+            return t.i({
+                className: app.utils.fileTypeIcons[fileType] || "ri-file-line",
+                ariaHidden: true,
+            });
         },
     );
 };

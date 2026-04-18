@@ -78,7 +78,7 @@ export function pageRequestSuperuserPasswordReset(route) {
                             className: () => `btn lg block ${data.isSubmitting ? "loading" : ""}`,
                             disabled: () => data.isSubmitting,
                         },
-                        t.i({ className: "ri-mail-send-line" }),
+                        t.i({ className: "ri-mail-send-line", ariaHidden: true }),
                         t.span({ className: "txt" }, "Send recovery link"),
                     ),
                 ),

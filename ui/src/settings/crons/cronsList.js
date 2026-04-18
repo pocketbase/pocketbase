@@ -97,13 +97,13 @@ export function cronsList(propsArg = {}) {
                         t.button(
                             {
                                 type: "button",
-                                ariaDescription: app.attrs.tooltip("Run"),
+                                ariaLabel: app.attrs.tooltip("Run"),
                                 className: () =>
                                     `btn sm circle secondary transparent ${data.isRunning[cron.id] ? "loading" : ""}`,
                                 disabled: () => data.isRunning[cron.id],
                                 onclick: () => runCron(cron.id),
                             },
-                            t.i({ className: "ri-play-large-line" }),
+                            t.i({ className: "ri-play-large-line", ariaHidden: true }),
                         ),
                     ),
                 );

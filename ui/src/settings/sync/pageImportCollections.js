@@ -446,6 +446,7 @@ export function pageImportCollections(route) {
                                                     }),
                                                     t.i({
                                                         className: "ri-arrow-right-line txt-sm",
+                                                        ariaHidden: true,
                                                     }),
                                                 ];
                                             },

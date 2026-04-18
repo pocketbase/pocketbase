@@ -249,7 +249,7 @@ function recordFilePickerModal(settings = defaultSettings) {
                     { className: "txt-lg collection-name m-r-auto" },
                     () => data.activeCollection?.name || "Select collection",
                 ),
-                t.i({ className: "ri-arrow-drop-down-line" }),
+                t.i({ className: "ri-arrow-drop-down-line", ariaHidden: true }),
             ),
             t.div(
                 { id: "collections_dropdown" + uniqueId, className: "dropdown", popover: "hint" },
@@ -281,10 +281,10 @@ function recordFilePickerModal(settings = defaultSettings) {
                 {
                     type: "button",
                     className: "btn circle transparent",
-                    ariaDescription: app.attrs.tooltip("Add new record"),
+                    ariaLabel: app.attrs.tooltip("Add new record"),
                     onclick: () => app.modals.openRecordUpsert(data.activeCollection),
                 },
-                t.i({ className: "ri-add-line txt-hint" }),
+                t.i({ className: "ri-add-line txt-hint", ariaHidden: true }),
             ),
         ),
         t.div(
@@ -323,7 +323,10 @@ function recordFilePickerModal(settings = defaultSettings) {
 
                                     const ftype = app.utils.getFileType(name);
 
-                                    return t.i({ className: app.utils.fileTypeIcons[ftype] || "ri-file-line" });
+                                    return t.i({
+                                        className: app.utils.fileTypeIcons[ftype] || "ri-file-line",
+                                        ariaHidden: true,
+                                    });
                                 },
                             ),
                         );

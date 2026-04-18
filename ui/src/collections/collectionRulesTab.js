@@ -201,6 +201,7 @@ export function collectionRulesTab(upsertData) {
                     },
                     t.span({ className: "txt" }, "Additional auth collection rules"),
                     t.i({
+                        ariaHidden: true,
                         className: () => (local.showAuthRules ? "ri-arrow-drop-up-line" : "ri-arrow-drop-down-line"),
                     }),
                 ),

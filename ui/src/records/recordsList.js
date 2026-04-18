@@ -421,6 +421,7 @@ window.app.components.recordsList = function(propsArg = {}) {
                                     t.div(
                                         { className: "inline-flex gap-5" },
                                         t.i({
+                                            ariaHidden: true,
                                             className: () => {
                                                 if (field.primaryKey) {
                                                     return "ri-key-line";
@@ -586,7 +587,10 @@ window.app.components.recordsList = function(propsArg = {}) {
                                 return columns;
                             },
                             // columns,
-                            t.td({ className: "col-meta" }, t.i({ className: "ri-arrow-right-line m-r-10" })),
+                            t.td(
+                                { className: "col-meta" },
+                                t.i({ className: "ri-arrow-right-line m-r-10", ariaHidden: true }),
+                            ),
                         );
                     });
                 },
@@ -644,7 +648,7 @@ window.app.components.recordsList = function(propsArg = {}) {
                                 );
                             },
                         },
-                        t.i({ className: "ri-delete-bin-7-line" }),
+                        t.i({ className: "ri-delete-bin-7-line", ariaHidden: true }),
                         t.span({ className: "txt" }, "Delete"),
                     );
                 },
@@ -654,7 +658,7 @@ window.app.components.recordsList = function(propsArg = {}) {
                         className: "btn sm pill",
                         onclick: () => downloadSelected(),
                     },
-                    t.i({ className: "ri-download-line" }),
+                    t.i({ className: "ri-download-line", ariaHidden: true }),
                     t.span({ className: "txt" }, "JSON"),
                 ),
             ),
@@ -726,10 +730,11 @@ function columnsDropdown(props, data) {
         {
             hidden: () => props.collection?.fields.length <= 1,
             type: "button",
+            title: "Toggle columns",
             className: "btn sm secondary transparent circle",
             popoverTargetElement: dropdown,
         },
-        t.i({ className: "ri-more-2-line" }),
+        t.i({ className: "ri-more-2-line", ariaHidden: true }),
         dropdown,
     );
 }

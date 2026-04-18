@@ -79,9 +79,10 @@ function collectionsOverviewModal(settings = {}) {
                             {
                                 type: "button",
                                 className: "btn sm secondary transparent circle modal-close-btn",
+                                title: "Close",
                                 onclick: () => app.modals.close(modal),
                             },
-                            t.i({ className: "ri-close-line" }),
+                            t.i({ className: "ri-close-line", ariaHidden: true }),
                         ),
                     ),
                 ),
@@ -228,6 +229,7 @@ function rules(data) {
                                 t.div(
                                     { className: "inline-flex gap-10" },
                                     t.i({
+                                        ariaHidden: true,
                                         className: () =>
                                             app.collectionTypes[collection.type]?.icon
                                             || app.utils.fallbackCollectionIcon,

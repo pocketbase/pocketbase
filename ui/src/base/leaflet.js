@@ -251,7 +251,7 @@ function initSearch(selectFunc = null) {
                         title: "Clear search",
                         onclick: () => reset(),
                     },
-                    t.i({ className: "ri-close-line" }),
+                    t.i({ className: "ri-close-line", ariaHidden: true }),
                 );
             }
         }),

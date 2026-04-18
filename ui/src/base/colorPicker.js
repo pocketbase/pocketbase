@@ -105,7 +105,7 @@ window.app.components.colorPicker = function(propsArg = {}) {
                 className: "link-hint predefined-colors-btn",
                 "html-popovertarget": uniqueId + "predefined-colors-dropdown",
             },
-            t.i({ className: "ri-arrow-down-s-line", roleHidden: true }),
+            t.i({ className: "ri-arrow-down-s-line", ariaHidden: true }),
         ),
         t.div(
             {

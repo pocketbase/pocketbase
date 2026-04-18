@@ -108,6 +108,7 @@ export function backupsForm(propsArg = {}) {
             t.span({ className: "txt" }, "Backup options"),
             t.i({
                 className: () => (data.showForm ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"),
+                ariaHidden: true,
             }),
         ),
         app.components.slide(
@@ -177,7 +178,7 @@ export function backupsForm(propsArg = {}) {
                                                         "html-popovertarget": "cron-presets-dropdown",
                                                     },
                                                     t.span({ className: "txt" }, "Presets"),
-                                                    t.i({ className: "ri-arrow-drop-down-line" }),
+                                                    t.i({ className: "ri-arrow-drop-down-line", ariaHidden: true }),
                                                 ),
                                                 t.div(
                                                     {

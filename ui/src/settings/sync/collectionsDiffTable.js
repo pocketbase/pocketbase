@@ -132,6 +132,7 @@ export function collectionsDiffTable(propsArg = {}) {
                                 }),
                                 t.i({
                                     className: "ri-arrow-right-line txt-sm",
+                                    ariaHidden: true,
                                 }),
                             ];
                         },

@@ -1,6 +1,7 @@
 const tolerance = 5;
 
 const tooltip = t.div({
+    ariaHidden: true,
     popover: "manual",
     className: "pb-tooltip",
 });

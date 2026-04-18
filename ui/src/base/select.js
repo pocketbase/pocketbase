@@ -194,10 +194,11 @@ window.app.components.select = function(propsArg = {}) {
                 t.button(
                     {
                         type: "button",
+                        title: "Clear",
                         className: "btn sm secondary transparent circle",
                         onclick: () => clearSearch(true),
                     },
-                    t.i({ className: "ri-close-line" }),
+                    t.i({ className: "ri-close-line", ariaHidden: true }),
                 ),
             ),
         ),
@@ -248,7 +249,7 @@ window.app.components.select = function(propsArg = {}) {
                         tabIndex: -1,
                         role: "button",
                         className: "ri-close-line link-hint btn-option-unset",
-                        ariaDescription: app.attrs.tooltip("Unset", "left"),
+                        ariaLabel: app.attrs.tooltip("Unset", "left"),
                         onclick: () => {
                             toggle(opt);
                             return false;

@@ -144,7 +144,7 @@ export function collectionViewQueryTab(upsertData) {
                                 className: "query-state",
                                 ariaDescription: app.attrs.tooltip("Invalid query", "left"),
                             },
-                            t.i({ className: "ri-error-warning-fill txt-danger" }),
+                            t.i({ className: "ri-error-warning-fill txt-danger", ariaHidden: true }),
                         ),
                         t.span(
                             {
@@ -152,7 +152,7 @@ export function collectionViewQueryTab(upsertData) {
                                 className: "query-state",
                                 ariaDescription: app.attrs.tooltip("Valid query", "left"),
                             },
-                            t.i({ className: "ri-checkbox-circle-fill txt-success" }),
+                            t.i({ className: "ri-checkbox-circle-fill txt-success", ariaHidden: true }),
                         ),
                     ),
                     app.components.codeEditor({

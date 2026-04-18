@@ -381,9 +381,10 @@ function collectionUpsertModal(rawCollection, modalSettings) {
                                 {
                                     type: "button",
                                     className: "btn sm circle transparent",
+                                    title: "More options",
                                     "html-popovertarget": uniqueId + "modal-header-dropdown",
                                 },
-                                t.i({ className: "ri-more-line" }),
+                                t.i({ className: "ri-more-line", ariaHidden: true }),
                             ),
                             t.div(
                                 {
@@ -403,7 +404,7 @@ function collectionUpsertModal(rawCollection, modalSettings) {
                                             app.toasts.success("Collection copied to clipboard!");
                                         },
                                     },
-                                    t.i({ className: "ri-braces-line" }),
+                                    t.i({ className: "ri-braces-line", ariaHidden: true }),
                                     t.span({ className: "txt" }, "Copy JSON"),
                                 ),
                                 t.button(
@@ -425,7 +426,7 @@ function collectionUpsertModal(rawCollection, modalSettings) {
                                             }
                                         },
                                     },
-                                    t.i({ className: "ri-file-copy-line" }),
+                                    t.i({ className: "ri-file-copy-line", ariaHidden: true }),
                                     t.span({ className: "txt" }, "Duplicate"),
                                 ),
                                 t.hr(),
@@ -497,6 +498,7 @@ function collectionUpsertModal(rawCollection, modalSettings) {
                                 ),
                                 t.i({
                                     hidden: () => !data.isNew,
+                                    ariaHidden: true,
                                     className: "ri-arrow-drop-down-line m-l-auto",
                                 }),
                             ),
@@ -524,6 +526,7 @@ function collectionUpsertModal(rawCollection, modalSettings) {
                                                     },
                                                 },
                                                 t.i({
+                                                    ariaHidden: true,
                                                     className: app.collectionTypes[opt.value]?.icon
                                                         || app.utils.fallbackCollectionIcon,
                                                 }),
@@ -606,11 +609,12 @@ function collectionUpsertModal(rawCollection, modalSettings) {
                 t.button(
                     {
                         type: "button",
+                        title: "Save options",
                         className: () => `btn p-5`,
                         disabled: () => !data.canSave,
                         "html-popovertarget": uniqueId + "save_options",
                     },
-                    t.i({ className: "ri-arrow-up-s-line" }),
+                    t.i({ className: "ri-arrow-up-s-line", ariaHidden: true }),
                 ),
                 t.div(
                     { id: uniqueId + "save_options", className: "dropdown nowrap", popover: "auto" },
@@ -801,7 +805,7 @@ function truncateDropdownItem(data, modalSettings) {
                 );
             },
         },
-        t.i({ className: "ri-eraser-line" }),
+        t.i({ className: "ri-eraser-line", ariaHidden: true }),
         t.span({ className: "txt" }, "Truncate"),
     );
 }
@@ -907,7 +911,7 @@ function deleteDropdownItem(data, modalSettings) {
                 );
             },
         },
-        t.i({ className: "ri-delete-bin-7-line" }),
+        t.i({ className: "ri-delete-bin-7-line", ariaHidden: true }),
         t.span({ className: "txt" }, "Delete"),
     );
 }

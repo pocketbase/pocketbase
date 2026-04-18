@@ -108,13 +108,13 @@ export function pageLogs(route) {
                         t.button(
                             {
                                 className: "btn circle transparent secondary tooltip-right",
-                                ariaDescription: app.attrs.tooltip("Logs settings"),
+                                ariaLabel: app.attrs.tooltip("Logs settings"),
                                 onclick: () =>
                                     app.modals.openLogsSettings({
                                         onsave: () => refreshLogsList(),
                                     }),
                             },
-                            t.i({ className: "ri-settings-3-line" }),
+                            t.i({ className: "ri-settings-3-line", ariaHidden: true }),
                         ),
                         app.components.refreshButton({
                             onclick: refreshLogsList,

@@ -149,7 +149,6 @@ window.app.oauth2.oidc = function(providerInfo, namePrefix, data) {
                                     { htmlFor: uniqueId + ".extra.jwksURL" },
                                     t.span({ className: "txt" }, "JWKS verification URL"),
                                     t.i({
-                                        ariaHidden: true,
                                         className: "ri-information-line link-hint",
                                         ariaDescription: app.attrs.tooltip(
                                             "URL to the public token verification keys.",
@@ -176,7 +175,6 @@ window.app.oauth2.oidc = function(providerInfo, namePrefix, data) {
                                     { htmlFor: uniqueId + ".extra.issuers" },
                                     t.span({ className: "txt" }, "Issuers"),
                                     t.i({
-                                        ariaHidden: true,
                                         className: "ri-information-line link-hint",
                                         ariaDescription: app.attrs.tooltip(
                                             "Comma separated list of accepted values for the iss token claim validation.",
@@ -221,7 +219,6 @@ window.app.oauth2.oidc = function(providerInfo, namePrefix, data) {
                         t.span({ className: "txt", textContent: "Support PKCE" }),
                         t.i({
                             className: "ri-information-line link-hint",
-                            ariaHidden: true,
                             ariaDescription: app.attrs.tooltip(
                                 "Usually it should be safe to be always enabled as most providers will just ignore the extra query parameters if they don't support PKCE.",
                             ),

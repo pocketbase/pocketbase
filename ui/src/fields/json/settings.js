@@ -65,6 +65,7 @@ export function settings(data) {
                         t.span({ className: "txt" }, "String value normalizations"),
                         t.i({
                             className: () => (local.showInfo ? "ri-arrow-up-s-line" : "ri-arrow-down-s-line"),
+                            ariaHidden: true,
                         }),
                     ),
                     app.components.slide(

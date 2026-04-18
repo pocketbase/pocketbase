@@ -33,7 +33,7 @@ export function input(props) {
             { className: "field" },
             t.label(
                 { htmlFor: uniqueId },
-                t.i({ className: app.fieldTypes.editor.icon }),
+                t.i({ className: app.fieldTypes.editor.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => props.field.name),
             ),
             () => local.lazyEditor,

@@ -126,7 +126,7 @@ export function input(props) {
             { className: () => `field ${props.field.required ? "required" : ""}` },
             t.label(
                 { htmlFor: uniqueId },
-                t.i({ className: app.fieldTypes.file.icon }),
+                t.i({ className: app.fieldTypes.file.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => props.field.name),
             ),
             fileInput,
@@ -204,11 +204,11 @@ export function input(props) {
                                     {
                                         type: "button",
                                         className: "btn sm secondary transparent circle",
-                                        ariaDescription: app.attrs.tooltip("Remove file"),
+                                        ariaLabel: app.attrs.tooltip("Remove file"),
                                         hidden: () => isDeleted(nameOrFile),
                                         onclick: () => toDelete(nameOrFile),
                                     },
-                                    t.i({ className: "ri-close-line" }),
+                                    t.i({ className: "ri-close-line", ariaHidden: true }),
                                 ),
                                 t.button(
                                     {
@@ -240,7 +240,7 @@ export function input(props) {
                             document.activeElement?.blur();
                         },
                     },
-                    t.i({ className: "ri-upload-cloud-line" }),
+                    t.i({ className: "ri-upload-cloud-line", ariaHidden: true }),
                     t.span({ className: "txt" }, "Upload or drop new file"),
                 ),
             ),

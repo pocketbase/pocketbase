@@ -35,7 +35,7 @@ export function settingsSidebar() {
                                     },
                                     () => {
                                         if (link.icon) {
-                                            return t.i({ className: link.icon });
+                                            return t.i({ className: link.icon, ariaHidden: true });
                                         }
                                     },
                                     t.span({ className: "txt" }, () => link.label),

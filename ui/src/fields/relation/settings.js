@@ -71,7 +71,7 @@ export function settings(props) {
                                         });
                                     },
                                 },
-                                t.i({ className: "ri-add-line" }),
+                                t.i({ className: "ri-add-line", ariaHidden: true }),
                                 t.span({ className: "txt" }, "New collection"),
                             ),
                         ];

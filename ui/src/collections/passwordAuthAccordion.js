@@ -45,7 +45,7 @@ export function passwordAuthAccordion(collection) {
         },
         t.summary(
             null,
-            t.i({ className: "ri-lock-password-line" }),
+            t.i({ className: "ri-lock-password-line", ariaHidden: true }),
             t.span({ className: "txt", textContent: "Identity/Password" }),
             t.span({
                 className: () => `label m-l-auto ${data.config.enabled ? "success" : ""}`,

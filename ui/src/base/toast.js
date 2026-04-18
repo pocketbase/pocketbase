@@ -137,7 +137,7 @@ function addToast(textOrElem, options = {}) {
                         title: "Clear",
                         onclick: () => removeToast(toastRef),
                     },
-                    t.i({ className: "ri-close-line" }),
+                    t.i({ className: "ri-close-line", ariaHidden: true }),
                 ),
             ),
         ),

@@ -143,7 +143,7 @@ window.app.components.recordFileThumb = function(propsArg = {}) {
                 return img;
             }
 
-            return t.i({ className: app.utils.fileTypeIcons[data.fileType] || "ri-file-line" });
+            return t.i({ className: app.utils.fileTypeIcons[data.fileType] || "ri-file-line", ariaHidden: true });
         },
     );
 };

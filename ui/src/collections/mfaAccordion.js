@@ -23,7 +23,7 @@ export function mfaAccordion(collection) {
         },
         t.summary(
             null,
-            t.i({ className: "ri-shield-check-line" }),
+            t.i({ className: "ri-shield-check-line", ariaHidden: true }),
             t.span({ className: "txt", textContent: "Multi-factor authentication (MFA)" }),
             t.span({
                 className: () => `label m-l-auto ${data.config.enabled ? "success" : ""}`,

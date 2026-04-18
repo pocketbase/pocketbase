@@ -47,7 +47,7 @@ export function appHeader() {
                             },
                             () => {
                                 if (link.icon) {
-                                    return t.i({ className: link.icon });
+                                    return t.i({ className: link.icon, ariaHidden: true });
                                 }
                             },
                             t.span({ className: "txt" }, () => link.label),
@@ -63,7 +63,7 @@ export function appHeader() {
                     "html-popovertarget": "logged-user-dropdown",
                 },
                 t.span({ className: "superuser-name txt-ellipsis" }, () => app.store.superuser?.email),
-                t.i({ className: "ri-arrow-drop-down-line" }),
+                t.i({ className: "ri-arrow-drop-down-line", ariaHidden: true }),
             ),
             t.div(
                 {

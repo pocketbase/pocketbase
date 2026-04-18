@@ -13,7 +13,7 @@ export function input(props) {
             { className: "field" },
             t.label(
                 { htmlFor: uniqueId },
-                t.i({ className: app.fieldTypes.date.icon }),
+                t.i({ className: app.fieldTypes.date.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => props.field.name),
             ),
             t.input({

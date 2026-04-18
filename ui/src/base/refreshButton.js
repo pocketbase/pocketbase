@@ -37,7 +37,7 @@ window.app.components.refreshButton = function(propsArg = {}) {
             hidden: () => props.hidden,
             inert: () => props.inert,
             type: "button",
-            ariaDescription: app.attrs.tooltip(() => props.tooltip),
+            ariaLabel: app.attrs.tooltip(() => props.tooltip),
             disabled: () => props.disabled,
             className: () => props.className,
             onunmount: () => {
@@ -64,7 +64,7 @@ window.app.components.refreshButton = function(propsArg = {}) {
                 }, 500);
             },
         },
-        t.i({ className: "ri-refresh-line" }),
+        t.i({ className: "ri-refresh-line", ariaHidden: true }),
     );
 
     return btn;

@@ -133,7 +133,7 @@ export function backupsList(propsArg = {}) {
             return data.backups.map((backup) => {
                 return t.div(
                     { className: () => `list-item ${data.isLoading ? "faded" : ""}` },
-                    t.i({ className: "ri-folder-zip-line" }),
+                    t.i({ className: "ri-folder-zip-line", ariaHidden: true }),
                     t.div(
                         { className: "content" },
                         t.span({
@@ -156,7 +156,7 @@ export function backupsList(propsArg = {}) {
                         t.button(
                             {
                                 type: "button",
-                                ariaDescription: app.attrs.tooltip("Download"),
+                                ariaLabel: app.attrs.tooltip("Download"),
                                 className: () =>
                                     `btn sm circle secondary transparent ${
                                         data.isDownloading[backup.key] ? "loading" : ""
@@ -164,22 +164,22 @@ export function backupsList(propsArg = {}) {
                                 disabled: () => data.isDeleting[backup.key] || data.isDownloading[backup.key],
                                 onclick: () => downloadBackup(backup.key),
                             },
-                            t.i({ className: "ri-download-line" }),
+                            t.i({ className: "ri-download-line", ariaHidden: true }),
                         ),
                         t.button(
                             {
                                 type: "button",
-                                ariaDescription: app.attrs.tooltip("Restore"),
+                                ariaLabel: app.attrs.tooltip("Restore"),
                                 className: () => `btn sm circle secondary transparent`,
                                 disabled: () => data.isDeleting[backup.key] || data.isDownloading[backup.key],
                                 onclick: () => openBackupRestoreModal(backup.key),
                             },
-                            t.i({ className: "ri-restart-line" }),
+                            t.i({ className: "ri-restart-line", ariaHidden: true }),
                         ),
                         t.button(
                             {
                                 type: "button",
-                                ariaDescription: app.attrs.tooltip("Delete"),
+                                ariaLabel: app.attrs.tooltip("Delete"),
                                 className: () =>
                                     `btn sm circle secondary transparent ${
                                         data.isDeleting[backup.key] ? "loading" : ""
@@ -187,7 +187,7 @@ export function backupsList(propsArg = {}) {
                                 disabled: () => data.isDeleting[backup.key] || data.isDownloading[backup.key],
                                 onclick: () => confirmBackupDelete(backup.key),
                             },
-                            t.i({ className: "ri-delete-bin-7-line" }),
+                            t.i({ className: "ri-delete-bin-7-line", ariaHidden: true }),
                         ),
                     ),
                 );
@@ -209,7 +209,7 @@ export function backupsList(propsArg = {}) {
                 () => {
                     if (data.canBackup) {
                         return [
-                            t.i({ className: "ri-play-circle-line" }),
+                            t.i({ className: "ri-play-circle-line", ariaHidden: true }),
                             t.span({ className: "txt" }, "Initialize new backup"),
                         ];
                     }

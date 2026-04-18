@@ -52,7 +52,7 @@ export function oauth2Accordion(collection) {
         },
         t.summary(
             null,
-            t.i({ className: "ri-profile-line" }),
+            t.i({ className: "ri-profile-line", ariaHidden: true }),
             t.span({ className: "txt", textContent: "OAuth2" }),
             t.span({
                 className: () => `label m-l-auto ${data.config.enabled ? "success" : ""}`,
@@ -118,7 +118,7 @@ export function oauth2Accordion(collection) {
                                         });
                                     }
 
-                                    return t.i({ className: app.utils.fallbackProviderIcon });
+                                    return t.i({ className: app.utils.fallbackProviderIcon, ariaHidden: true });
                                 },
                             ),
                             t.div(
@@ -133,11 +133,12 @@ export function oauth2Accordion(collection) {
                                 { className: "actions" },
                                 t.button(
                                     {
-                                        "type": "button",
-                                        "className": "btn secondary transparent sm circle",
+                                        type: "button",
+                                        title: "Options",
+                                        className: "btn secondary transparent sm circle",
                                         "html-popovertarget": providerId + "dropdown",
                                     },
-                                    t.i({ className: "ri-more-2-line" }),
+                                    t.i({ className: "ri-more-2-line", ariaHidden: true }),
                                 ),
                                 t.div(
                                     {
@@ -217,7 +218,7 @@ export function oauth2Accordion(collection) {
                             });
                         },
                     },
-                    t.i({ className: "ri-add-line" }),
+                    t.i({ className: "ri-add-line", ariaHidden: true }),
                     t.span({ className: "txt " }, "Add provider"),
                 ),
             ),
@@ -232,6 +233,7 @@ export function oauth2Accordion(collection) {
                     t.span({ className: "txt" }, "Optional users create fields mapping"),
                     t.i({
                         className: () => (data.showMapping ? "ri-arrow-drop-up-line" : "ri-arrow-drop-down-line"),
+                        ariaHidden: true,
                     }),
                 ),
                 app.components.slide(

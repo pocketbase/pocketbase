@@ -198,7 +198,7 @@ window.app.modals.openCollectionChangesConfirmation = async function(
                         { className: "list-item" },
                         "Renamed collection ",
                         t.strong({ className: "label warning" }, oldCollection?.name),
-                        t.i({ className: "ri-arrow-right-line txt-sm" }),
+                        t.i({ className: "ri-arrow-right-line txt-sm", ariaHidden: true }),
                         t.strong({ className: "label success" }, newCollection?.name || "N/A"),
                     ),
                 );
@@ -218,7 +218,7 @@ window.app.modals.openCollectionChangesConfirmation = async function(
                                 { className: "list-item" },
                                 "Renamed field ",
                                 t.strong({ className: "label warning" }, oldField?.name),
-                                t.i({ className: "ri-arrow-right-line txt-sm" }),
+                                t.i({ className: "ri-arrow-right-line txt-sm", ariaHidden: true }),
                                 t.strong({ className: "label success" }, newField.name || "N/A"),
                             );
                         });
@@ -316,7 +316,7 @@ window.app.modals.openCollectionChangesConfirmation = async function(
                                 oidc.name,
                                 " host ",
                                 t.strong({ className: "label warning" }, oidc.oldHost),
-                                t.i({ className: "ri-arrow-right-line txt-sm" }),
+                                t.i({ className: "ri-arrow-right-line txt-sm", ariaHidden: true }),
                                 t.strong({ className: "label success" }, oidc.newHost),
                                 t.br(),
                                 t.span(

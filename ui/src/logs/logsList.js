@@ -237,7 +237,7 @@ export function logsList(logsSettings) {
                         { className: "col-field-name-level" },
                         t.div(
                             { className: "inline-flex gap-5" },
-                            t.i({ className: "ri-bookmark-line" }),
+                            t.i({ className: "ri-bookmark-line", ariaHidden: true }),
                             t.span({ textContent: "Level" }),
                         ),
                     ),
@@ -245,7 +245,7 @@ export function logsList(logsSettings) {
                         { className: "col-field-name-message" },
                         t.div(
                             { className: "inline-flex gap-5" },
-                            t.i({ className: "ri-file-list-2-line" }),
+                            t.i({ className: "ri-file-list-2-line", ariaHidden: true }),
                             t.span({ textContent: "Message" }),
                         ),
                     ),
@@ -253,7 +253,7 @@ export function logsList(logsSettings) {
                         { className: "col-field-type-date col-field-name-created" },
                         t.div(
                             { className: "inline-flex gap-5" },
-                            t.i({ className: "ri-calendar-line" }),
+                            t.i({ className: "ri-calendar-line", ariaHidden: true }),
                             t.span({ textContent: "Created" }),
                         ),
                     ),
@@ -406,7 +406,7 @@ export function logsList(logsSettings) {
                                     ),
                                     t.td(
                                         { className: "col-meta" },
-                                        t.i({ className: "ri-arrow-right-line" }),
+                                        t.i({ className: "ri-arrow-right-line", ariaHidden: true }),
                                     ),
                                 ];
                             },
@@ -459,7 +459,7 @@ export function logsList(logsSettings) {
                         className: "btn sm pill",
                         onclick: () => downloadSelected(),
                     },
-                    t.i({ className: "ri-download-line" }),
+                    t.i({ className: "ri-download-line", ariaHidden: true }),
                     t.span({ className: "txt" }, "JSON"),
                 ),
             ),

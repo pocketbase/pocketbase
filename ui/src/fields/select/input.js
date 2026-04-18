@@ -13,7 +13,7 @@ export function input(data) {
             { className: "field" },
             t.label(
                 { htmlFor: uniqueId },
-                t.i({ className: app.fieldTypes.select.icon }),
+                t.i({ className: app.fieldTypes.select.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => data.field.name),
             ),
             app.components.select({

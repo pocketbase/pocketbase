@@ -144,10 +144,11 @@ function recordPreviewModal(rawRecord, modalSettings) {
             ),
             t.button(
                 {
-                    "className": "btn sm circle transparent m-l-auto",
+                    title: "More options",
+                    className: "btn sm circle transparent m-l-auto",
                     "html-popovertarget": uniqueId + "preview-dropdown",
                 },
-                t.i({ className: "ri-more-line" }),
+                t.i({ className: "ri-more-line", ariaHidden: true }),
             ),
             t.div({ id: uniqueId + "preview-dropdown", className: "dropdown", popover: "auto" }, (el) => {
                 return t.button(
@@ -158,7 +159,7 @@ function recordPreviewModal(rawRecord, modalSettings) {
                             el.hidePopover();
                         },
                     },
-                    t.i({ className: "ri-braces-line" }),
+                    t.i({ className: "ri-braces-line", ariaHidden: true }),
                     t.span({ className: "txt" }, "Copy JSON"),
                 );
             }),
@@ -236,7 +237,7 @@ function recordPreviewModal(rawRecord, modalSettings) {
                     className: "btn",
                     onclick: () => downloadJSON(data.record),
                 },
-                t.i({ className: "ri-download-line" }),
+                t.i({ className: "ri-download-line", ariaHidden: true }),
                 t.span({ className: "txt" }, "Download JSON"),
             ),
         ),

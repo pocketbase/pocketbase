@@ -116,6 +116,7 @@ window.app.components.searchHistoryButton = function(propsArg = {}) {
                         {
                             role: "button",
                             className: "remove-btn link-hint m-l-auto p-l-5 p-r-5",
+                            title: "Clear",
                             onauxclick: (e) => {
                                 e.stopPropagation();
                                 return false;
@@ -126,7 +127,7 @@ window.app.components.searchHistoryButton = function(propsArg = {}) {
                                 return false;
                             },
                         },
-                        t.i({ className: "ri-close-line" }),
+                        t.i({ className: "ri-close-line", ariaHidden: true }),
                     ),
                 );
             });
@@ -140,14 +141,15 @@ window.app.components.searchHistoryButton = function(propsArg = {}) {
             hidden: () => props.hidden,
             inert: () => props.inert,
             type: "button",
+            title: "Search history",
             className: () => props.btnClassName,
             "html-popovertarget": uniqueId,
             onunmount: () => {
                 watchers?.forEach((w) => w?.unwatch());
             },
         },
-        t.i({ className: "ri-search-line" }),
-        t.i({ className: "ri-arrow-drop-down-line" }),
+        t.i({ className: "ri-search-line", ariaHidden: true }),
+        t.i({ className: "ri-arrow-drop-down-line", ariaHidden: true }),
         dropdown,
     );
 };

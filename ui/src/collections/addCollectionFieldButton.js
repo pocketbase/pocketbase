@@ -58,7 +58,7 @@ window.app.components.addCollectionFieldButton = function(collection) {
                 className: "btn block outline",
                 "html-popovertarget": uniqueId + "_dropdown",
             },
-            t.i({ className: "ri-add-line" }),
+            t.i({ className: "ri-add-line", ariaHidden: true }),
             t.span({ className: "txt" }, "New field"),
         ),
         t.div(
@@ -91,7 +91,7 @@ window.app.components.addCollectionFieldButton = function(collection) {
                                     addNewField(type);
                                 },
                             },
-                            t.i({ className: def.icon || app.utils.fallbackFieldIcon }),
+                            t.i({ className: def.icon || app.utils.fallbackFieldIcon, ariaHidden: true }),
                             t.span({ className: "txt" }, def.label || type),
                         ),
                     );

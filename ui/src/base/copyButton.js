@@ -53,6 +53,7 @@ window.app.components.copyButton = function(textOrFunc, ...children) {
         },
         t.i({
             hidden: children?.length,
+            ariaHidden: true,
             className: () => `copy-icon ${data.active ? "ri-check-double-line" : "ri-file-copy-line"}`,
         }),
         ...children,

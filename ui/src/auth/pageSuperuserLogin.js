@@ -187,13 +187,12 @@ function authWithPasswordForm(data) {
                             type: "button",
                             tabIndex: -1,
                             className: "btn sm transparent secondary circle tooltip-right",
-                            ariaDescription: app.attrs.tooltip(() =>
-                                data.showPassword ? "Hide password" : "Show password"
-                            ),
+                            ariaLabel: app.attrs.tooltip(() => data.showPassword ? "Hide password" : "Show password"),
                             onclick: () => (data.showPassword = !data.showPassword),
                         },
                         t.i({
                             className: () => (data.showPassword ? "ri-eye-off-line" : "ri-eye-line"),
+                            ariaHidden: true,
                         }),
                     ),
                 ),
@@ -215,7 +214,7 @@ function authWithPasswordForm(data) {
                     disabled: () => data.isPasswordAuthSubmitting,
                 },
                 t.span({ className: "txt" }, () => (data.totalSteps > 1 ? "Next" : "Login")),
-                t.i({ className: "ri-arrow-right-line" }),
+                t.i({ className: "ri-arrow-right-line", ariaHidden: true }),
             ),
         ),
     );
@@ -282,7 +281,7 @@ function requestOTPForm(data) {
                     className: () => `btn lg block ${data.isOTPRequestSubmitting ? "loading" : ""}`,
                     disabled: () => data.isOTPRequestSubmitting,
                 },
-                t.i({ className: "ri-mail-send-line" }),
+                t.i({ className: "ri-mail-send-line", ariaHidden: true }),
                 t.span({ className: "txt" }, "Send OTP"),
             ),
         ),
@@ -378,9 +377,7 @@ function authWithOTPForm(data) {
                             type: "button",
                             tabIndex: -1,
                             className: "btn sm transparent secondary circle tooltip-right",
-                            ariaDescription: app.attrs.tooltip(() =>
-                                data.showPassword ? "Hide password" : "Show password"
-                            ),
+                            ariaLabel: app.attrs.tooltip(() => data.showPassword ? "Hide password" : "Show password"),
                             onclick: () => (data.showPassword = !data.showPassword),
                         },
                         t.i({
@@ -398,7 +395,7 @@ function authWithOTPForm(data) {
                     disabled: () => data.isOTPAuthSubmitting,
                 },
                 t.span({ className: "txt" }, "Login"),
-                t.i({ className: "ri-arrow-right-line" }),
+                t.i({ className: "ri-arrow-right-line", ariaHidden: true }),
             ),
             t.div(
                 { className: "block m-t-sm txt-center" },

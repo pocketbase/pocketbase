@@ -74,7 +74,7 @@ export function backupUploadButton(onSuccess = null) {
         t.button(
             {
                 type: "button",
-                ariaDescription: app.attrs.tooltip("Upload backup"),
+                ariaLabel: app.attrs.tooltip("Upload backup"),
                 className: () => `btn sm transparent secondary circle ${data.isUploading ? "loading" : ""}`,
                 disabled: () => data.isUploading,
                 onclick: () => fileInput?.click(),
@@ -82,7 +82,7 @@ export function backupUploadButton(onSuccess = null) {
                     app.pb.cancelRequest(uniqueId);
                 },
             },
-            t.i({ className: "ri-upload-cloud-line" }),
+            t.i({ className: "ri-upload-cloud-line", ariaHidden: true }),
         ),
         fileInput,
     );

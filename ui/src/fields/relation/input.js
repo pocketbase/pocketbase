@@ -107,7 +107,7 @@ export function input(props) {
             { className: () => `field ${props.field.required ? "required" : ""}` },
             t.label(
                 { htmlFor: uniqueId },
-                t.i({ className: app.fieldTypes.relation.icon }),
+                t.i({ className: app.fieldTypes.relation.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => props.field.name),
             ),
             t.output(
@@ -150,10 +150,10 @@ export function input(props) {
                                 t.button(
                                     {
                                         className: "btn sm secondary transparent circle",
-                                        ariaDescription: app.attrs.tooltip("Remove"),
+                                        ariaLabel: app.attrs.tooltip("Remove"),
                                         onclick: () => remove(record.id),
                                     },
-                                    t.i({ className: "ri-close-line" }),
+                                    t.i({ className: "ri-close-line", ariaHidden: true }),
                                 ),
                             ),
                         );
@@ -181,7 +181,7 @@ export function input(props) {
                             });
                         },
                     },
-                    t.i({ className: "ri-magic-line" }),
+                    t.i({ className: "ri-magic-line", ariaHidden: true }),
                     t.span({ className: "txt" }, "Open records picker"),
                 ),
             ),

@@ -119,10 +119,11 @@ function logPreviewModal(logIdOrModel, settings) {
             t.h5(null, "Log details"),
             t.button(
                 {
-                    "className": "btn sm circle transparent m-l-auto",
+                    className: "btn sm circle transparent m-l-auto",
+                    title: "More options",
                     "html-popovertarget": "log-meta-dropdown",
                 },
-                t.i({ className: "ri-more-line" }),
+                t.i({ className: "ri-more-line", ariaHidden: true }),
             ),
             t.div({ id: "log-meta-dropdown", className: "dropdown", popover: "auto" }, (el) => {
                 return t.button(
@@ -133,7 +134,7 @@ function logPreviewModal(logIdOrModel, settings) {
                             el.hidePopover();
                         },
                     },
-                    t.i({ className: "ri-braces-line" }),
+                    t.i({ className: "ri-braces-line", ariaHidden: true }),
                     t.span({ className: "txt" }, "Copy JSON"),
                 );
             }),
@@ -266,7 +267,7 @@ function logPreviewModal(logIdOrModel, settings) {
                     className: "btn",
                     onclick: () => downloadJSON(data.log),
                 },
-                t.i({ className: "ri-download-line" }),
+                t.i({ className: "ri-download-line", ariaHidden: true }),
                 t.span({ className: "txt" }, "Download JSON"),
             ),
         ),

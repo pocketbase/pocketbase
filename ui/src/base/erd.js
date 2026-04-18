@@ -335,6 +335,7 @@ window.app.components.erd = function(propsArg = {}) {
                                             "html-data-field-name": () => field.name,
                                         },
                                         t.i({
+                                            ariaHidden: true,
                                             title: () => field.type,
                                             className: () =>
                                                 `field-icon ${

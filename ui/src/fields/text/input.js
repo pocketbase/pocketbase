@@ -28,6 +28,7 @@ export function input(props) {
                 t.label(
                     { htmlFor: uniqueId },
                     t.i({
+                        ariaHidden: true,
                         className: () => (props.field.primaryKey ? "ri-key-line" : app.fieldTypes.text.icon),
                     }),
                     t.span({ className: "txt" }, () => props.field.name),

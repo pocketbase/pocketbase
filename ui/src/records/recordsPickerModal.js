@@ -297,12 +297,12 @@ function recordsPickerModal(settings = defaultSettings) {
                 {
                     type: "button",
                     className: "btn circle transparent",
-                    ariaDescription: app.attrs.tooltip("Add new record"),
+                    ariaLabel: app.attrs.tooltip("Add new record"),
                     onclick: () => {
                         app.modals.openRecordUpsert(data.collection);
                     },
                 },
-                t.i({ className: "ri-add-line txt-hint" }),
+                t.i({ className: "ri-add-line txt-hint", ariaHidden: true }),
             ),
         ),
         t.div(
@@ -329,6 +329,7 @@ function recordsPickerModal(settings = defaultSettings) {
                                 t.span(
                                     { className: "state-icon" },
                                     t.i({
+                                        ariaHidden: true,
                                         className: () =>
                                             isSelected(record)
                                                 ? "ri-checkbox-circle-fill txt-success"
@@ -342,13 +343,13 @@ function recordsPickerModal(settings = defaultSettings) {
                                 t.button(
                                     {
                                         className: "btn sm secondary transparent circle",
-                                        ariaDescription: app.attrs.tooltip("Edit"),
+                                        ariaLabel: app.attrs.tooltip("Edit"),
                                         onclick: (e) => {
                                             e.stopPropagation();
                                             app.modals.openRecordUpsert(data.collection, record);
                                         },
                                     },
-                                    t.i({ className: "ri-pencil-line" }),
+                                    t.i({ className: "ri-pencil-line", ariaHidden: true }),
                                 ),
                             ),
                         );

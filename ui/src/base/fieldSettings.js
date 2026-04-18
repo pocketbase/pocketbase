@@ -243,7 +243,7 @@ window.app.components.fieldSettings = function(data, settingsArg = {}) {
                         }
                     },
                 },
-                t.i({ className: "ri-settings-3-line" }),
+                t.i({ className: "ri-settings-3-line", ariaHidden: true }),
             ),
             t.button(
                 {
@@ -251,9 +251,9 @@ window.app.components.fieldSettings = function(data, settingsArg = {}) {
                     className: "btn sm circle transparent warning",
                     hidden: () => !data.field[toDeleteProp],
                     onclick: () => delete data.field[toDeleteProp],
-                    ariaDescription: app.attrs.tooltip("Restore"),
+                    ariaLabel: app.attrs.tooltip("Restore"),
                 },
-                t.i({ className: "ri-restart-line" }),
+                t.i({ className: "ri-restart-line", ariaHidden: true }),
             ),
         ),
         (el) => {
@@ -334,6 +334,7 @@ window.app.components.fieldSettings = function(data, settingsArg = {}) {
                 {
                     hidden: () => !settings.showDuplicate && (!settings.showRemove || data.field.system),
                     type: "button",
+                    title: "More options",
                     className: "btn sm circle transparent secondary more-btn m-l-auto",
                     "html-popovertarget": uniqueId + "_options_dropdown",
                 },

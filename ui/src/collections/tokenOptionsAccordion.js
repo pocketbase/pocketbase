@@ -29,7 +29,7 @@ export function tokenOptionsAccordion(collection) {
         },
         t.summary(
             null,
-            t.i({ className: "ri-key-2-line" }),
+            t.i({ className: "ri-key-2-line", ariaHidden: true }),
             t.span({ className: "txt", textContent: "Token options (invalidate, duration)" }),
         ),
         t.div({ className: "grid sm" }, () => {

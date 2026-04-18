@@ -144,7 +144,7 @@ function providerPickerModal(settings = {}) {
                                             });
                                         }
 
-                                        return t.i({ className: app.utils.fallbackProviderIcon });
+                                        return t.i({ className: app.utils.fallbackProviderIcon, ariaHidden: true });
                                     },
                                 ),
                                 t.div(

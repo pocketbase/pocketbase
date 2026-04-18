@@ -52,7 +52,7 @@ export function trustedProxyAccordion(pageData) {
         },
         t.summary(
             null,
-            t.i({ className: "ri-route-line" }),
+            t.i({ className: "ri-route-line", ariaHidden: true }),
             t.span({ className: "txt" }, "User IP proxy headers"),
             () => {
                 if (proxyInfo.isLoading) {

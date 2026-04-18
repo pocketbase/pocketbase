@@ -180,13 +180,14 @@ export function pageInstaller(route) {
                                 type: "button",
                                 tabIndex: -1,
                                 className: "btn sm transparent secondary circle tooltip-right",
-                                ariaDescription: app.attrs.tooltip(() =>
+                                ariaLabel: app.attrs.tooltip(() =>
                                     data.showPassword ? "Hide password" : "Show password"
                                 ),
                                 onclick: () => (data.showPassword = !data.showPassword),
                             },
                             t.i({
                                 className: () => (data.showPassword ? "ri-eye-off-line" : "ri-eye-line"),
+                                ariaHidden: true,
                             }),
                         ),
                     ),
@@ -217,13 +218,14 @@ export function pageInstaller(route) {
                                 type: "button",
                                 tabIndex: -1,
                                 className: "btn sm transparent secondary circle tooltip-right",
-                                ariaDescription: app.attrs.tooltip(() =>
+                                ariaLabel: app.attrs.tooltip(() =>
                                     data.showPasswordConfirm ? "Hide password" : "Show password"
                                 ),
                                 onclick: () => (data.showPasswordConfirm = !data.showPasswordConfirm),
                             },
                             t.i({
                                 className: () => (data.showPasswordConfirm ? "ri-eye-off-line" : "ri-eye-line"),
+                                ariaHidden: true,
                             }),
                         ),
                     ),
@@ -237,7 +239,7 @@ export function pageInstaller(route) {
                         disabled: () => data.isBusy,
                     },
                     t.span({ className: "txt" }, "Create superuser and login"),
-                    t.i({ className: "ri-arrow-right-line" }),
+                    t.i({ className: "ri-arrow-right-line", ariaHidden: true }),
                 ),
             ),
         ),
@@ -250,7 +252,7 @@ export function pageInstaller(route) {
                         data.isUploading ? "loading" : ""
                     }`,
             },
-            t.i({ className: "ri-upload-cloud-line" }),
+            t.i({ className: "ri-upload-cloud-line", ariaHidden: true }),
             t.span({ className: "txt" }, "Or initialize from backup"),
         ),
         t.input({

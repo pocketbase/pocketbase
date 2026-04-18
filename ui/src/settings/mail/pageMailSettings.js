@@ -370,7 +370,7 @@ export function pageMailSettings(route) {
                                             className: () => `btn expanded outline`,
                                             onclick: () => app.modals.openMailTest(),
                                         },
-                                        t.i({ className: "ri-mail-check-line" }),
+                                        t.i({ className: "ri-mail-check-line", ariaHidden: true }),
                                         t.span({ className: "txt" }, "Send test email"),
                                     );
                                 },

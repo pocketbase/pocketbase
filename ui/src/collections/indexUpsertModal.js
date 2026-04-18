@@ -247,7 +247,7 @@ function indexUpsertModal(collection, index = "", settings = {}) {
                     hidden: () => data.isNew,
                     type: "button",
                     className: () => "btn sm circle transparent secondary",
-                    ariaDescription: app.attrs.tooltip("Delete index", "left"),
+                    ariaLabel: app.attrs.tooltip("Delete index", "left"),
                     onclick: () => {
                         app.modals.confirm(
                             "Do you really want to remove the selected index from the collection?",
@@ -255,7 +255,7 @@ function indexUpsertModal(collection, index = "", settings = {}) {
                         );
                     },
                 },
-                t.i({ className: "ri-delete-bin-7-line" }),
+                t.i({ className: "ri-delete-bin-7-line", ariaHidden: true }),
             ),
             t.button(
                 {

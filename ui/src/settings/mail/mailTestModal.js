@@ -195,7 +195,7 @@ function mailTestModal(preselectedCollectionIdOrName = "", template = "") {
                     className: () => `btn expanded ${data.isSending ? "loading" : ""}`,
                     disabled: () => data.isSending || !data.canSubmit,
                 },
-                t.i({ className: "ri-mail-send-line" }),
+                t.i({ className: "ri-mail-send-line", ariaHidden: true }),
                 t.span({ className: "txt" }, "Send"),
             ),
         ),

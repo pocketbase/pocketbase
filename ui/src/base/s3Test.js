@@ -111,13 +111,13 @@ window.app.components.s3Test = function(propsArg = {}) {
 
             if (data.hasError) {
                 return [
-                    t.i({ className: "ri-error-warning-line txt-warning" }),
+                    t.i({ className: "ri-error-warning-line txt-warning", ariaHidden: true }),
                     t.span({ className: "txt" }, "Failed to establish S3 connection"),
                 ];
             }
 
             return [
-                t.i({ className: "ri-checkbox-circle-line txt-success" }),
+                t.i({ className: "ri-checkbox-circle-line txt-success", ariaHidden: true }),
                 t.span({ className: "txt" }, "S3 connected successfully"),
             ];
         },

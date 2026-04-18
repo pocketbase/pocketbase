@@ -191,7 +191,7 @@ export function collectionsSidebar() {
                                 });
                             },
                         },
-                        t.i({ className: "ri-add-line" }),
+                        t.i({ className: "ri-add-line", ariaHidden: true }),
                         t.span({ textContent: "New collection" }),
                     ),
                 ),
@@ -210,7 +210,10 @@ function collectionItem(collection, data) {
             title: () => collection.name,
             onclick: () => app.store.activeCollection = collection.name,
         },
-        t.i({ className: () => app.collectionTypes[collection.type]?.icon || app.utils.fallbackCollectionIcon }),
+        t.i({
+            className: () => app.collectionTypes[collection.type]?.icon || app.utils.fallbackCollectionIcon,
+            ariaHidden: true,
+        }),
         t.span({ className: "txt" }, () => collection.name),
         () => {
             if (

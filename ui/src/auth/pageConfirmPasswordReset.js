@@ -103,13 +103,14 @@ export function pageConfirmPasswordReset(route) {
                                     type: "button",
                                     tabIndex: -1,
                                     className: "btn sm transparent secondary circle tooltip-right",
-                                    ariaDescription: app.attrs.tooltip(() =>
+                                    ariaLabel: app.attrs.tooltip(() =>
                                         data.showNewPassword ? "Hide password" : "Show password"
                                     ),
                                     onclick: () => (data.showNewPassword = !data.showNewPassword),
                                 },
                                 t.i({
                                     className: () => (data.showNewPassword ? "ri-eye-off-line" : "ri-eye-line"),
+                                    ariaHidden: true,
                                 }),
                             ),
                         ),
@@ -139,13 +140,14 @@ export function pageConfirmPasswordReset(route) {
                                     type: "button",
                                     tabIndex: -1,
                                     className: "btn sm transparent secondary circle tooltip-right",
-                                    ariaDescription: app.attrs.tooltip(() =>
+                                    ariaLabel: app.attrs.tooltip(() =>
                                         data.showNewPasswordConfirm ? "Hide password" : "Show password"
                                     ),
                                     onclick: () => (data.showNewPasswordConfirm = !data.showNewPasswordConfirm),
                                 },
                                 t.i({
                                     className: () => (data.showNewPasswordConfirm ? "ri-eye-off-line" : "ri-eye-line"),
+                                    ariaHidden: true,
                                 }),
                             ),
                         ),

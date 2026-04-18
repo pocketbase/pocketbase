@@ -71,7 +71,7 @@ export function input(props) {
             },
             t.label(
                 { htmlFor: uniqueId },
-                t.i({ className: app.fieldTypes.json.icon }),
+                t.i({ className: app.fieldTypes.json.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => props.field.name),
                 t.span(
                     {
@@ -79,7 +79,7 @@ export function input(props) {
                         className: "json-state",
                         ariaDescription: app.attrs.tooltip("Invalid JSON", "left"),
                     },
-                    t.i({ className: "ri-error-warning-fill txt-danger" }),
+                    t.i({ className: "ri-error-warning-fill txt-danger", ariaHidden: true }),
                 ),
                 t.span(
                     {
@@ -87,7 +87,7 @@ export function input(props) {
                         className: "json-state",
                         ariaDescription: app.attrs.tooltip("Valid JSON", "left"),
                     },
-                    t.i({ className: "ri-checkbox-circle-fill txt-success" }),
+                    t.i({ className: "ri-checkbox-circle-fill txt-success", ariaHidden: true }),
                 ),
             ),
             app.components.codeEditor({

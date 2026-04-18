@@ -179,7 +179,7 @@ export function pageExportCollections(route) {
                         { className: "col-lg-12 txt-right" },
                         t.button(
                             { className: "btn", onclick: download },
-                            t.i({ className: "ri-download-line" }),
+                            t.i({ className: "ri-download-line", ariaHidden: true }),
                             t.span({ className: "txt" }, "Download as JSON"),
                         ),
                     ),

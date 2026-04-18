@@ -23,7 +23,7 @@ export function otpAccordion(collection) {
         },
         t.summary(
             null,
-            t.i({ className: "ri-time-line" }),
+            t.i({ className: "ri-time-line", ariaHidden: true }),
             t.span({ className: "txt", textContent: "One-time password (OTP)" }),
             t.span({
                 className: () => `label m-l-auto ${data.config.enabled ? "success" : ""}`,
