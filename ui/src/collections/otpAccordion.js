@@ -13,6 +13,9 @@ export function otpAccordion(collection) {
 
             return collection.otp;
         },
+        get isSuperusers() {
+            return collection.system && collection.name == "_superusers";
+        },
     });
 
     return t.details(
@@ -52,12 +55,28 @@ export function otpAccordion(collection) {
                         name: "otp.enabled",
                         className: "switch",
                         checked: () => data.config.enabled,
-                        onchange: (e) => (data.config.enabled = e.target.checked),
+                        onchange: (e) => {
+                            data.config.enabled = e.target.checked;
+
+                            if (data.isSuperusers) {
+                                collection.mfa.enabled = e.target.checked;
+                            }
+                        },
                     }),
                     t.label({
                         htmlFor: uniqueId + ".enabled",
                         textContent: "Enable",
                     }),
+                    () => {
+                        if (!data.isSuperusers) {
+                            return
+                        }
+
+                        return t.i({
+                            className: "ri-information-line link-hint",
+                            ariaDescription: app.attrs.tooltip("Superusers can have OTP only as part of Two-factor authentication."),
+                        })
+                    },
                 ),
             ),
             t.div(
