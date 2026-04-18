@@ -13,6 +13,9 @@ export function mfaAccordion(collection) {
 
             return collection.mfa;
         },
+        get isSuperusers() {
+            return collection.system && collection.name == "_superusers";
+        },
     });
 
     return t.details(
@@ -72,7 +75,13 @@ export function mfaAccordion(collection) {
                         name: "mfa.enabled",
                         className: "switch",
                         checked: () => data.config.enabled,
-                        onchange: (e) => (data.config.enabled = e.target.checked),
+                        onchange: (e) => {
+                            data.config.enabled = e.target.checked;
+
+                            if (data.isSuperusers) {
+                                collection.otp.enabled = e.target.checked;
+                            }
+                        },
                     }),
                     t.label({
                         htmlFor: uniqueId + ".enabled",
