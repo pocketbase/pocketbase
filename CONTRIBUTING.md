@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > Due to recent LLM spam, PRs are temporary disabled and only existing collaborators can open a PR.
-> If you stumble on an problem that you want to fix, please consider instead opening an issue or discussion with link to your fork _(if not obvious - LLM contributions are not welcome)_.
+> If you stumble on a problem that you want to fix, please consider instead opening an issue or discussion with link to your fork _(if not obvious - LLM contributions are not welcome)_.
 > This status may change in the future in case GitHub finally decide to do something about the constant spam, or when I find time to move the project somewhere else.
 
 This document describes how to prepare a PR for a change in the main repository.
