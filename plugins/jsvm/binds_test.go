@@ -1391,18 +1391,18 @@ func TestLoadingArrayOf(t *testing.T) {
 	}
 }
 
-func TestBindHttpClientCount(t *testing.T) {
+func TestBindHTTPCount(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
 	vm := goja.New()
-	BindHttpClient(vm)
+	BindHTTP(vm)
 
 	testBindsCount(vm, "this", 2, t) // + FormData
 	testBindsCount(vm, "$http", 1, t)
 }
 
-func TestBindHttpClientSend(t *testing.T) {
+func TestBindHTTPSend(t *testing.T) {
 	t.Parallel()
 
 	// start a test server
@@ -1448,7 +1448,7 @@ func TestBindHttpClientSend(t *testing.T) {
 
 	vm := goja.New()
 	BindCore(vm)
-	BindHttpClient(vm)
+	BindHTTP(vm)
 	vm.Set("testURL", server.URL)
 
 	_, err := vm.RunString(`
@@ -1862,9 +1862,9 @@ func TestBindFilepathCount(t *testing.T) {
 	testBindsCount(vm, "$filepath", 15, t)
 }
 
-func TestBindOsCount(t *testing.T) {
+func TestBindOSCount(t *testing.T) {
 	vm := goja.New()
-	BindOs(vm)
+	BindOS(vm)
 
 	testBindsCount(vm, "$os", 20, t)
 }

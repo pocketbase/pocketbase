@@ -774,7 +774,7 @@ func BindFilesystem(vm *goja.Runtime) {
 	})
 }
 
-// BindFilesystem registers $filepath.* namespaced object with
+// BindFilepath registers $filepath.* namespaced object with
 // common std Go filepath package related exports.
 //
 // See https://pocketbase.io/jsvm/modules/_filepath.html.
@@ -799,11 +799,11 @@ func BindFilepath(vm *goja.Runtime) {
 	obj.Set("walkDir", filepath.WalkDir)
 }
 
-// BindFilesystem registers $os.* namespaced object with
+// BindOS registers $os.* namespaced object with
 // common std Go os package related exports.
 //
 // See https://pocketbase.io/jsvm/modules/_os.html.
-func BindOs(vm *goja.Runtime) {
+func BindOS(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$os", obj)
 
@@ -881,11 +881,11 @@ func BindApis(vm *goja.Runtime) {
 	registerFactoryAsConstructor(vm, "InternalServerError", router.NewInternalServerError)
 }
 
-// BindHttpClient registers $http.* namespaced object with common utils
+// BindHTTP registers $http.* namespaced object with common utils
 // for sending HTTP requests.
 //
 // See https://pocketbase.io/jsvm/modules/_http.html.
-func BindHttpClient(vm *goja.Runtime) {
+func BindHTTP(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$http", obj)
 
