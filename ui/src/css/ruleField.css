@@ -6,10 +6,6 @@
         .highlight-overlay {
             color: var(--surfaceTxtColor);
         }
-        .editor-content,
-        .highlight-overlay {
-            white-space: pre-line;
-        }
         .editor-content:empty::before {
             font-family: var(--baseFontFamily);
         }
