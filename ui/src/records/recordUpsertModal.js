@@ -436,7 +436,7 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                             { className: "col-12" },
                             app.fieldTypes[pkField.type].input({
                                 get collection() {
-                                    return data.collection;
+                                    return collection;
                                 },
                                 get originalRecord() {
                                     return data.originalRecord;
@@ -495,7 +495,7 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                                     () => {
                                         return app.fieldTypes[field.type].input({
                                             get collection() {
-                                                return data.collection;
+                                                return collection;
                                             },
                                             get originalRecord() {
                                                 return data.originalRecord;
