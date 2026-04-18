@@ -1,0 +1,136 @@
+.list {
+    --borderColor: var(--surfaceAlt3Color);
+
+    position: relative;
+    display: block;
+    width: 100%;
+    overflow: auto;
+    color: var(--surfaceTxtColor);
+    background: var(--surfaceColor);
+    border: 1px solid var(--borderColor);
+    border-radius: var(--borderRadius);
+    scrollbar-width: thin;
+
+    &:empty {
+        display: none;
+    }
+
+    .list-item {
+        word-break: break-word;
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        gap: 10px;
+        outline: 0;
+        padding: 10px var(--inputPadding);
+        min-height: 54px;
+        box-shadow: 0px -1px 0 0 var(--borderColor);
+        transition: background var(--animationSpeed);
+        .content {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+            max-width: 100%;
+            user-select: text;
+            line-height: 1.5;
+        }
+        .actions {
+            gap: 10px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            margin: -1px -5px -1px 0;
+            &.autohide {
+                opacity: 0;
+                transform: translateX(5px);
+                transition:
+                    transform var(--animationSpeed),
+                    opacity var(--animationSpeed),
+                    visibility var(--animationSpeed);
+
+                /* not mouse-pointer interfaces */
+                @media only screen and (hover: none) {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+        }
+
+        > .btn.block {
+            width: 100%;
+            border-radius: 0;
+            &.sm {
+                border-radius: var(--borderRadius);
+            }
+        }
+        &:has(> .btn.block) {
+            padding: 0;
+            min-height: 0;
+        }
+        &:has(> .btn.sm.block) {
+            padding: 5px;
+        }
+
+        &:hover,
+        &:focus-visible,
+        &:focus-within,
+        &:active {
+            .actions.autohide {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        &[data-dragstart="true"],
+        &.active {
+            background: var(--surfaceAlt1Color);
+        }
+
+        &[data-dragstart="true"] {
+            .actions.autohide {
+                opacity: 0;
+            }
+        }
+
+        &:not(.disabled).highlight,
+        &:not(.disabled).handle {
+            &:hover,
+            &:focus-visible {
+                background: var(--surfaceAlt1Color);
+            }
+            &:active {
+                background: var(--surfaceAlt2Color);
+                transition-duration: var(--activeAnimationSpeed);
+            }
+        }
+        &.handle {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        &.deleted {
+            cursor: default;
+            .content {
+                opacity: 0.6;
+                .txt {
+                    text-decoration: line-through;
+                }
+            }
+        }
+
+        &.disabled:not(.active) {
+            cursor: default;
+            opacity: 0.6;
+        }
+    }
+
+    &.sm {
+        .list-item {
+            min-height: var(--btnHeight);
+            padding: 5px 10px;
+        }
+    }
+}

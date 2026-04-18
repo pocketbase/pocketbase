@@ -1,3 +1,8 @@
+## v0.37.0 (WIP)
+
+- @todo
+
+
 ## v0.36.9
 
 - Updated the Discord `AuthUser.Name` field to use `global_name` ([#7603](https://github.com/pocketbase/pocketbase/pull/7603); thanks @HansHans135).

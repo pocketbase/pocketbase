@@ -1,0 +1,114 @@
+@keyframes toastEntrance {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+}
+
+@keyframes toastContentEntrance {
+    0% {
+        overflow: hidden;
+    }
+}
+
+.toast {
+    --toastWidth: 420px;
+    --toastSurfaceColor: var(--surfaceInfoColor);
+    --toastSurfaceTxtColor: var(--surfaceTxtColor);
+    --toastAccentColor: var(--infoColor);
+
+    position: sticky;
+    top: 0;
+    display: grid;
+    grid-template-rows: 1fr;
+    width: var(--toastWidth);
+    max-width: 95%;
+    margin: 0 0 var(--smSpacing);
+    animation: toastEntrance var(--animationSpeed);
+    .toast-container {
+        display: flex;
+        width: 100%;
+        align-items: stretch;
+        border-radius: var(--borderRadius);
+        line-height: var(--lineHeight);
+        color: var(--toastSurfaceTxtColor);
+        background: var(--toastSurfaceColor);
+        box-shadow: var(--boxShadow);
+        animation: toastContentEntrance var(--animationSpeed);
+    }
+    .toast-content {
+        display: flex;
+        width: 100%;
+        gap: 10px;
+        align-items: center;
+        text-align: left;
+        word-break: break-word;
+        min-height: var(--lgBtnHeight);
+        padding: max(5px, calc(var(--inputPadding) - 5px)) var(--inputPadding);
+    }
+    .toast-icon {
+        align-content: center;
+        font-size: 1.2em;
+        min-height: 0;
+        padding: 5px 10px;
+        margin-left: -1px;
+        color: var(--toastAccentColor);
+        border-top-left-radius: var(--borderRadius);
+        border-bottom-left-radius: var(--borderRadius);
+        border-right: 1px solid color-mix(in srgb, var(--toastAccentColor), transparent 90%);
+        &::before {
+            content: "\F414";
+            font-family: var(--iconFontFamily);
+        }
+    }
+    .toast-remove {
+        margin: -5px -10px -5px 0;
+    }
+
+    /* variants */
+    &.success {
+        --toastSurfaceColor: var(--surfaceSuccessColor);
+        --toastAccentColor: var(--successColor);
+        .toast-icon::before {
+            content: "\EB7B";
+        }
+    }
+    &.error {
+        --toastSurfaceColor: var(--surfaceDangerColor);
+        --toastAccentColor: var(--dangerColor);
+        .toast-icon::before {
+            content: "\EA20";
+        }
+    }
+    &.removing {
+        transition:
+            opacity var(--animationSpeed),
+            margin var(--animationSpeed),
+            grid-template-rows var(--animationSpeed);
+        opacity: 0;
+        margin: 0;
+        grid-template-rows: 0fr;
+        .toast-container {
+            overflow: hidden;
+        }
+    }
+}
+
+.toasts-container {
+    display: block;
+    position: fixed;
+    z-index: 9999;
+    bottom: var(--spacing);
+    left: 0;
+    width: 100%;
+    pointer-events: none !important;
+    .toast {
+        pointer-events: auto;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}

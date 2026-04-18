@@ -28,8 +28,20 @@ func NewProviderByName(name string) (Provider, error) {
 	return factory(), nil
 }
 
+// @todo refactor and consider replace with a plain struct
+//
 // Provider defines a common interface for an OAuth2 client.
 type Provider interface {
+	// @todo temp backport
+	//
+	// Order returns the sorting order of the provider usually used in the auth methods list response.
+	Logo() string
+
+	// @todo temp backport
+	//
+	// Order returns the sorting order of the provider usually used in the auth methods list response.
+	Order() int
+
 	// Context returns the context associated with the provider (if any).
 	Context() context.Context
 
@@ -133,10 +145,17 @@ type AuthUser struct {
 	Id           string         `json:"id"`
 	Name         string         `json:"name"`
 	Username     string         `json:"username"`
-	Email        string         `json:"email"`
 	AvatarURL    string         `json:"avatarURL"`
 	AccessToken  string         `json:"accessToken"`
 	RefreshToken string         `json:"refreshToken"`
+
+	// @todo consider assigning the non-verified email and combining
+	// with an extra Verified bool flag.
+
+	// The VERIFIED OAuth2 account email.
+	//
+	// It must be empty if the provider is not able to verify the email ownership.
+	Email string `json:"email"`
 
 	// @todo
 	// deprecated: use AvatarURL instead

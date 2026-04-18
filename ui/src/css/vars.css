@@ -1,0 +1,246 @@
+:root,
+.dropdown,
+.base-surface {
+    --baseFontFamily: "IBM Plex Sans", system-ui, sans-serif, emoji;
+    --monospaceFontFamily: "IBM Plex Mono", ui-monospace, monospace, emoji;
+    --iconFontFamily: "remixicon";
+
+    --primaryColor: #25272d;
+    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), white 8%);
+    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), white 13%);
+    --primaryTxtColor: #fff;
+    --primaryTxtHintColor: color-mix(in srgb, var(--primaryTxtColor), transparent 35%);
+    --primaryTxtDisabledColor: color-mix(in srgb, var(--primaryTxtColor), transparent 50%);
+
+    --secondaryColor: #e8eaee;
+    --secondaryAlt1Color: #dcdfe5;
+    --secondaryAlt2Color: #c4cbd4;
+    --secondaryTxtColor: var(--primaryColor);
+    --secondaryTxtHintColor: color-mix(in srgb, var(--secondaryTxtColor), transparent 35%);
+    --secondaryTxtDisabledColor: color-mix(in srgb, var(--secondaryTxtColor), transparent 50%);
+
+    --infoColor: #3376e5;
+    --infoAlt1Color: color-mix(in srgb, var(--infoColor), white 10%);
+    --infoAlt2Color: color-mix(in srgb, var(--infoColor), white 15%);
+    --infoTxtColor: var(--primaryTxtColor);
+    --infoTxtHintColor: var(--primaryTxtHintColor);
+    --infoTxtDisabledColor: var(--primaryTxtDisabledColor);
+
+    --successColor: #22a96d;
+    --successAlt1Color: color-mix(in srgb, var(--successColor), white 10%);
+    --successAlt2Color: color-mix(in srgb, var(--successColor), white 15%);
+    --successTxtColor: var(--primaryTxtColor);
+    --successTxtHintColor: var(--primaryTxtHintColor);
+    --successTxtDisabledColor: var(--primaryTxtDisabledColor);
+
+    --warningColor: #e57534;
+    --warningAlt1Color: color-mix(in srgb, var(--warningColor), white 10%);
+    --warningAlt2Color: color-mix(in srgb, var(--warningColor), white 15%);
+    --warningTxtColor: var(--primaryTxtColor);
+    --warningTxtHintColor: var(--primaryTxtHintColor);
+    --warningTxtDisabledColor: var(--primaryTxtDisabledColor);
+
+    --dangerColor: #c33751;
+    --dangerAlt1Color: color-mix(in srgb, var(--dangerColor), white 10%);
+    --dangerAlt2Color: color-mix(in srgb, var(--dangerColor), white 15%);
+    --dangerTxtColor: var(--primaryTxtColor);
+    --dangerTxtHintColor: var(--primaryTxtHintColor);
+    --dangerTxtDisabledColor: var(--primaryTxtDisabledColor);
+
+    --accentColor: #1055c9;
+    --accentAlt1Color: color-mix(in srgb, var(--accentColor), white 10%);
+    --accentAlt2Color: color-mix(in srgb, var(--accentColor), white 15%);
+    --accentTxtColor: #fff;
+    --accentTxtHintColor: color-mix(in srgb, var(--accentTxtColor), transparent 40%);
+    --accentTxtDisabledColor: color-mix(in srgb, var(--accentTxtColor), transparent 50%);
+
+    --surfaceColor: #fff;
+    --surfaceAlt1Color: #f6f7f9;
+    --surfaceAlt2Color: #e8eaee;
+    --surfaceAlt3Color: #dfe2e7;
+    --surfaceAlt4Color: #d9dde2;
+    --surfaceAlt5Color: #d1d6dc;
+    --surfaceTxtColor: #25272d;
+    --surfaceTxtHintColor: #6b747b;
+    --surfaceTxtDisabledColor: #abaeba;
+    --surfaceAccentColor: color-mix(in srgb, var(--accentColor), white 80%);
+    --surfaceInfoColor: color-mix(in srgb, var(--infoColor), white 80%);
+    --surfaceSuccessColor: color-mix(in srgb, var(--successColor), white 80%);
+    --surfaceWarningColor: color-mix(in srgb, var(--warningColor), white 80%);
+    --surfaceDangerColor: color-mix(in srgb, var(--dangerColor), white 80%);
+    --selectionColor: var(--surfaceAlt3Color);
+    --inputColor: var(--surfaceAlt2Color);
+    --inputFocusColor: var(--surfaceAlt3Color);
+    --inputBorderColor: var(--surfaceAlt4Color);
+    scrollbar-color: var(--surfaceAlt4Color) transparent;
+
+    --prismFunctionColor: #7c00aa;
+    --prismStringColor: #116b00;
+    --prismNumberColor: #246f86;
+    --prismPropertyColor: #246f86;
+    --prismKeywordColor: #a04900;
+    --prismCommentColor: var(--surfaceTxtHintColor);
+    --prismPunctuationColor: var(--surfaceTxtColor);
+
+    /* ---------------- */
+
+    --modalAnimationSpeed: 200ms;
+    --modalOverlayColor: rgba(34, 36, 42, 0.22);
+
+    --tooltipTxtColor: #fff;
+    --tooltipSurfaceColor: rgba(34, 36, 36, 0.9);
+
+    --boxShadow: 0px 8px 5px -5px rgba(34, 36, 36, 0.1);
+    --leftBoxShadow: -1px 0px 5px 0 rgba(34, 36, 36, 0.1);
+    --rightBoxShadow: 1px 0px 5px 0 rgba(34, 36, 36, 0.1);
+    --topScrollShadow: 0px 2px 8px 1px rgba(34, 36, 36, 0.15);
+    --bottomScrollShadow: 0px -2px 8px 1px rgba(34, 36, 36, 0.15);
+    --leftScrollShadow: 3px 0px 5px 0px rgba(34, 36, 36, 0.2);
+    --rightScrollShadow: -3px 0px 5px 0px rgba(34, 36, 36, 0.2);
+
+    --fontSize: 14px;
+    --smFontSize: 13px;
+    --lgFontSize: 15px;
+
+    --lineHeight: 22px;
+    --smLineHeight: 16px;
+    --lgLineHeight: 24px;
+
+    --btnHeight: 45px;
+    --smBtnHeight: 35px;
+    --lgBtnHeight: 52px;
+
+    --spacing: 30px;
+    --smSpacing: 20px;
+
+    --inputPadding: 13px;
+    --inputBorderRadius: var(--borderRadius);
+
+    --borderRadius: 5px;
+    --lgBorderRadius: 15px;
+
+    --pageSidebarWidth: 240px;
+
+    --wrapperWidth: 840px;
+    --smWrapperWidth: 430px;
+    --lgWrapperWidth: 1150px;
+
+    --loaderIcon: "\eec4";
+    --loaderAnimationSpeed: 1.2s;
+
+    --animationSpeed: 150ms;
+    --activeAnimationSpeed: 70ms;
+    --slideAnimationSpeed: 200ms;
+
+    accent-color: var(--primaryColor);
+}
+
+/* dark */
+[data-color-scheme="dark"],
+[data-color-scheme="dark"] .dropdown {
+    --surfaceColor: #282828;
+    --surfaceAlt1Color: color-mix(in srgb, var(--surfaceColor), white 2%);
+    --surfaceAlt2Color: color-mix(in srgb, var(--surfaceColor), white 4%);
+    --surfaceAlt3Color: color-mix(in srgb, var(--surfaceColor), white 6%);
+    --surfaceAlt4Color: color-mix(in srgb, var(--surfaceColor), white 9%);
+    --surfaceAlt5Color: color-mix(in srgb, var(--surfaceColor), white 12%);
+
+    --surfaceTxtColor: #dedede;
+    --tooltipTxtColor: var(--surfaceTxtColor);
+    --surfaceTxtHintColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 45%);
+    --surfaceTxtDisabledColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 65%);
+
+    --secondaryColor: var(--surfaceAlt3Color);
+    --secondaryTxtColor: var(--surfaceTxtColor);
+    --secondaryTxtColor: var(--surfaceTxtColor);
+    --secondaryAlt1Color: var(--surfaceAlt4Color);
+    --secondaryAlt2Color: var(--surfaceAlt5Color);
+
+    --primaryColor: #1e1e1e;
+    --primaryTxtColor: var(--surfaceTxtColor);
+    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), black 8%);
+    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), black 16%);
+    --primaryTxtHintColor: color-mix(in srgb, var(--primaryTxtColor), transparent 35%);
+    --primaryTxtDisabledColor: color-mix(in srgb, var(--primaryTxtColor), transparent 50%);
+
+    --infoColor: #4273bd;
+    --infoTxtColor: var(--surfaceTxtColor);
+    --infoAlt1Color: color-mix(in srgb, var(--infoColor), black 10%);
+    --infoAlt2Color: color-mix(in srgb, var(--infoColor), black 15%);
+    --surfaceInfoColor: color-mix(in srgb, var(--infoColor), var(--surfaceColor) 45%);
+
+    --successColor: #257e58;
+    --successTxtColor: var(--surfaceTxtColor);
+    --successAlt1Color: color-mix(in srgb, var(--successColor), black 10%);
+    --successAlt2Color: color-mix(in srgb, var(--successColor), black 15%);
+    --surfaceSuccessColor: color-mix(in srgb, var(--successColor), var(--surfaceColor) 45%);
+
+    --warningColor: #ae4d0e;
+    --warningTxtColor: var(--surfaceTxtColor);
+    --warningAlt1Color: color-mix(in srgb, var(--warningColor), black 10%);
+    --warningAlt2Color: color-mix(in srgb, var(--warningColor), black 15%);
+    --surfaceWarningColor: color-mix(in srgb, var(--warningColor), var(--surfaceColor) 45%);
+
+    --dangerColor: #b6354c;
+    --dangerTxtColor: var(--surfaceTxtColor);
+    --dangerAlt1Color: color-mix(in srgb, var(--dangerColor), black 10%);
+    --dangerAlt2Color: color-mix(in srgb, var(--dangerColor), black 15%);
+    --surfaceDangerColor: color-mix(in srgb, var(--dangerColor), var(--surfaceColor) 45%);
+
+    --inputColor: var(--surfaceAlt2Color);
+    --inputFocusColor: var(--surfaceAlt3Color);
+    --inputBorderColor: var(--surfaceAlt4Color);
+    scrollbar-color: var(--surfaceAlt5Color) transparent;
+
+    --modalOverlayColor: rgb(0,0,0,0.5);
+
+    --boxShadow: 0px 8px 5px -5px rgba(0,0,0, 0.3);
+    --leftBoxShadow: -1px 0px 5px 0 rgba(0,0,0, 0.3);
+    --rightBoxShadow: 1px 0px 5px 0 rgba(0,0,0, 0.3);
+    --topScrollShadow: 0px 2px 8px 1px rgba(0,0,0, 0.45);
+    --bottomScrollShadow: 0px -2px 8px 1px rgba(0,0,0, 0.45);
+    --leftScrollShadow: 3px 0px 5px 0px rgba(0,0,0, 0.4);
+    --rightScrollShadow: -3px 0px 5px 0px rgba(0,0,0, 0.4);
+
+    --prismFunctionColor: #ab7abd;
+    --prismStringColor: #87b47e;
+    --prismNumberColor: #86b9bb;
+    --prismPropertyColor: #90c2d1;
+    --prismKeywordColor: #b3703d;
+    --prismCommentColor: var(--surfaceTxtHintColor);
+    --prismPunctuationColor: var(--surfaceTxtColor);
+}
+
+html .accent-surface {
+    --surfaceColor: var(--accentColor);
+    --surfaceAlt1Color: color-mix(in srgb, var(--surfaceColor), white 5%);
+    --surfaceAlt2Color: color-mix(in srgb, var(--surfaceColor), white 10%);
+    --surfaceAlt3Color: color-mix(in srgb, var(--surfaceColor), white 20%);
+    --surfaceAlt4Color: color-mix(in srgb, var(--surfaceColor), white 30%);
+    --surfaceAlt5Color: color-mix(in srgb, var(--surfaceColor), white 40%);
+    --surfaceTxtColor: #fff;
+    --surfaceTxtHintColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 35%);
+    --surfaceTxtDisabledColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 60%);
+    --surfaceAccentColor: color-mix(in srgb, var(--surfaceColor), white 20%);
+    --surfaceInfoColor: color-mix(in srgb, var(--infoColor), transparent 40%);
+    --surfaceSuccessColor: color-mix(in srgb, var(--successColor), transparent 40%);
+    --surfaceWarningColor: color-mix(in srgb, var(--warningColor), transparent 40%);
+    --surfaceDangerColor: color-mix(in srgb, var(--dangerColor), transparent 40%);
+    --inputColor: var(--surfaceAlt3Color);
+    --inputFocusColor: var(--surfaceAlt4Color);
+    --inputBorderColor: var(--surfaceAlt5Color);
+    --selectionColor: var(--surfaceAccentColor);
+    scrollbar-color: var(--surfaceAlt4Color) transparent;
+}
+
+@media (max-width: 900px) {
+    :root,
+    .dropdown,
+    .base-surface {
+        --spacing: 20px;
+        --smSpacing: 15px;
+        --btnHeight: 40px;
+        --smBtnHeight: 30px;
+        --lgBtnHeight: 47px;
+    }
+}

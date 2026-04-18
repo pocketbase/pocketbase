@@ -1,0 +1,50 @@
+@keyframes rotate {
+    from {
+        pointer-events: none;
+    }
+    to {
+        pointer-events: none;
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes halfRotate {
+    from {
+        pointer-events: none;
+    }
+    to {
+        pointer-events: none;
+        transform: rotate(180deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideTop {
+    from {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

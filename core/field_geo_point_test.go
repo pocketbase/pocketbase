@@ -199,4 +199,5 @@ func TestGeoPointFieldValidateValue(t *testing.T) {
 func TestGeoPointFieldValidateSettings(t *testing.T) {
 	testDefaultFieldIdValidation(t, core.FieldTypeGeoPoint)
 	testDefaultFieldNameValidation(t, core.FieldTypeGeoPoint)
+	testDefaultFieldHelpValidation[core.GeoPointField](t)
 }

@@ -22,6 +22,8 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
+const defaultCSP = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' http://127.0.0.1:* https://tile.openstreetmap.org data: blob:; connect-src 'self' http://127.0.0.1:* https://nominatim.openstreetmap.org; script-src 'self' http://127.0.0.1:*; frame-src 'none'"
+
 // ServeConfig defines a configuration struct for apis.Serve().
 type ServeConfig struct {
 	// ShowStartBanner indicates whether to show or hide the server start console message.
@@ -77,21 +79,25 @@ func Serve(app core.App, config ServeConfig) error {
 		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 	}))
 
-	pbRouter.GET("/_/{path...}", Static(ui.DistDirFS, false)).
-		BindFunc(func(e *core.RequestEvent) error {
-			// ignore root path
-			if e.Request.PathValue(StaticWildcardParam) != "" {
-				e.Response.Header().Set("Cache-Control", "max-age=1209600, stale-while-revalidate=86400")
-			}
+	// @todo consider moving in base
+	if ui.DistDirFS != nil {
+		pbRouter.GET("/_/{path...}", Static(ui.DistDirFS, false)).
+			BindFunc(func(e *core.RequestEvent) error {
+				if !e.App.IsDev() &&
+					// exclude root path
+					e.Request.PathValue(StaticWildcardParam) != "" &&
+					e.Response.Header().Get("Cache-Control") == "" {
+					e.Response.Header().Set("Cache-Control", "max-age=1209600, stale-while-revalidate=86400")
+				}
 
-			// add a default CSP
-			if e.Response.Header().Get("Content-Security-Policy") == "" {
-				e.Response.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' http://127.0.0.1:* https://tile.openstreetmap.org data: blob:; connect-src 'self' http://127.0.0.1:* https://nominatim.openstreetmap.org; script-src 'self' 'sha256-GRUzBA7PzKYug7pqxv5rJaec5bwDCw1Vo6/IXwvD3Tc='")
-			}
+				if e.Response.Header().Get("Content-Security-Policy") == "" {
+					e.Response.Header().Set("Content-Security-Policy", defaultCSP)
+				}
 
-			return e.Next()
-		}).
-		Bind(Gzip())
+				return e.Next()
+			}).
+			Bind(Gzip())
+	}
 
 	// start http server
 	// ---
@@ -279,8 +285,12 @@ func Serve(app core.App, config ServeConfig) error {
 		)
 
 		regular := color.New()
-		regular.Printf("├─ REST API:  %s\n", color.CyanString("%s/api/", baseURL))
-		regular.Printf("└─ Dashboard: %s\n", color.CyanString("%s/_/", baseURL))
+		if ui.DistDirFS == nil {
+			regular.Printf("└─ REST API:  %s\n", color.CyanString("%s/api/", baseURL))
+		} else {
+			regular.Printf("├─ REST API:  %s\n", color.CyanString("%s/api/", baseURL))
+			regular.Printf("└─ Dashboard: %s\n", color.CyanString("%s/_/", baseURL))
+		}
 	}
 
 	var serveErr error

@@ -43,16 +43,16 @@ func testBindsCount(vm *goja.Runtime, namespace string, count int, t *testing.T)
 
 // note: this test is useful as a reminder to update the tests in case
 // a new base binding is added.
-func TestBaseBindsCount(t *testing.T) {
+func TestBindCoreCount(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	testBindsCount(vm, "this", 41, t)
 }
 
-func TestBaseBindsSleep(t *testing.T) {
+func TestBindCoreSleep(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 	vm.Set("reader", strings.NewReader("test"))
 
 	start := time.Now()
@@ -69,9 +69,9 @@ func TestBaseBindsSleep(t *testing.T) {
 	}
 }
 
-func TestBaseBindsReaderToString(t *testing.T) {
+func TestBindCoreReaderToString(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 	vm.Set("reader", strings.NewReader("test"))
 
 	_, err := vm.RunString(`
@@ -86,9 +86,9 @@ func TestBaseBindsReaderToString(t *testing.T) {
 	}
 }
 
-func TestBaseBindsToString(t *testing.T) {
+func TestBindCoreToString(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 	vm.Set("scenarios", []struct {
 		Name     string
 		Value    any
@@ -120,9 +120,9 @@ func TestBaseBindsToString(t *testing.T) {
 	}
 }
 
-func TestBaseBindsToBytes(t *testing.T) {
+func TestBindCoreToBytes(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 	vm.Set("bytesEqual", bytes.Equal)
 	vm.Set("scenarios", []struct {
 		Name     string
@@ -160,9 +160,9 @@ func TestBaseBindsToBytes(t *testing.T) {
 	}
 }
 
-func TestBaseBindsUnmarshal(t *testing.T) {
+func TestBindCoreUnmarshal(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 	vm.Set("data", &map[string]any{"a": 123})
 
 	_, err := vm.RunString(`
@@ -181,9 +181,9 @@ func TestBaseBindsUnmarshal(t *testing.T) {
 	}
 }
 
-func TestBaseBindsContext(t *testing.T) {
+func TestBindCoreContext(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	_, err := vm.RunString(`
 		const base = new Context(null, "a", 123);
@@ -205,9 +205,9 @@ func TestBaseBindsContext(t *testing.T) {
 	}
 }
 
-func TestBaseBindsCookie(t *testing.T) {
+func TestBindCoreCookie(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	_, err := vm.RunString(`
 		const cookie = new Cookie({
@@ -234,9 +234,9 @@ func TestBaseBindsCookie(t *testing.T) {
 	}
 }
 
-func TestBaseBindsSubscriptionMessage(t *testing.T) {
+func TestBindCoreSubscriptionMessage(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 	vm.Set("bytesToString", func(b []byte) string {
 		return string(b)
 	})
@@ -262,7 +262,7 @@ func TestBaseBindsSubscriptionMessage(t *testing.T) {
 	}
 }
 
-func TestBaseBindsRecord(t *testing.T) {
+func TestBindCoreRecord(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -272,7 +272,7 @@ func TestBaseBindsRecord(t *testing.T) {
 	}
 
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 	vm.Set("collection", collection)
 
 	// without record data
@@ -308,9 +308,9 @@ func TestBaseBindsRecord(t *testing.T) {
 	}
 }
 
-func TestBaseBindsCollection(t *testing.T) {
+func TestBindCoreCollection(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	v, err := vm.RunString(`new Collection({ name: "test", createRule: "@request.auth.id != ''", fields: [{name: "title", "type": "text"}] })`)
 	if err != nil {
@@ -336,9 +336,9 @@ func TestBaseBindsCollection(t *testing.T) {
 	}
 }
 
-func TestBaseBindsFieldsList(t *testing.T) {
+func TestBindCoreFieldsList(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	v, err := vm.RunString(`new FieldsList([{name: "title", "type": "text"}])`)
 	if err != nil {
@@ -355,9 +355,9 @@ func TestBaseBindsFieldsList(t *testing.T) {
 	}
 }
 
-func TestBaseBindsField(t *testing.T) {
+func TestBindCoreField(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	v, err := vm.RunString(`new Field({name: "test", "type": "bool"})`)
 	if err != nil {
@@ -379,11 +379,11 @@ func isType[T any](v any) bool {
 	return ok
 }
 
-func TestBaseBindsNamedFields(t *testing.T) {
+func TestBindCoreNamedFields(t *testing.T) {
 	t.Parallel()
 
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	scenarios := []struct {
 		js       string
@@ -470,9 +470,9 @@ func TestBaseBindsNamedFields(t *testing.T) {
 	}
 }
 
-func TestBaseBindsMailerMessage(t *testing.T) {
+func TestBindCoreMailerMessage(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	v, err := vm.RunString(`new MailerMessage({
 		from: {name: "test_from", address: "test_from@example.com"},
@@ -517,9 +517,9 @@ func TestBaseBindsMailerMessage(t *testing.T) {
 	}
 }
 
-func TestBaseBindsCommand(t *testing.T) {
+func TestBindCoreCommand(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	_, err := vm.RunString(`
 		let runCalls = 0;
@@ -546,9 +546,9 @@ func TestBaseBindsCommand(t *testing.T) {
 	}
 }
 
-func TestBaseBindsRequestInfo(t *testing.T) {
+func TestBindCoreRequestInfo(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	_, err := vm.RunString(`
 		const info = new RequestInfo({
@@ -564,9 +564,9 @@ func TestBaseBindsRequestInfo(t *testing.T) {
 	}
 }
 
-func TestBaseBindsMiddleware(t *testing.T) {
+func TestBindCoreMiddleware(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	_, err := vm.RunString(`
 		const m = new Middleware(
@@ -584,9 +584,9 @@ func TestBaseBindsMiddleware(t *testing.T) {
 	}
 }
 
-func TestBaseBindsTimezone(t *testing.T) {
+func TestBindCoreTimezone(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	_, err := vm.RunString(`
 		const v0 = (new Timezone()).string();
@@ -609,9 +609,9 @@ func TestBaseBindsTimezone(t *testing.T) {
 	}
 }
 
-func TestBaseBindsDateTime(t *testing.T) {
+func TestBindCoreDateTime(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	_, err := vm.RunString(`
 		const now = new DateTime();
@@ -650,9 +650,9 @@ func TestBaseBindsDateTime(t *testing.T) {
 	}
 }
 
-func TestBaseBindsValidationError(t *testing.T) {
+func TestBindCoreValidationError(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
+	BindCore(vm)
 
 	scenarios := []struct {
 		js            string
@@ -697,14 +697,14 @@ func TestBaseBindsValidationError(t *testing.T) {
 	}
 }
 
-func TestDbxBinds(t *testing.T) {
+func TestBindDbx(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
 	vm := goja.New()
 	vm.Set("db", app.DB())
-	baseBinds(vm)
-	dbxBinds(vm)
+	BindCore(vm)
+	BindDbx(vm)
 
 	testBindsCount(vm, "$dbx", 15, t)
 
@@ -792,14 +792,14 @@ func TestDbxBinds(t *testing.T) {
 	}
 }
 
-func TestMailsBindsCount(t *testing.T) {
+func TestBindMailsCount(t *testing.T) {
 	vm := goja.New()
-	mailsBinds(vm)
+	BindMails(vm)
 
 	testBindsCount(vm, "$mails", 5, t)
 }
 
-func TestMailsBinds(t *testing.T) {
+func TestBindMails(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -809,8 +809,8 @@ func TestMailsBinds(t *testing.T) {
 	}
 
 	vm := goja.New()
-	baseBinds(vm)
-	mailsBinds(vm)
+	BindCore(vm)
+	BindMails(vm)
 	vm.Set("$app", app)
 	vm.Set("record", record)
 
@@ -845,17 +845,17 @@ func TestMailsBinds(t *testing.T) {
 	}
 }
 
-func TestSecurityBindsCount(t *testing.T) {
+func TestBindSecurityCount(t *testing.T) {
 	vm := goja.New()
-	securityBinds(vm)
+	BindSecurity(vm)
 
 	testBindsCount(vm, "$security", 16, t)
 }
 
 func TestSecurityCryptoBinds(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
-	securityBinds(vm)
+	BindCore(vm)
+	BindSecurity(vm)
 
 	sceneraios := []struct {
 		js       string
@@ -888,8 +888,8 @@ func TestSecurityCryptoBinds(t *testing.T) {
 
 func TestSecurityRandomStringBinds(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
-	securityBinds(vm)
+	BindCore(vm)
+	BindSecurity(vm)
 
 	sceneraios := []struct {
 		js     string
@@ -964,8 +964,8 @@ func TestSecurityJWTBinds(t *testing.T) {
 	for _, s := range sceneraios {
 		t.Run(s.name, func(t *testing.T) {
 			vm := goja.New()
-			baseBinds(vm)
-			securityBinds(vm)
+			BindCore(vm)
+			BindSecurity(vm)
 
 			_, err := vm.RunString(s.js)
 			if err != nil {
@@ -977,8 +977,8 @@ func TestSecurityJWTBinds(t *testing.T) {
 
 func TestSecurityEncryptAndDecryptBinds(t *testing.T) {
 	vm := goja.New()
-	baseBinds(vm)
-	securityBinds(vm)
+	BindCore(vm)
+	BindSecurity(vm)
 
 	_, err := vm.RunString(`
 		const key = "abcdabcdabcdabcdabcdabcdabcdabcd"
@@ -996,7 +996,7 @@ func TestSecurityEncryptAndDecryptBinds(t *testing.T) {
 	}
 }
 
-func TestFilesystemBinds(t *testing.T) {
+func TestBindFilesystem(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -1020,8 +1020,8 @@ func TestFilesystemBinds(t *testing.T) {
 	vm.Set("tmpDir", tmpDir)
 	vm.Set("testFile", filepath.Join(app.DataDir(), "data.db"))
 	vm.Set("baseURL", srv.URL)
-	baseBinds(vm)
-	filesystemBinds(vm)
+	BindCore(vm)
+	BindFilesystem(vm)
 
 	testBindsCount(vm, "$filesystem", 6, t)
 
@@ -1116,24 +1116,24 @@ func TestFilesystemBinds(t *testing.T) {
 	}
 }
 
-func TestFormsBinds(t *testing.T) {
+func TestBindForms(t *testing.T) {
 	vm := goja.New()
-	formsBinds(vm)
+	BindForms(vm)
 
 	testBindsCount(vm, "this", 4, t)
 }
 
-func TestApisBindsCount(t *testing.T) {
+func TestBindApisCount(t *testing.T) {
 	vm := goja.New()
-	apisBinds(vm)
+	BindApis(vm)
 
 	testBindsCount(vm, "this", 8, t)
 	testBindsCount(vm, "$apis", 11, t)
 }
 
-func TestApisBindsApiError(t *testing.T) {
+func TestBindApisErrors(t *testing.T) {
 	vm := goja.New()
-	apisBinds(vm)
+	BindApis(vm)
 
 	scenarios := []struct {
 		js            string
@@ -1190,8 +1190,8 @@ func TestLoadingDynamicModel(t *testing.T) {
 	defer app.Cleanup()
 
 	vm := goja.New()
-	baseBinds(vm)
-	dbxBinds(vm)
+	BindCore(vm)
+	BindDbx(vm)
 	vm.Set("$app", app)
 
 	_, err := vm.RunString(`
@@ -1291,8 +1291,8 @@ func TestDynamicModelMapFieldCaching(t *testing.T) {
 	defer app.Cleanup()
 
 	vm := goja.New()
-	baseBinds(vm)
-	dbxBinds(vm)
+	BindCore(vm)
+	BindDbx(vm)
 	vm.Set("$app", app)
 
 	_, err := vm.RunString(`
@@ -1350,8 +1350,8 @@ func TestLoadingArrayOf(t *testing.T) {
 	defer app.Cleanup()
 
 	vm := goja.New()
-	baseBinds(vm)
-	dbxBinds(vm)
+	BindCore(vm)
+	BindDbx(vm)
 	vm.Set("$app", app)
 
 	_, err := vm.RunString(`
@@ -1391,18 +1391,18 @@ func TestLoadingArrayOf(t *testing.T) {
 	}
 }
 
-func TestHttpClientBindsCount(t *testing.T) {
+func TestBindHttpClientCount(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
 	vm := goja.New()
-	httpClientBinds(vm)
+	BindHttpClient(vm)
 
 	testBindsCount(vm, "this", 2, t) // + FormData
 	testBindsCount(vm, "$http", 1, t)
 }
 
-func TestHttpClientBindsSend(t *testing.T) {
+func TestBindHttpClientSend(t *testing.T) {
 	t.Parallel()
 
 	// start a test server
@@ -1447,8 +1447,8 @@ func TestHttpClientBindsSend(t *testing.T) {
 	defer server.Close()
 
 	vm := goja.New()
-	baseBinds(vm)
-	httpClientBinds(vm)
+	BindCore(vm)
+	BindHttpClient(vm)
 	vm.Set("testURL", server.URL)
 
 	_, err := vm.RunString(`
@@ -1626,7 +1626,7 @@ func TestHooksBinds(t *testing.T) {
 
 	vmFactory := func() *goja.Runtime {
 		vm := goja.New()
-		baseBinds(vm)
+		BindCore(vm)
 		vm.Set("$app", app)
 		vm.Set("result", result)
 		return vm
@@ -1712,7 +1712,7 @@ func TestHooksExceptionUnwrapping(t *testing.T) {
 
 	vmFactory := func() *goja.Runtime {
 		vm := goja.New()
-		baseBinds(vm)
+		BindCore(vm)
 		vm.Set("$app", app)
 		vm.Set("goErr", goErr)
 		return vm
@@ -1766,8 +1766,8 @@ func TestRouterBinds(t *testing.T) {
 
 	vmFactory := func() *goja.Runtime {
 		vm := goja.New()
-		baseBinds(vm)
-		apisBinds(vm)
+		BindCore(vm)
+		BindApis(vm)
 		vm.Set("$app", app)
 		vm.Set("result", result)
 		return vm
@@ -1855,16 +1855,16 @@ func TestRouterBinds(t *testing.T) {
 	}
 }
 
-func TestFilepathBindsCount(t *testing.T) {
+func TestBindFilepathCount(t *testing.T) {
 	vm := goja.New()
-	filepathBinds(vm)
+	BindFilepath(vm)
 
 	testBindsCount(vm, "$filepath", 15, t)
 }
 
-func TestOsBindsCount(t *testing.T) {
+func TestBindOsCount(t *testing.T) {
 	vm := goja.New()
-	osBinds(vm)
+	BindOs(vm)
 
 	testBindsCount(vm, "$os", 20, t)
 }

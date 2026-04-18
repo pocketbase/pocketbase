@@ -26,6 +26,8 @@ type Twitter struct {
 func NewTwitterProvider() *Twitter {
 	return &Twitter{BaseProvider{
 		ctx:         context.Background(),
+		order:       13,
+		logo:        `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300.3"><path d="M179 127 290 0h-26l-97 110L89 0H0l117 167L0 300h26l103-116 82 116h89M36 20h41l187 262h-41"/></svg>`,
 		displayName: "X/Twitter",
 		pkce:        true,
 		scopes: []string{

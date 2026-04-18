@@ -16,6 +16,8 @@ func bindSettingsApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
 	subGroup.PATCH("", settingsSet)
 	subGroup.POST("/test/s3", settingsTestS3)
 	subGroup.POST("/test/email", settingsTestEmail)
+
+	// @todo move to collections
 	subGroup.POST("/apple/generate-client-secret", settingsGenerateAppleClientSecret)
 }
 
@@ -62,12 +64,12 @@ func settingsSet(e *core.RequestEvent) error {
 			return e.BadRequestError("An error occurred while saving the new settings.", err)
 		}
 
-		appSettings, err := e.App.Settings().Clone()
-		if err != nil {
-			return e.InternalServerError("Failed to clone app settings.", err)
-		}
-
 		return execAfterSuccessTx(true, e.App, func() error {
+			appSettings, err := e.App.Settings().Clone()
+			if err != nil {
+				return e.InternalServerError("Failed to clone app settings.", err)
+			}
+
 			return e.JSON(http.StatusOK, appSettings)
 		})
 	})

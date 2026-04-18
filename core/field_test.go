@@ -2,6 +2,8 @@ package core_test
 
 import (
 	"context"
+	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -113,7 +115,7 @@ func testDefaultFieldIdValidation(t *testing.T, fieldType string) {
 
 			hasErr := errs["id"] != nil
 			if hasErr != s.expectError {
-				t.Fatalf("Expected hasErr %v, got %v", s.expectError, hasErr)
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, errs)
 			}
 		})
 	}
@@ -254,7 +256,64 @@ func testDefaultFieldNameValidation(t *testing.T, fieldType string) {
 
 			hasErr := errs["name"] != nil
 			if hasErr != s.expectError {
-				t.Fatalf("Expected hasErr %v, got %v", s.expectError, hasErr)
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, errs)
+			}
+		})
+	}
+}
+
+func testDefaultFieldHelpValidation[T any](t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection := core.NewBaseCollection("test_collection")
+
+	scenarios := []struct {
+		name        string
+		json        string
+		expectError bool
+	}{
+		{
+			"empty value",
+			`{}`,
+			false,
+		},
+		{
+			"< max limit",
+			`{"help":"abc"}`,
+			false,
+		},
+		{
+			"= max limit",
+			`{"help":"` + strings.Repeat("a", 300) + `"}`,
+			false,
+		},
+		{
+			"> max limit",
+			`{"help":"` + strings.Repeat("a", 301) + `"}`,
+			true,
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run("[help] "+s.name, func(t *testing.T) {
+			var zeroField T
+
+			field, ok := reflect.New(reflect.TypeOf(zeroField)).Interface().(core.Field)
+			if !ok {
+				t.Fatalf("Expected core.Field instance, got %T", zeroField)
+			}
+
+			err := json.Unmarshal([]byte(s.json), &field)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			errs, _ := field.ValidateSettings(context.Background(), app, collection).(validation.Errors)
+
+			hasErr := errs["help"] != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, errs)
 			}
 		})
 	}

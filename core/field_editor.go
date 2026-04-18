@@ -41,11 +41,15 @@ type EditorField struct {
 	// Hidden hides the field from the API response.
 	Hidden bool `form:"hidden" json:"hidden"`
 
+	// ---
+
 	// Presentable hints the Dashboard UI to use the underlying
 	// field record value in the relation preview label.
 	Presentable bool `form:"presentable" json:"presentable"`
 
-	// ---
+	// Help is an extra text explaining what the field is about.
+	// It is usually shown in Dashboard UI under the field input.
+	Help string `form:"help" json:"help"`
 
 	// MaxSize specifies the maximum size of the allowed field value (in bytes and up to 2^53-1).
 	//
@@ -148,6 +152,7 @@ func (f *EditorField) ValidateSettings(ctx context.Context, app App, collection 
 	return validation.ValidateStruct(f,
 		validation.Field(&f.Id, validation.By(DefaultFieldIdValidationRule)),
 		validation.Field(&f.Name, validation.By(DefaultFieldNameValidationRule)),
+		validation.Field(&f.Help, validation.By(DefaultFieldHelpValidationRule)),
 		validation.Field(&f.MaxSize, validation.Min(0), validation.Max(maxSafeJSONInt)),
 	)
 }

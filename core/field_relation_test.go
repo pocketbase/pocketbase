@@ -348,6 +348,7 @@ func TestRelationFieldValidateValue(t *testing.T) {
 func TestRelationFieldValidateSettings(t *testing.T) {
 	testDefaultFieldIdValidation(t, core.FieldTypeRelation)
 	testDefaultFieldNameValidation(t, core.FieldTypeRelation)
+	testDefaultFieldHelpValidation[core.RelationField](t)
 
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

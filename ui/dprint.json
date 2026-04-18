@@ -1,0 +1,13 @@
+{
+  "typescript": {
+    "indentWidth": 4
+  },
+  "excludes": [
+    "**/node_modules",
+    "**/public",
+    "**/dist"
+  ],
+  "plugins": [
+    "dprint-typescript-0.95.15.wasm"
+  ]
+}

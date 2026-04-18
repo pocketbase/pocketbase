@@ -1,0 +1,70 @@
+.modal.collections-overview-modal {
+    width: 1500px;
+    max-width: 90%;
+    min-height: 90%;
+    max-height: 90%;
+
+    /* note: don't use scale to avoid interfering with the erd sizing */
+    transform: translateY(3px);
+    &[data-modal-state="open"] {
+        transform: translateY(0);
+        @starting-style {
+            transform: translateY(3px);
+        }
+    }
+
+    .modal-header {
+        padding-top: var(--smSpacing);
+    }
+    .modal-content.erd-tab {
+        padding: 0;
+        align-items: stretch;
+        display: flex;
+        &::before,
+        &::after {
+            content: none;
+            display: none;
+        }
+    }
+    .modal-content.rules-tab {
+        padding-top: 0;
+        scrollbar-gutter: stable;
+    }
+    .rules-table {
+        min-width: 700px;
+        word-break: break-word;
+        margin-top: calc(var(--spacing) - 5px);
+        .collection-name {
+            width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        thead {
+            top: -3px;
+        }
+    }
+    .col-rule-btns {
+        /*padding: 5px;*/
+    }
+    .rule-btns {
+        display: flex;
+        width: 100%;
+        gap: 5px;
+        .btn {
+            flex: 1 1 0;
+            padding: 5px;
+            &.outline {
+                padding: 3px;
+            }
+        }
+    }
+
+    @media (max-width: 700px) {
+        max-width: 95%;
+        min-height: 95%;
+        max-height: 95%;
+        .rules-table .collection-name {
+            max-width: 130px;
+        }
+    }
+}

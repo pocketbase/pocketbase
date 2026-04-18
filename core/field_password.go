@@ -61,11 +61,17 @@ type PasswordField struct {
 	// Hidden hides the field from the API response.
 	Hidden bool `form:"hidden" json:"hidden"`
 
+	// ---
+
+	// @todo remove
+	//
 	// Presentable hints the Dashboard UI to use the underlying
 	// field record value in the relation preview label.
 	Presentable bool `form:"presentable" json:"presentable"`
 
-	// ---
+	// Help is an extra text explaining what the field is about.
+	// It is usually shown in Dashboard UI under the field input.
+	Help string `form:"help" json:"help"`
 
 	// Pattern specifies an optional regex pattern to match against the field value.
 	//
@@ -209,6 +215,7 @@ func (f *PasswordField) ValidateSettings(ctx context.Context, app App, collectio
 	return validation.ValidateStruct(f,
 		validation.Field(&f.Id, validation.By(DefaultFieldIdValidationRule)),
 		validation.Field(&f.Name, validation.By(DefaultFieldNameValidationRule)),
+		validation.Field(&f.Help, validation.By(DefaultFieldHelpValidationRule)),
 		validation.Field(&f.Min, validation.Min(1), validation.Max(71)),
 		validation.Field(&f.Max, validation.Min(f.Min), validation.Max(71)),
 		validation.Field(&f.Cost, validation.Min(bcrypt.MinCost), validation.Max(bcrypt.MaxCost)),

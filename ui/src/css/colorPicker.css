@@ -1,0 +1,97 @@
+.color-picker {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+    min-height: 28px;
+    padding: 0px;
+    background: none;
+    border-radius: var(--borderRadius);
+    padding: 3px;
+    gap: 3px;
+    background: var(--surfaceColor);
+    .predefined-colors-btn {
+        padding: 0 3px;
+    }
+    .color-picker-input-wrapper {
+        position: relative;
+        display: block;
+        flex-grow: 1;
+        height: auto;
+        input[type="color"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            border: 0;
+            cursor: cell;
+            border-radius: var(--borderRadius);
+            &::-webkit-color-swatch-wrapper {
+                padding: 0;
+            }
+            &::-webkit-color-swatch {
+                border: none;
+                border-radius: 0;
+            }
+        }
+        .result {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            padding: 0 2px;
+            text-align: center;
+            align-content: center;
+            line-height: 1;
+            font-size: 0.85rem;
+            font-family: var(--monospaceFontFamily);
+            pointer-events: none;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    }
+}
+
+.predefined-colors-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    user-select: none;
+    .color {
+        cursor: pointer;
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        border-radius: var(--borderRadius);
+        transition: opacity var(--animationSpeed);
+        &:focus-visible {
+            outline-color: var(--surfaceAlt5Color);
+        }
+        &:hover,
+        &:active {
+            opacity: 0.8;
+        }
+        &:active {
+            opacity: 0.7;
+            transition-duration: var(--activeAnimationSpeed);
+        }
+    }
+}
+
+.predefined-colors-dropdown {
+    width: auto;
+    min-width: 25px;
+    max-width: 170px;
+}
+
+.field {
+    .color-picker {
+        margin: 4px;
+        width: auto;
+    }
+    label ~ .color-picker {
+        margin-top: 6px;
+    }
+}

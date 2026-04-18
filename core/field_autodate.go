@@ -46,11 +46,11 @@ type AutodateField struct {
 	// Hidden hides the field from the API response.
 	Hidden bool `form:"hidden" json:"hidden"`
 
+	// ---
+
 	// Presentable hints the Dashboard UI to use the underlying
 	// field record value in the relation preview label.
 	Presentable bool `form:"presentable" json:"presentable"`
-
-	// ---
 
 	// OnCreate auto sets the current datetime as field value on record create.
 	OnCreate bool `form:"onCreate" json:"onCreate"`

@@ -1,3 +1,5 @@
+//go:build !no_ui
+
 // Package ui handles the PocketBase Superuser frontend embedding.
 package ui
 

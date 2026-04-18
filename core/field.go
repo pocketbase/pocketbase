@@ -184,6 +184,26 @@ type RecordInterceptor interface {
 	) error
 }
 
+// DefaultFieldHelpValidationRule performs base validation on a field's "help" value.
+func DefaultFieldHelpValidationRule(value any) error {
+	v, ok := value.(string)
+	if !ok {
+		return validators.ErrUnsupportedValueType
+	}
+
+	rules := []validation.Rule{
+		validation.Length(1, 300),
+	}
+
+	for _, r := range rules {
+		if err := r.Validate(v); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // DefaultFieldIdValidationRule performs base validation on a field id value.
 func DefaultFieldIdValidationRule(value any) error {
 	v, ok := value.(string)

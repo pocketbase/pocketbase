@@ -732,3 +732,129 @@ func TestFindRecordByViewFile(t *testing.T) {
 		})
 	}
 }
+
+func TestDryRunView(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	scenarios := []struct {
+		name            string
+		query           string
+		sampleSize      int
+		expectError     bool
+		expectFields    map[string]string // name-type pairs
+		expectSampleIds []string          // record ids of the resulting sample
+	}{
+		{
+			"empty query",
+			"",
+			10,
+			true,
+			nil,
+			nil,
+		},
+		{
+			"non-select query",
+			"CREATE TABLE t1(x INT)",
+			10,
+			true,
+			nil,
+			nil,
+		},
+		{
+			"multiple inline select statements",
+			"select 'a' as id; select 'b' as id",
+			10,
+			true,
+			nil,
+			nil,
+		},
+		{
+			"select with invalid formatted field name",
+			"select 'a' as id, count(*)", // missing field alias
+			10,
+			true,
+			nil,
+			nil,
+		},
+		{
+			"select resolving to records with missing id",
+			"(select 'a' as id UNION ALL select null as id UNION ALL select 'c' as id)",
+			10,
+			true,
+			nil,
+			nil,
+		},
+		{
+			"select resolving to records with duplicated ids",
+			"(select 'a' as id UNION ALL select 'a' as id UNION ALL select 'c' as id)",
+			10,
+			true,
+			nil,
+			nil,
+		},
+		{
+			"no sample size and valid select query but with invalid records result",
+			"(select 'a' as id UNION ALL select 'a' as id UNION ALL select 'c' as id)",
+			0,
+			false, // still "valid" because there is no sample to check
+			map[string]string{"id": "text"},
+			nil,
+		},
+		{
+			"sample size < total select records",
+			"(select 'a' as id UNION ALL select 'b' as id UNION ALL select 'c' as id UNION ALL select 'd' as id)",
+			3,
+			false,
+			map[string]string{"id": "text"},
+			[]string{"a", "b", "c"},
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			result, err := app.DryRunView(s.query, s.sampleSize)
+
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
+			}
+
+			if hasErr {
+				return
+			}
+
+			// check fields
+			// ---
+			if len(s.expectFields) != len(result.Fields) {
+				serialized, _ := json.Marshal(result.Fields)
+				t.Fatalf("Expected %d fields, got %d: \n%s", len(s.expectFields), len(result.Fields), serialized)
+			}
+			for name, typ := range s.expectFields {
+				field := result.Fields.GetByName(name)
+				if field == nil {
+					t.Fatalf("Expected to find field %s, got nil", name)
+				}
+
+				if field.Type() != typ {
+					t.Fatalf("Expected field %s to be %q, got %q", name, typ, field.Type())
+				}
+			}
+
+			// check sample ids
+			// ---
+			if len(s.expectSampleIds) != len(result.Sample) {
+				t.Fatalf("Expected %d sample records, got %d", len(s.expectSampleIds), len(result.Sample))
+			}
+			for i, r := range result.Sample {
+				if s.expectSampleIds[i] != r.Id {
+					t.Fatalf("Expected sample record id %q, got %q at %d", s.expectSampleIds[i], r.Id, i)
+				}
+			}
+		})
+	}
+
+	ensureNoTempViews(app, t)
+}

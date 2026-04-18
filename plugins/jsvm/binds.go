@@ -289,9 +289,13 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 	return wrappedMiddlewares, nil
 }
 
+// -------------------------------------------------------------------
+
 var cachedArrayOfTypes = store.New[reflect.Type, reflect.Type](nil)
 
-func baseBinds(vm *goja.Runtime) {
+// BindCore registers common core objects and functions such as sleep,
+// toString, DynamicModel, etc. into the provided runtime.
+func BindCore(vm *goja.Runtime) {
 	vm.SetFieldNameMapper(FieldMapper{})
 
 	// deprecated: use toString
@@ -659,7 +663,10 @@ func baseBinds(vm *goja.Runtime) {
 	})
 }
 
-func dbxBinds(vm *goja.Runtime) {
+// BindDbx registers $dbx.* namespaced object with dbx database builder related methods.
+//
+// See https://pocketbase.io/jsvm/modules/_dbx.html.
+func BindDbx(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$dbx", obj)
 
@@ -682,7 +689,10 @@ func dbxBinds(vm *goja.Runtime) {
 	obj.Set("notBetween", dbx.NotBetween)
 }
 
-func mailsBinds(vm *goja.Runtime) {
+// BindMails registers $mail.* namespaced object with common mail related helpers.
+//
+// See https://pocketbase.io/jsvm/modules/_mails.html.
+func BindMails(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$mails", obj)
 
@@ -693,7 +703,10 @@ func mailsBinds(vm *goja.Runtime) {
 	obj.Set("sendRecordAuthAlert", mails.SendRecordAuthAlert)
 }
 
-func securityBinds(vm *goja.Runtime) {
+// BindSecurity registers $security.* namespaced object with common security related helpers.
+//
+// See https://pocketbase.io/jsvm/modules/_security.html.
+func BindSecurity(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$security", obj)
 
@@ -736,7 +749,11 @@ func securityBinds(vm *goja.Runtime) {
 	})
 }
 
-func filesystemBinds(vm *goja.Runtime) {
+// BindFilesystem registers $filesystem.* namespaced object with
+// common filesystem package related helpers.
+//
+// See https://pocketbase.io/jsvm/modules/_filesystem.html.
+func BindFilesystem(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$filesystem", obj)
 
@@ -757,7 +774,11 @@ func filesystemBinds(vm *goja.Runtime) {
 	})
 }
 
-func filepathBinds(vm *goja.Runtime) {
+// BindFilesystem registers $filepath.* namespaced object with
+// common std Go filepath package related exports.
+//
+// See https://pocketbase.io/jsvm/modules/_filepath.html.
+func BindFilepath(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$filepath", obj)
 
@@ -778,7 +799,11 @@ func filepathBinds(vm *goja.Runtime) {
 	obj.Set("walkDir", filepath.WalkDir)
 }
 
-func osBinds(vm *goja.Runtime) {
+// BindFilesystem registers $os.* namespaced object with
+// common std Go os package related exports.
+//
+// See https://pocketbase.io/jsvm/modules/_os.html.
+func BindOs(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$os", obj)
 
@@ -804,14 +829,20 @@ func osBinds(vm *goja.Runtime) {
 	obj.Set("openInRoot", os.OpenInRoot)
 }
 
-func formsBinds(vm *goja.Runtime) {
+// BindForms registers various application form constructors.
+// These bindings are mostly used internally and/or preserved for backward compatibility with earlier versions.
+func BindForms(vm *goja.Runtime) {
 	registerFactoryAsConstructor(vm, "AppleClientSecretCreateForm", forms.NewAppleClientSecretCreate)
 	registerFactoryAsConstructor(vm, "RecordUpsertForm", forms.NewRecordUpsert)
 	registerFactoryAsConstructor(vm, "TestEmailSendForm", forms.NewTestEmailSend)
 	registerFactoryAsConstructor(vm, "TestS3FilesystemForm", forms.NewTestS3Filesystem)
 }
 
-func apisBinds(vm *goja.Runtime) {
+// BindApis registers $apis.* namespaced object with reusable Web API
+// handlers, middlewares and other related helpers.
+//
+// See https://pocketbase.io/jsvm/modules/_apis.html.
+func BindApis(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$apis", obj)
 
@@ -850,7 +881,11 @@ func apisBinds(vm *goja.Runtime) {
 	registerFactoryAsConstructor(vm, "InternalServerError", router.NewInternalServerError)
 }
 
-func httpClientBinds(vm *goja.Runtime) {
+// BindHttpClient registers $http.* namespaced object with common utils
+// for sending HTTP requests.
+//
+// See https://pocketbase.io/jsvm/modules/_http.html.
+func BindHttpClient(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$http", obj)
 

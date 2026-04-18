@@ -267,6 +267,15 @@ type App interface {
 	// "dangerousSelectQuery" argument must come only from trusted input!
 	CreateViewFields(dangerousSelectQuery string) (FieldsList, error)
 
+	// DryRunView executes the provided query by creating a temporary view
+	// collection and returning a sample of the resulting query records (if valid).
+	//
+	// The same caveats from CreateViewFields apply here too.
+	//
+	// NB! Be aware that this method is vulnerable to SQL injection and the
+	// "dangerousSelectQuery" argument must come only from trusted input!
+	DryRunView(dangerousSelectQuery string, sampleSize int) (*DryRunViewResult, error)
+
 	// FindRecordByViewFile returns the original Record of the provided view collection file.
 	FindRecordByViewFile(viewCollectionModelOrIdentifier any, fileFieldName string, filename string) (*Record, error)
 

@@ -26,6 +26,8 @@ type Wakatime struct {
 func NewWakatimeProvider() *Wakatime {
 	return &Wakatime{BaseProvider{
 		ctx:         context.Background(),
+		order:       26,
+		logo:        `<svg xmlns="http://www.w3.org/2000/svg" width="340" height="340" fill="none"><path stroke="#000" stroke-width="40" d="M170 20a150 150 0 1 0 0 300 150 150 0 0 0 0-300Z" clip-rule="evenodd"/><path fill="#000" stroke="#000" stroke-width="10" d="M190.2 213.5a8 8 0 0 1-7.6 3l-2-.8a9 9 0 0 1-2.3-2l-.9-1.3-8.8-14.2-8.8 14.2a8 8 0 0 1-6.8 4.3 8 8 0 0 1-6.8-4.4l-38.6-56.2a9 9 0 0 1-2-5.8c0-4.8 3.4-8.6 7.7-8.6 2.8 0 5.3 1.6 6.6 4l32.7 48.2 9.1-15a8 8 0 0 1 6.9-4.4q4.2.2 6.4 3.8l9.5 15.5 51.2-73.2q2.3-3.8 6.5-4c4.3 0 7.8 4 7.8 8.7q0 3.2-1.8 5.4z"/></svg>`,
 		displayName: "WakaTime",
 		pkce:        true,
 		scopes:      []string{"email"},

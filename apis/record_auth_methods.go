@@ -34,6 +34,7 @@ type oauth2Response struct {
 type providerInfo struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName"`
+	Logo        string `json:"logo"`
 	State       string `json:"state"`
 	AuthURL     string `json:"authURL"`
 
@@ -68,7 +69,14 @@ func (amr *authMethodsResponse) fillLegacyFields() {
 	amr.UsernamePassword = amr.Password.Enabled && slices.Contains(amr.Password.IdentityFields, "username")
 
 	if amr.OAuth2.Enabled {
-		amr.AuthProviders = amr.OAuth2.Providers
+		// clone without the logo
+		legacyProviders := make([]providerInfo, len(amr.OAuth2.Providers))
+		for i, p := range amr.OAuth2.Providers {
+			legacyProviders[i] = p
+			legacyProviders[i].Logo = ""
+		}
+
+		amr.AuthProviders = legacyProviders
 	}
 }
 
@@ -128,6 +136,7 @@ func recordAuthMethods(e *core.RequestEvent) error {
 		info := providerInfo{
 			Name:        config.Name,
 			DisplayName: provider.DisplayName(),
+			Logo:        provider.Logo(),
 			State:       security.RandomString(30),
 		}
 

@@ -133,6 +133,7 @@ func TestDateFieldValidateValue(t *testing.T) {
 func TestDateFieldValidateSettings(t *testing.T) {
 	testDefaultFieldIdValidation(t, core.FieldTypeDate)
 	testDefaultFieldNameValidation(t, core.FieldTypeDate)
+	testDefaultFieldHelpValidation[core.DateField](t)
 
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

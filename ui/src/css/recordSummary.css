@@ -1,0 +1,71 @@
+.record-summary {
+    padding: 3px 5px;
+    flex-shrink: 1;
+    justify-content: flex-start;
+    .thumb {
+        --thumbSize: 28px;
+        border-width: 1px;
+        font-size: 75%;
+    }
+    i {
+        font-size: 1em;
+    }
+    .record-preview-icon {
+        padding: 0 5px;
+        margin: 0 -5px;
+        height: 100%;
+        align-content: center;
+    }
+    .record-summary {
+        .thumb {
+            --thumbSize: 24px;
+        }
+        .record-summary .thumb {
+            --thumbSize: 20px;
+        }
+    }
+    .field-content & {
+        border-width: 1px;
+    }
+    .record-field-view {
+        display: inline-block;
+        vertical-align: top;
+    }
+}
+
+/* reduce the max width of common large text fields inside table */
+td .record-summary {
+    .field-type-text,
+    .field-type-editor,
+    .field-type-json {
+        max-width: 250px;
+    }
+}
+
+.record-summary-dropdown {
+    font-family: var(--monospaceFontFamily);
+    font-size: var(--smFontSize);
+    line-height: var(--smLineHeight);
+    width: 100%;
+    max-width: 350px;
+    max-height: 305px;
+    min-width: anchor-size(width);
+    user-select: text;
+    cursor: default;
+    &[popover] {
+        position-area: bottom span-right;
+        position-try-fallbacks: flip-block;
+    }
+    .record-header {
+        display: flex;
+        width: 100%;
+        gap: 10px;
+        padding: 5px;
+        align-items: center;
+        font-family: var(--baseFontFamily);
+    }
+    .record-json {
+        overflow: auto;
+        scrollbar-width: thin;
+    }
+}

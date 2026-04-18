@@ -66,11 +66,15 @@ type RelationField struct {
 	// Hidden hides the field from the API response.
 	Hidden bool `form:"hidden" json:"hidden"`
 
+	// ---
+
 	// Presentable hints the Dashboard UI to use the underlying
 	// field record value in the relation preview label.
 	Presentable bool `form:"presentable" json:"presentable"`
 
-	// ---
+	// Help is an extra text explaining what the field is about.
+	// It is usually shown in Dashboard UI under the field input.
+	Help string `form:"help" json:"help"`
 
 	// CollectionId is the id of the related collection.
 	CollectionId string `form:"collectionId" json:"collectionId"`
@@ -237,6 +241,7 @@ func (f *RelationField) ValidateSettings(ctx context.Context, app App, collectio
 	return validation.ValidateStruct(f,
 		validation.Field(&f.Id, validation.By(DefaultFieldIdValidationRule)),
 		validation.Field(&f.Name, validation.By(DefaultFieldNameValidationRule)),
+		validation.Field(&f.Help, validation.By(DefaultFieldHelpValidationRule)),
 		validation.Field(&f.CollectionId, validation.Required, validation.By(f.checkCollectionId(app, collection))),
 		validation.Field(&f.MinSelect, validation.Min(0)),
 		validation.Field(&f.MaxSelect, validation.When(f.MinSelect > 0, validation.Required), validation.Min(f.MinSelect)),

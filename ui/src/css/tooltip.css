@@ -1,0 +1,30 @@
+.pb-tooltip {
+    position: fixed;
+    z-index: 99999;
+    max-width: 300px;
+    min-width: 30px;
+    text-align: center;
+    white-space: pre-line;
+    word-break: break-word;
+    background: var(--tooltipSurfaceColor);
+    border-radius: var(--borderRadius);
+    color: var(--tooltipTxtColor);
+    font-weight: normal;
+    font-size: var(--smFontSize);
+    line-height: var(--smLineHeight);
+    font-family: var(--baseFontFamily);
+    margin: 3px;
+    padding: 3px 5px;
+    pointer-events: none;
+    opacity: 0;
+    transition:
+        opacity var(--animationSpeed),
+        display var(--animationSpeed) allow-discrete;
+    &:popover-open {
+        display: block;
+        opacity: 1;
+        @starting-style {
+            opacity: 0;
+        }
+    }
+}

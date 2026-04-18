@@ -1,0 +1,163 @@
+@keyframes popoverHide {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(3px);
+    }
+}
+
+@keyframes popoverShow {
+    from {
+        transform: translateY(3px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0px);
+        opacity: 1;
+    }
+}
+
+.dropdown {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 5px;
+    width: anchor-size(width);
+    min-width: 150px;
+    max-height: 330px;
+    overflow: auto;
+    padding: 5px;
+    margin: 5px 0;
+    outline: 0;
+    text-align: left;
+    font-weight: normal;
+    font-size: var(--fontSize);
+    line-height: var(--smLineHeight);
+    color: var(--surfaceTxtColor);
+    background: var(--surfaceColor);
+    box-shadow: var(--boxShadow);
+    scrollbar-width: thin;
+    border-radius: var(--borderRadius);
+    border: 1px solid var(--surfaceAlt3Color);
+    &[popover] {
+        display: none;
+        position-area: bottom span-left;
+        position-try-fallbacks: flip-block;
+        transition:
+            display var(--animationSpeed) allow-discrete,
+            overlay var(--animationSpeed) allow-discrete;
+        animation: popoverHide var(--animationSpeed) forwards;
+        &:popover-open {
+            animation: popoverShow var(--animationSpeed) forwards;
+            display: inline-flex;
+        }
+        &.left {
+            position-area: bottom span-right;
+        }
+    }
+    hr {
+        margin: 0;
+    }
+    .dropdown-item {
+        outline: 0;
+        cursor: pointer;
+        display: flex;
+        width: 100%;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        user-select: none;
+        text-decoration: none;
+        word-break: break-word;
+        color: inherit;
+        transition: background var(--animationSpeed);
+        border-radius: var(--borderRadius);
+        &:hover {
+            background: var(--surfaceAlt1Color);
+        }
+        &:focus-visible {
+            outline: 2px dotted var(--surfaceAlt3Color);
+        }
+        &:active {
+            background: var(--surfaceAlt2Color);
+            transition-duration: var(--activeAnimationSpeed);
+        }
+        &.active {
+            background: var(--surfaceAlt2Color);
+            transition-duration: var(--activeAnimationSpeed);
+            &:hover {
+                background: var(--surfaceAlt3Color);
+                transition-duration: var(--animationSpeed);
+            }
+        }
+        &[disabled],
+        &.disabled {
+            cursor: default;
+            background: none;
+            color: var(--surfaceTxtDisabledColor);
+        }
+        input[type="checkbox"],
+        input[type="radio"] {
+            ~ label {
+                width: 100%;
+            }
+        }
+    }
+    > .field,
+    > .fields-group {
+        margin: 0;
+    }
+    .field:has(.search),
+    .fields-group:has(.search) {
+        margin: 0;
+        background: none;
+        border-bottom: 1px solid var(--surfaceAlt1Color);
+        .field,
+        input.search {
+            background: none;
+            border-bottom: 0;
+        }
+    }
+    .dropdown-search {
+        border-bottom: 1px solid var(--surfaceAlt2Color);
+        .field {
+            background: none !important;
+        }
+    }
+
+    &.nowrap,
+    &.txt-nowrap {
+        width: auto;
+        white-space: nowrap;
+    }
+
+    &.sm {
+        min-width: 100px;
+        font-size: var(--smFontSize);
+        .dropdown-item {
+            gap: 5px;
+            padding: 7px;
+        }
+    }
+
+    &.autocomplete {
+        position: fixed;
+        z-index: 99999;
+        max-width: 350px;
+        max-height: 200px;
+        padding: 3px;
+        gap: 3px;
+        word-break: break-word;
+        font-size: var(--smFontSize);
+        .dropdown-item {
+            padding: 2px 4px;
+            line-height: 1.2;
+        }
+    }
+
+    &.history-searchbar-dropdown[popover] {
+        min-width: 300px;
+        max-width: 450px;
+    }
+}

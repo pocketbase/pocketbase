@@ -1,0 +1,98 @@
+.provider-logo {
+    --size: 40px;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    width: var(--size);
+    height: var(--size);
+    padding: 8px;
+    line-height: 1;
+    font-size: var(--fontSize);
+    color: var(--surfaceTxtDisabledColor);
+    background: var(--surfaceAlt1Color);
+    border-radius: var(--borderRadius);
+    &:empty {
+        &::before {
+            content: "\f452";
+            font-family: var(--iconFontFamily);
+        }
+    }
+    img {
+        width: 100%;
+        height: auto;
+    }
+}
+
+.provider-card {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+    align-items: center;
+    padding: 5px;
+    min-height: var(--lgBtnHeight);
+    border-radius: var(--borderRadius);
+    border: 1px solid var(--surfaceAlt2Color);
+
+    .content {
+        flex-grow: 1;
+        word-break: break-word;
+        font-size: var(--fontSize);
+        line-height: 1.1;
+        p {
+            margin: 5px 0;
+            &:first-child {
+                margin-top: 0;
+            }
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+        .primary-txt,
+        .secondary-txt {
+            display: block;
+        }
+        .secondary-txt {
+            color: var(--surfaceTxtHintColor);
+            font-size: var(--smFontSize);
+            margin: 2px 0;
+        }
+    }
+
+    &.handle {
+        outline: 0;
+        cursor: pointer;
+        user-select: none;
+        text-decoration: none;
+        transition: background var(--animationSpeed);
+        .provider-logo {
+            transition: background var(--animationSpeed);
+        }
+        &:hover,
+        &:focus-visible {
+            background: var(--surfaceAlt1Color);
+            .provider-logo {
+                background: var(--surfaceAlt2Color);
+            }
+        }
+        &.active,
+        &:active {
+            .provider-logo {
+                transition-duration: var(--activeAnimationSpeed);
+                background: var(--surfaceAlt3Color);
+            }
+        }
+    }
+
+    &.error {
+        border-color: var(--dangerColor);
+        background: var(--surfaceDangerColor);
+    }
+}
+
+.btn.add-provider-btn {
+    font-size: var(--fontSize);
+    line-height: var(--lineHeight);
+    height: 100%;
+}

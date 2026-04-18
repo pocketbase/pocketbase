@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"io/fs"
 	"net"
 	"net/http"
 	"time"
@@ -57,6 +58,9 @@ type baseCollectionEventData struct {
 	Collection *Collection
 }
 
+// @todo consider storing the original collection name and use that as a tag
+// to avoid the  ambiguity when the collection is being modified (#7613);
+// for new collection also maybe return empty tags?
 func (e *baseCollectionEventData) Tags() []string {
 	if e.Collection == nil {
 		return nil
@@ -125,6 +129,21 @@ type ServeEvent struct {
 	//
 	// Set it to nil if you want to skip the installer.
 	InstallerFunc func(app App, systemSuperuser *Record, baseURL string) error
+
+	// @todo experimental
+	//
+	// UIExtensions is a list with the superuser UI extensions.
+	UIExtensions []UIExtension
+}
+
+type UIExtension struct {
+	// Name is the name of the extension.
+	// It is also used as path segment for the registered public extension endpoint
+	// (e.g. /_/extensions/{name}/*)
+	Name string
+
+	// FS is the extension file system.
+	FS fs.FS
 }
 
 // -------------------------------------------------------------------

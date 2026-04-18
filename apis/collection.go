@@ -3,10 +3,12 @@ package apis
 import (
 	"errors"
 	"net/http"
+	"slices"
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/router"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/security"
@@ -23,6 +25,10 @@ func bindCollectionApi(app core.App, rg *router.RouterGroup[*core.RequestEvent])
 	subGroup.DELETE("/{collection}/truncate", collectionTruncate)
 	subGroup.PUT("/import", collectionsImport)
 	subGroup.GET("/meta/scaffolds", collectionScaffolds)
+
+	// @todo experimental
+	subGroup.GET("/meta/oauth2-providers", collectionListOAuth2Providers)
+	subGroup.POST("/meta/dry-run-view", collectionDryRunView)
 }
 
 func collectionsList(e *core.RequestEvent) error {
@@ -206,4 +212,85 @@ func collectionScaffolds(e *core.RequestEvent) error {
 	}
 
 	return e.JSON(http.StatusOK, collections)
+}
+
+type providerListItem struct {
+	order int
+
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Logo        string `json:"logo"`
+}
+
+func collectionListOAuth2Providers(e *core.RequestEvent) error {
+	providers := make([]*providerListItem, 0, len(auth.Providers))
+
+	for name, factory := range auth.Providers {
+		p := factory()
+
+		providers = append(providers, &providerListItem{
+			order:       p.Order(),
+			Name:        name,
+			DisplayName: p.DisplayName(),
+			Logo:        p.Logo(),
+		})
+	}
+
+	slices.SortStableFunc(providers, func(a, b *providerListItem) int {
+		// sort by order
+		if a.order < b.order {
+			return -1
+		}
+		if a.order > b.order {
+			return 1
+		}
+
+		// fallback sort by name
+		if a.Name < b.Name {
+			return -1
+		}
+		if a.Name > b.Name {
+			return 1
+		}
+
+		return 0
+	})
+
+	return e.JSON(http.StatusOK, providers)
+}
+
+func collectionDryRunView(e *core.RequestEvent) error {
+	// extra precaution in case reused in custom route group
+	if !e.HasSuperuserAuth() {
+		return e.ForbiddenError("", nil)
+	}
+
+	form := dryRunViewForm{}
+
+	err := e.BindBody(&form)
+	if err != nil {
+		return firstApiError(err, e.BadRequestError("An error occurred while loading the submitted data.", err))
+	}
+
+	err = form.validate()
+	if err != nil {
+		return firstApiError(err, e.BadRequestError("An error occurred while validating the submitted data.", err))
+	}
+
+	result, err := e.App.DryRunView(form.Query, 10)
+	if err != nil {
+		return firstApiError(err, e.BadRequestError("Invalid view query. Raw error: \n"+err.Error(), nil))
+	}
+
+	return e.JSON(http.StatusOK, result)
+}
+
+type dryRunViewForm struct {
+	Query string `form:"query" json:"query"`
+}
+
+func (form *dryRunViewForm) validate() error {
+	return validation.ValidateStruct(form,
+		validation.Field(&form.Query, validation.Required, validation.Length(0, 5000)),
+	)
 }

@@ -30,14 +30,46 @@ func TestDisplayName(t *testing.T) {
 
 	before := b.DisplayName()
 	if before != "" {
-		t.Fatalf("Expected displayName to be empty, got %v", before)
+		t.Fatalf("Expected displayName to be empty, got %q", before)
 	}
 
 	b.SetDisplayName("test")
 
 	after := b.DisplayName()
 	if after != "test" {
-		t.Fatalf("Expected displayName to be 'test', got %v", after)
+		t.Fatalf("Expected displayName to be %q, got %q", "test", after)
+	}
+}
+
+func TestOrder(t *testing.T) {
+	b := BaseProvider{}
+
+	before := b.Order()
+	if before != 0 {
+		t.Fatalf("Expected order to be empty, got %d", before)
+	}
+
+	b.order = 123
+
+	after := b.Order()
+	if after != 123 {
+		t.Fatalf("Expected order to be %d, got %d", 123, after)
+	}
+}
+
+func TestLogo(t *testing.T) {
+	b := BaseProvider{}
+
+	before := b.Logo()
+	if before != "" {
+		t.Fatalf("Expected logo to be empty, got %q", before)
+	}
+
+	b.logo = "test"
+
+	after := b.Logo()
+	if after != "test" {
+		t.Fatalf("Expected logo to be %q, got %q", "test", after)
 	}
 }
 
@@ -78,14 +110,14 @@ func TestClientId(t *testing.T) {
 
 	before := b.ClientId()
 	if before != "" {
-		t.Fatalf("Expected clientId to be empty, got %v", before)
+		t.Fatalf("Expected clientId to be empty, got %q", before)
 	}
 
 	b.SetClientId("test")
 
 	after := b.ClientId()
 	if after != "test" {
-		t.Fatalf("Expected clientId to be 'test', got %v", after)
+		t.Fatalf("Expected clientId to be %q, got %q", "test", after)
 	}
 }
 
@@ -94,14 +126,14 @@ func TestClientSecret(t *testing.T) {
 
 	before := b.ClientSecret()
 	if before != "" {
-		t.Fatalf("Expected clientSecret to be empty, got %v", before)
+		t.Fatalf("Expected clientSecret to be empty, got %q", before)
 	}
 
 	b.SetClientSecret("test")
 
 	after := b.ClientSecret()
 	if after != "test" {
-		t.Fatalf("Expected clientSecret to be 'test', got %v", after)
+		t.Fatalf("Expected clientSecret to be %q, got %q", "test", after)
 	}
 }
 
@@ -110,14 +142,14 @@ func TestRedirectURL(t *testing.T) {
 
 	before := b.RedirectURL()
 	if before != "" {
-		t.Fatalf("Expected RedirectURL to be empty, got %v", before)
+		t.Fatalf("Expected RedirectURL to be empty, got %q", before)
 	}
 
 	b.SetRedirectURL("test")
 
 	after := b.RedirectURL()
 	if after != "test" {
-		t.Fatalf("Expected RedirectURL to be 'test', got %v", after)
+		t.Fatalf("Expected RedirectURL to be %q, got %q", "test", after)
 	}
 }
 
@@ -126,14 +158,14 @@ func TestAuthURL(t *testing.T) {
 
 	before := b.AuthURL()
 	if before != "" {
-		t.Fatalf("Expected authURL to be empty, got %v", before)
+		t.Fatalf("Expected authURL to be empty, got %q", before)
 	}
 
 	b.SetAuthURL("test")
 
 	after := b.AuthURL()
 	if after != "test" {
-		t.Fatalf("Expected authURL to be 'test', got %v", after)
+		t.Fatalf("Expected authURL to be %q, got %q", "test", after)
 	}
 }
 
@@ -142,14 +174,14 @@ func TestTokenURL(t *testing.T) {
 
 	before := b.TokenURL()
 	if before != "" {
-		t.Fatalf("Expected tokenURL to be empty, got %v", before)
+		t.Fatalf("Expected tokenURL to be empty, got %q", before)
 	}
 
 	b.SetTokenURL("test")
 
 	after := b.TokenURL()
 	if after != "test" {
-		t.Fatalf("Expected tokenURL to be 'test', got %v", after)
+		t.Fatalf("Expected tokenURL to be %q, got %q", "test", after)
 	}
 }
 
@@ -158,14 +190,14 @@ func TestUserInfoURL(t *testing.T) {
 
 	before := b.UserInfoURL()
 	if before != "" {
-		t.Fatalf("Expected userInfoURL to be empty, got %v", before)
+		t.Fatalf("Expected userInfoURL to be empty, got %q", before)
 	}
 
 	b.SetUserInfoURL("test")
 
 	after := b.UserInfoURL()
 	if after != "test" {
-		t.Fatalf("Expected userInfoURL to be 'test', got %v", after)
+		t.Fatalf("Expected userInfoURL to be %q, got %q", "test", after)
 	}
 }
 

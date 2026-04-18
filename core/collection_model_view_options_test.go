@@ -42,6 +42,24 @@ func TestCollectionViewOptionsValidate(t *testing.T) {
 			expectedErrors: []string{"fields", "viewQuery"},
 		},
 		{
+			name: "view with valid query but empty sample id",
+			collection: func(app core.App) (*core.Collection, error) {
+				c := core.NewViewCollection("new_auth")
+				c.ViewQuery = "select '' as id"
+				return c, nil
+			},
+			expectedErrors: []string{"viewQuery"},
+		},
+		{
+			name: "view with valid query but duplicated sample id",
+			collection: func(app core.App) (*core.Collection, error) {
+				c := core.NewViewCollection("new_auth")
+				c.ViewQuery = "(select 'a' as id union all select 'a' as id union all select 'c' as id)"
+				return c, nil
+			},
+			expectedErrors: []string{"viewQuery"},
+		},
+		{
 			name: "view with valid query",
 			collection: func(app core.App) (*core.Collection, error) {
 				c := core.NewViewCollection("new_auth")

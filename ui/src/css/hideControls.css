@@ -1,0 +1,7 @@
+.app.hide-controls {
+    .btn-collection-settings,
+    .sidebar-content.new-collection,
+    .settings-sidebar [data-group="Sync"] {
+        display: none;
+    }
+}

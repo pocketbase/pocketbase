@@ -28,6 +28,8 @@ func NewMicrosoftProvider() *Microsoft {
 	endpoints := microsoft.AzureADEndpoint("")
 	return &Microsoft{BaseProvider{
 		ctx:         context.Background(),
+		order:       3,
+		logo:        `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" preserveAspectRatio="xMidYMid"><path fill="#f1511b" d="M122 122H0V0h122z"/><path fill="#80cc28" d="M256 122H134V0h122z"/><path fill="#00adef" d="M122 256H0V134h122z"/><path fill="#fbbc09" d="M256 256H134V134h122z"/></svg>`,
 		displayName: "Microsoft",
 		pkce:        true,
 		scopes:      []string{"User.Read"},

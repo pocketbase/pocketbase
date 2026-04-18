@@ -13,16 +13,28 @@ import (
 // BaseProvider defines common fields and methods used by OAuth2 client providers.
 type BaseProvider struct {
 	ctx          context.Context
+	extra        map[string]any
+	redirectURL  string
 	clientId     string
 	clientSecret string
 	displayName  string
-	redirectURL  string
+	logo         string
 	authURL      string
 	tokenURL     string
 	userInfoURL  string
 	scopes       []string
+	order        int
 	pkce         bool
-	extra        map[string]any
+}
+
+// Order implements Provider.Order() interface method.
+func (p *BaseProvider) Order() int {
+	return p.order
+}
+
+// Logo implements Provider.Logo() interface method.
+func (p *BaseProvider) Logo() string {
+	return p.logo
 }
 
 // Context implements Provider.Context() interface method.

@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://pocketbase.io" target="_blank" rel="noopener">
-        <img src="https://i.imgur.com/5qimnm5.png" alt="PocketBase - open source backend in 1 file" />
+        <img src="https://i.imgur.com/3FTfaXH.png" alt="PocketBase - open source backend in 1 file" />
     </a>
 </p>
 
@@ -146,10 +146,13 @@ You could help continuing its development by:
 - [Contribute to the source code](CONTRIBUTING.md)
 - [Suggest new features and report issues](https://github.com/pocketbase/pocketbase/issues)
 
-PRs for new OAuth2 providers, bug fixes, code optimizations and documentation improvements are more than welcome.
-
-But please refrain creating PRs for _new features_ without previously discussing the implementation details.
+Please refrain creating PRs for _new features_ without previously discussing the implementation details.
 PocketBase has a [roadmap](https://github.com/orgs/pocketbase/projects/2) and I try to work on issues in specific order and such PRs often come in out of nowhere and skew all initial planning with tedious back-and-forth communication.
 
 Don't get upset if I close your PR, even if it is well executed and tested. This doesn't mean that it will never be merged.
 Later we can always refer to it and/or take pieces of your implementation when the time comes to work on the issue (don't worry you'll be credited in the release notes).
+
+> [!IMPORTANT]
+> Due to recent LLM spam, PRs are temporary disabled and only existing collaborators can open a PR.
+> If you stumble on an problem that you want to fix, please consider instead opening an issue or discussion with link to your fork _(if not obvious - LLM contributions are not welcome)_.
+> This status may change in the future in case GitHub finally decide to do something about the constant spam, or when I find time to move the project somewhere else.

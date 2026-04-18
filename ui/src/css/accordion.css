@@ -1,0 +1,163 @@
+.accordion {
+    --siblingSpacing: var(--smSpacing);
+    --contentPadding: var(--smSpacing);
+
+    position: relative;
+    display: block;
+    width: 100%;
+    color: var(--surfaceTxtColor);
+    border-radius: var(--borderRadius);
+    background: var(--surfaceAlt1Color);
+    border: 1px solid var(--surfaceAlt3Color);
+    transition:
+        border var(--animationSpeed),
+        border-radius var(--animationSpeed),
+        box-shadow var(--animationSpeed),
+        margin var(--animationSpeed);
+
+    summary {
+        position: relative;
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        align-items: center;
+        min-height: var(--lgBtnHeight);
+        cursor: pointer;
+        padding: 10px var(--smSpacing);
+        padding-right: calc(var(--smSpacing) + 30px);
+        background: var(--surfaceColor);
+        border-radius: var(--borderRadius);
+        user-select: none;
+        transition:
+            background var(--animationSpeed),
+            border var(--animationSpeed),
+            border-radius var(--animationSpeed);
+        &::marker {
+            content: "";
+            display: none;
+        }
+        &::before {
+            position: absolute;
+            right: calc(var(--smSpacing) - 3px);
+            top: 50%;
+            margin-top: -10px;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            align-content: center;
+            content: "\EA4E";
+            display: block;
+            flex-shrink: 0;
+            font-size: 1.3rem;
+            font-weight: normal;
+            font-family: var(--iconFontFamily);
+            color: var(--surfaceTxtHintColor);
+            transition: color var(--animationSpeed);
+        }
+        &:not([tabindex="-1"]) {
+            &:hover,
+            &:focus-visible {
+                outline: 0;
+                background: var(--surfaceAlt1Color);
+                &::before {
+                    color: var(--surfaceTxtColor);
+                }
+            }
+        }
+        &[tabindex="-1"] {
+            outline: 0;
+            cursor: default;
+            user-select: auto;
+            padding-right: var(--smSpacing);
+            &::before {
+                content: none;
+                display: none;
+            }
+        }
+    }
+    &::details-content {
+        height: 0;
+        overflow: clip;
+        padding: 0 var(--contentPadding);
+        background: var(--surfaceColor);
+        border-bottom-left-radius: var(--borderRadius);
+        border-bottom-right-radius: var(--borderRadius);
+        transition:
+            border var(--slideAnimationSpeed) step-end,
+            height var(--slideAnimationSpeed),
+            padding var(--slideAnimationSpeed),
+            content-visibility var(--slideAnimationSpeed),
+            overflow var(--slideAnimationSpeed) step-start;
+        transition-behavior: allow-discrete;
+    }
+    &:has(+ .accordion) {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        summary {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+    }
+    &:not([open]):has(+ .accordion[open]) {
+        border-bottom-left-radius: var(--borderRadius);
+        border-bottom-right-radius: var(--borderRadius);
+        border-bottom-width: 1px;
+        summary {
+            border-bottom-left-radius: var(--borderRadius);
+            border-bottom-right-radius: var(--borderRadius);
+        }
+    }
+    + .accordion {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        border-top-width: 0;
+        summary {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+    }
+    & + .accordion[open] {
+        margin-top: var(--siblingSpacing);
+    }
+    &[open] {
+        border-width: 1px;
+        border-radius: var(--borderRadius);
+        box-shadow: var(--boxShadow);
+        summary {
+            background: var(--surfaceAlt1Color);
+            border-radius: var(--borderRadius) var(--borderRadius) 0 0;
+            &::before {
+                content: "\EA78";
+            }
+        }
+        &::details-content {
+            border-top: 1px solid var(--surfaceAlt3Color);
+            padding-top: var(--contentPadding);
+            padding-bottom: var(--contentPadding);
+            height: auto;
+            overflow: visible;
+            /* same transition but with step-end overflow */
+            transition:
+                height var(--slideAnimationSpeed),
+                padding var(--slideAnimationSpeed),
+                content-visibility var(--slideAnimationSpeed),
+                overflow var(--slideAnimationSpeed) step-end;
+            transition-behavior: allow-discrete;
+        }
+        & + .accordion {
+            border-top-width: 1px;
+            margin-top: var(--siblingSpacing);
+            border-top-left-radius: var(--borderRadius);
+            border-top-right-radius: var(--borderRadius);
+            summary {
+                border-top-left-radius: var(--borderRadius);
+                border-top-right-radius: var(--borderRadius);
+            }
+        }
+    }
+    &.noanimation {
+        &::details-content {
+            transition: none !important;
+        }
+    }
+}

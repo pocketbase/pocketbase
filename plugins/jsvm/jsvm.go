@@ -1,6 +1,9 @@
 // Package jsvm implements pluggable utilities for binding a JS goja runtime
 // to the PocketBase instance (loading migrations, attaching to app hooks, etc.).
 //
+// The package also exports several reusable bindings so that users
+// can utilize them as part of their own custom goja runtime setup.
+//
 // Example:
 //
 //	jsvm.MustRegister(app, jsvm.Config{
@@ -200,15 +203,15 @@ func (p *plugin) registerMigrations() error {
 		process.Enable(vm)
 		buffer.Enable(vm)
 
-		baseBinds(vm)
-		dbxBinds(vm)
-		securityBinds(vm)
-		osBinds(vm)
-		filepathBinds(vm)
-		httpClientBinds(vm)
-		filesystemBinds(vm)
-		formsBinds(vm)
-		mailsBinds(vm)
+		BindCore(vm)
+		BindDbx(vm)
+		BindSecurity(vm)
+		BindOs(vm)
+		BindFilepath(vm)
+		BindHttpClient(vm)
+		BindFilesystem(vm)
+		BindForms(vm)
+		BindMails(vm)
 
 		vm.Set("$template", templateRegistry)
 		vm.Set("__hooks", absHooksDir)
@@ -288,16 +291,16 @@ func (p *plugin) registerHooks() error {
 		process.Enable(vm)
 		buffer.Enable(vm)
 
-		baseBinds(vm)
-		dbxBinds(vm)
-		filesystemBinds(vm)
-		securityBinds(vm)
-		osBinds(vm)
-		filepathBinds(vm)
-		httpClientBinds(vm)
-		formsBinds(vm)
-		apisBinds(vm)
-		mailsBinds(vm)
+		BindCore(vm)
+		BindDbx(vm)
+		BindSecurity(vm)
+		BindOs(vm)
+		BindFilepath(vm)
+		BindHttpClient(vm)
+		BindFilesystem(vm)
+		BindForms(vm)
+		BindMails(vm)
+		BindApis(vm)
 
 		vm.Set("$app", p.app)
 		vm.Set("$template", templateRegistry)

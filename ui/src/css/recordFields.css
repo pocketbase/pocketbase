@@ -1,0 +1,325 @@
+.accordion.record-field-settings {
+    --fieldsGap: 10px;
+    border-color: var(--surfaceAlt4Color);
+
+    summary {
+        display: flex;
+        align-items: center;
+        gap: var(--fieldsGap);
+        padding: 4px;
+        min-height: 0;
+        background: var(--inputColor);
+        container-type: inline-size;
+        .header-fields {
+            display: flex;
+            gap: var(--fieldsGap);
+            width: 100%;
+            align-content: center;
+            align-items: stretch;
+            .header-select {
+                max-width: 150px;
+            }
+            /* auto delimiter */
+            > * {
+                position: relative;
+                &::before {
+                    content: "";
+                    position: absolute;
+                    top: -4px;
+                    bottom: -4px;
+                    right: -5px;
+                    width: 1px;
+                    height: auto;
+                    min-height: 0;
+                    flex-shrink: 0;
+                    background: var(--surfaceAlt4Color);
+                }
+            }
+        }
+        .btn {
+            i.ri-settings-3-line {
+                transition:
+                    color var(--animationSpeed),
+                    transform var(--animationSpeed);
+            }
+        }
+        .sort-handle {
+            position: absolute;
+            z-index: 2;
+            top: 0;
+            left: -30px;
+            width: 30px;
+            height: 100%;
+            padding-left: 7px;
+            align-content: center;
+            flex-shrink: 0;
+            text-align: left;
+            cursor: pointer;
+            color: var(--surfaceTxtHintColor);
+            opacity: 0;
+            transform: translateX(3px);
+            transition:
+                color var(--animationSpeed),
+                opacity var(--animationSpeed),
+                transform var(--animationSpeed);
+            &:hover,
+            &:active {
+                opacity: 1;
+                transform: translateX(0);
+                color: var(--surfaceTxtColor);
+            }
+        }
+
+        @container (width <= 480px) {
+            .header-fields {
+                flex-direction: column;
+                gap: 5px;
+                padding: 5px;
+                border-radius: var(--borderRadius);
+                background: var(--surfaceColor);
+                > * {
+                    flex-grow: 1;
+                    max-width: none !important;
+                    &::before {
+                        content: none;
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+
+    &:hover {
+        summary .sort-handle {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .record-field-settings-footer {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--smSpacing);
+        margin-top: var(--smSpacing);
+        > .field,
+        > .fields {
+            width: auto;
+        }
+    }
+    summary + .record-field-settings-footer {
+        margin-top: 0;
+    }
+
+    .field-labels {
+        position: absolute;
+        z-index: 2;
+        align-items: center;
+        display: flex;
+        top: 2px;
+        right: 2px;
+        gap: 2px;
+        pointer-events: none;
+        user-select: none;
+        .label {
+            min-height: 0;
+            line-height: 1.2;
+            font-size: 0.7em;
+            padding: 2px 3px;
+        }
+    }
+
+    &[open] {
+        box-shadow: 0px 0px 0px 1px var(--surfaceAlt3Color);
+        summary {
+            outline: 0;
+            .btn i.ri-settings-3-line {
+                color: var(--surfaceTxtColor);
+                transform: rotate(-30deg);
+            }
+        }
+    }
+
+    &.deleted {
+        summary {
+            background: var(--surfaceAlt1Color);
+            .field,
+            .fields {
+                background: none !important;
+            }
+        }
+        .header-fields {
+            opacity: 0.7;
+            > *::after {
+                background: var(--surfaceAlt2Color);
+            }
+        }
+    }
+}
+
+.header-select.field-select-choices-input,
+.header-select.collections-select {
+    min-width: 200px;
+}
+
+.record-field-view {
+    display: block;
+    vertical-align: top;
+    align-content: center;
+    text-align: left;
+    max-width: 100%;
+    min-width: 0; /* flex summary ellipsis fix */
+    &:empty {
+        display: none !important;
+    }
+    .missing-value {
+        display: inline-block;
+        vertical-align: top;
+        color: var(--surfaceTxtDisabledColor);
+        font-size: var(--smFontSize);
+        align-content: center;
+        &::before {
+            content: "N/A";
+        }
+    }
+    .delimiter {
+        line-height: 1;
+        font-size: var(--smFontSize);
+        color: var(--surfaceTxtDisabledColor);
+    }
+    .marker {
+        line-height: 1;
+        padding-right: 5px;
+        align-content: center;
+        font-size: var(--smFontSize);
+        color: var(--surfaceTxtHintColor);
+    }
+}
+
+.record-field-input {
+    .record-summary {
+        animation: fadeIn var(--animationSpeed);
+    }
+}
+
+.field-type-bool {
+    &.record-field-view .label {
+        min-width: 48px;
+    }
+}
+
+.field-type-json {
+    &.record-field-view {
+        overflow: auto;
+        max-height: 400px;
+        white-space: pre-wrap;
+        scrollbar-width: thin;
+    }
+    .input.code-editor {
+        min-height: 38px;
+    }
+    .json-state {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+}
+
+.field-type-geoPoint {
+    &.record-field-view {
+        white-space: nowrap;
+    }
+}
+
+.field-type-select {
+    .field-select-choices-input {
+        > input {
+            font-size: var(--smFontSize);
+        }
+    }
+    .field-select-choices-dropdown {
+        max-height: 400px;
+        textarea {
+            font-size: var(--smFontSize);
+            max-height: 300px;
+        }
+    }
+}
+
+.more-marker {
+    align-self: flex-end;
+    color: var(--surfaceTxtHintColor);
+}
+
+.field-type-file {
+    &.record-field-view {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+}
+
+.field-type-editor {
+    &.record-field-view {
+        width: 100%;
+    }
+    &.record-field-input {
+        /* fixed size to minimize flickering */
+        .field {
+            min-height: 296px;
+        }
+        .loading-textarea {
+            resize: none
+        }
+        .pb-tinymce {
+            animation: fadeIn var(--animationSpeed);
+        }
+    }
+}
+
+.field-type-relation {
+    &.record-field-view {
+        display: inline-flex;
+        align-items: stretch;
+        flex-wrap: wrap;
+        gap: 10px;
+        .record-summary & {
+            gap: 5px;
+        }
+    }
+}
+
+.hidden-field-blur {
+    filter: blur(2.5px);
+    transition: filter var(--animationSpeed);
+    &:hover,
+    &:active,
+    &:focus-within {
+        filter: none;
+        transition-delay: 0s;
+    }
+}
+
+/* --------------------------------------------------------------- */
+
+.records-list-columns-dropdown {
+    max-height: 230px;
+}
+
+.record-upsert-modal {
+    width: 720px;
+    .modal-title {
+        min-height: var(--smBtnHeight); /* minimize flickering */
+        align-content: center;
+    }
+    .modal-content {
+        scrollbar-gutter: stable;
+    }
+}
+.record-upsert-modal,
+.record-preview-modal {
+    &:has(.large-modal) {
+        width: 832px;
+    }
+}

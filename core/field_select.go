@@ -66,11 +66,15 @@ type SelectField struct {
 	// Hidden hides the field from the API response.
 	Hidden bool `form:"hidden" json:"hidden"`
 
+	// ---
+
 	// Presentable hints the Dashboard UI to use the underlying
 	// field record value in the relation preview label.
 	Presentable bool `form:"presentable" json:"presentable"`
 
-	// ---
+	// Help is an extra text explaining what the field is about.
+	// It is usually shown in Dashboard UI under the field input.
+	Help string `form:"help" json:"help"`
 
 	// Values specifies the list of accepted values.
 	Values []string `form:"values" json:"values"`
@@ -216,6 +220,7 @@ func (f *SelectField) ValidateSettings(ctx context.Context, app App, collection 
 	return validation.ValidateStruct(f,
 		validation.Field(&f.Id, validation.By(DefaultFieldIdValidationRule)),
 		validation.Field(&f.Name, validation.By(DefaultFieldNameValidationRule)),
+		validation.Field(&f.Help, validation.By(DefaultFieldHelpValidationRule)),
 		validation.Field(&f.Values, validation.Required),
 		validation.Field(&f.MaxSelect, validation.Min(0), validation.Max(max)),
 	)

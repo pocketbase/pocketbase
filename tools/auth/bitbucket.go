@@ -28,6 +28,8 @@ type Bitbucket struct {
 func NewBitbucketProvider() *Bitbucket {
 	return &Bitbucket{BaseProvider{
 		ctx:         context.Background(),
+		order:       9,
+		logo:        `<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="2256" preserveAspectRatio="xMidYMid" viewBox="-1 -0.6 257.9 230.8"><linearGradient id="a" x1="108.6%" x2="46.9%" y1="13.8%" y2="78.8%"><stop offset=".2" stop-color="#0052cc"/><stop offset="1" stop-color="#2684ff"/></linearGradient><g fill="none"><path d="M101 153h54l13-76H87z"/><path fill="#2684ff" d="M8 0a8 8 0 0 0-8 10l35 211a11 11 0 0 0 11 9h167a8 8 0 0 0 8-7l35-213a8 8 0 0 0-8-10zm147 153h-53L87 77h81z"/><path fill="url(#a)" d="M245 77h-77l-13 76h-53l-63 74 7 3h167a8 8 0 0 0 8-7z"/></g></svg>`,
 		displayName: "Bitbucket",
 		pkce:        false,
 		scopes:      []string{"account"},

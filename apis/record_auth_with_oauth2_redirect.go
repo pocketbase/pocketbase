@@ -9,6 +9,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
+	"github.com/pocketbase/pocketbase/ui"
 )
 
 const (
@@ -28,17 +29,12 @@ type oauth2RedirectData struct {
 }
 
 func oauth2SubscriptionRedirect(e *core.RequestEvent) error {
-	redirectStatusCode := http.StatusTemporaryRedirect
-	if e.Request.Method != http.MethodGet {
-		redirectStatusCode = http.StatusSeeOther
-	}
-
 	data := oauth2RedirectData{}
 
 	if e.Request.Method == http.MethodPost {
 		if err := e.BindBody(&data); err != nil {
 			e.App.Logger().Debug("Failed to read OAuth2 redirect data", "error", err)
-			return e.Redirect(redirectStatusCode, oauth2RedirectFailurePath)
+			return failureRedirect(e)
 		}
 	} else {
 		query := e.Request.URL.Query()
@@ -49,13 +45,13 @@ func oauth2SubscriptionRedirect(e *core.RequestEvent) error {
 
 	if data.State == "" {
 		e.App.Logger().Debug("Missing OAuth2 state parameter")
-		return e.Redirect(redirectStatusCode, oauth2RedirectFailurePath)
+		return failureRedirect(e)
 	}
 
 	client, err := e.App.SubscriptionsBroker().ClientById(data.State)
 	if err != nil || client.IsDiscarded() || !client.HasSubscription(oauth2SubscriptionTopic) {
 		e.App.Logger().Debug("Missing or invalid OAuth2 subscription client", "error", err, "clientId", data.State)
-		return e.Redirect(redirectStatusCode, oauth2RedirectFailurePath)
+		return failureRedirect(e)
 	}
 	defer client.Unsubscribe(oauth2SubscriptionTopic)
 
@@ -76,7 +72,7 @@ func oauth2SubscriptionRedirect(e *core.RequestEvent) error {
 	encodedData, err := json.Marshal(data)
 	if err != nil {
 		e.App.Logger().Debug("Failed to marshalize OAuth2 redirect data", "error", err)
-		return e.Redirect(redirectStatusCode, oauth2RedirectFailurePath)
+		return failureRedirect(e)
 	}
 
 	msg := subscriptions.Message{
@@ -88,10 +84,36 @@ func oauth2SubscriptionRedirect(e *core.RequestEvent) error {
 
 	if data.Error != "" || data.Code == "" {
 		e.App.Logger().Debug("Failed OAuth2 redirect due to an error or missing code parameter", "error", data.Error, "clientId", data.State)
-		return e.Redirect(redirectStatusCode, oauth2RedirectFailurePath)
+		return failureRedirect(e)
 	}
 
-	return e.Redirect(redirectStatusCode, oauth2RedirectSuccessPath)
+	return successRedirect(e)
+}
+
+func redirectStatusCode(e *core.RequestEvent) int {
+	if e.Request.Method != http.MethodGet {
+		return http.StatusSeeOther
+	}
+
+	return http.StatusTemporaryRedirect
+}
+
+func failureRedirect(e *core.RequestEvent) error {
+	// fallback if UI is not bundled
+	if ui.DistDirFS == nil {
+		return e.String(http.StatusOK, "Failed to authenticate. You can close this window and go back to the app to try again.")
+	}
+
+	return e.Redirect(redirectStatusCode(e), oauth2RedirectFailurePath)
+}
+
+func successRedirect(e *core.RequestEvent) error {
+	// fallback if UI is not bundled
+	if ui.DistDirFS == nil {
+		return e.HTML(http.StatusOK, "Auth completed. You can close this window and go back to the app.")
+	}
+
+	return e.Redirect(redirectStatusCode(e), oauth2RedirectSuccessPath)
 }
 
 // parseAndStoreAppleRedirectName extracts the first and last name

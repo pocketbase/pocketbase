@@ -1,0 +1,38 @@
+.records-picker-list {
+    max-height: 400px;
+}
+
+.records-picker-selected-list {
+    display: flex;
+    max-width: 100%;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.records-picker-modal {
+    .modal-header .collection-name {
+        max-width: 250px;
+        min-width: 0;
+        flex-shrink: 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    @media only screen and (max-width: 550px) {
+        .modal-header {
+            flex-wrap: wrap;
+            .collection-name {
+                flex-grow: 1;
+                flex-shrink: 1;
+                max-width: 80%;
+                margin-right: auto;
+            }
+        }
+        .searchbar {
+            flex-grow: 1;
+            order: 99;
+        }
+    }
+}

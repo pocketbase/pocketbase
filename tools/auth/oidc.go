@@ -57,6 +57,8 @@ type OIDC struct {
 func NewOIDCProvider() *OIDC {
 	return &OIDC{BaseProvider{
 		ctx:         context.Background(),
+		order:       99,
+		logo:        `<svg xmlns="http://www.w3.org/2000/svg" width="93" height="84" fill="none"><path fill="#ccc" d="M83.4 32.9c-8.7-5.5-21-8.8-34.3-8.8C22 24 .4 37.5.4 54 .4 69.3 18.5 81.8 42 84v-8.7c-15.9-2-27.8-10.7-27.8-21 0-11.9 15.5-21.6 34.8-21.6 9.5 0 18.2 2.4 24.5 6.3l-9 5.6h27.9V27.3z"/><path fill="#ff6200" d="M42 9.2V84l14-8.7V.2z"/></svg>`,
 		displayName: "OIDC",
 		pkce:        true,
 		scopes: []string{

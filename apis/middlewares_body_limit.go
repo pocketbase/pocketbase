@@ -11,7 +11,7 @@ import (
 
 var ErrRequestEntityTooLarge = router.NewApiError(http.StatusRequestEntityTooLarge, "Request entity too large", nil)
 
-const DefaultMaxBodySize int64 = 32 << 20
+const DefaultMaxBodySize int64 = 32 << 20 // @todo consider replacing with router.DefaultMaxMemory
 
 const (
 	DefaultBodyLimitMiddlewareId       = "pbBodyLimit"

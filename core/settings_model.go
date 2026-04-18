@@ -143,6 +143,7 @@ func newDefaultSettings() *Settings {
 		isNew: true,
 		settings: settings{
 			Meta: MetaConfig{
+				AccentColor:   "#1055c9",
 				AppName:       "Acme",
 				AppURL:        "http://localhost:8090",
 				HideControls:  false,
@@ -513,6 +514,11 @@ func checkCronExpression(value any) error {
 // -------------------------------------------------------------------
 
 type MetaConfig struct {
+	// @todo experimental
+	//
+	// AccentColor specify the UI "accent" color (HEX).
+	AccentColor string `form:"accentColor" json:"accentColor"`
+
 	AppName       string `form:"appName" json:"appName"`
 	AppURL        string `form:"appURL" json:"appURL"`
 	SenderName    string `form:"senderName" json:"senderName"`
@@ -523,6 +529,7 @@ type MetaConfig struct {
 // Validate makes MetaConfig validatable by implementing [validation.Validatable] interface.
 func (c MetaConfig) Validate() error {
 	return validation.ValidateStruct(&c,
+		validation.Field(&c.AccentColor, validation.Length(7, 7), is.HexColor),
 		validation.Field(&c.AppName, validation.Required, validation.Length(1, 255)),
 		validation.Field(&c.AppURL, validation.Required, is.URL),
 		validation.Field(&c.SenderName, validation.Required, validation.Length(1, 255)),

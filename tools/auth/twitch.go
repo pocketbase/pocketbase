@@ -29,6 +29,8 @@ type Twitch struct {
 func NewTwitchProvider() *Twitch {
 	return &Twitch{BaseProvider{
 		ctx:         context.Background(),
+		order:       23,
+		logo:        `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="268" preserveAspectRatio="xMidYMid"><path fill="#5a3e85" d="M17 0 0 47v186h64v35h35l35-35h52l70-70V0zm24 23h192v128l-41 41h-64l-35 35v-35H41zm64 117h23V70h-23zm64 0h23V70h-23z"/></svg>`,
 		displayName: "Twitch",
 		pkce:        true,
 		scopes:      []string{"user:read:email"},

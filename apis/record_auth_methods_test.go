@@ -54,6 +54,8 @@ func TestRecordAuthMethodsList(t *testing.T) {
 				`"providers":[{`,
 				`"name":"google"`,
 				`"name":"gitlab"`,
+				`"logo":"\u003csvg`,
+				`"logo":""`, // for the legacy fields
 				`"state":`,
 				`"displayName":`,
 				`"codeVerifier":`,

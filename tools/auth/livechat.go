@@ -26,6 +26,8 @@ type Livechat struct {
 func NewLivechatProvider() *Livechat {
 	return &Livechat{BaseProvider{
 		ctx:         context.Background(),
+		order:       27,
+		logo:        `<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 80 80"><path d="M79.5 49.7a19 19 0 0 1-19 17.3H50L30 80V67l20-13h10.5a6 6 0 0 0 6.1-5.3q1-15-.2-30a5.6 5.6 0 0 0-5.2-5.1Q50.9 13.1 40 13c-10.9-.1-14.4.2-21.2.7-2.8.2-5 2.3-5.2 5.1q-1 15-.2 30c.3 3.1 3 5.3 6.1 5.2H30v13H19.5c-9.9.1-18.2-7.4-19-17.3q-1-16 .2-32C1.5 8.5 8.8 1.3 18 .7a313 313 0 0 1 44.1.1c9.2.6 16.5 7.8 17.3 17q1.1 16 .1 31.9" style="fill:#ff5100"/></svg>`,
 		displayName: "LiveChat",
 		pkce:        true,
 		scopes:      []string{}, // default scopes are specified from the provider dashboard

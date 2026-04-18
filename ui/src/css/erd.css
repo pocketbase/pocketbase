@@ -1,0 +1,183 @@
+.erd-table-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 5px;
+    border: 0;
+    padding: 2px 5px;
+    font-weight: normal;
+    min-height: var(--smBtnHeight);
+    background: var(--surfaceColor);
+    color: var(--surfaceTxtColor);
+    border-top: 1px solid var(--surfaceAlt2Color);
+    .txt-ellipsis {
+        min-width: 0;
+    }
+    &.header {
+        color: inherit;
+        background: inherit;
+        justify-content: center;
+        text-align: center;
+        font-weight: bold;
+        border: 0;
+    }
+    &.type-relation {
+        background: var(--surfaceAlt1Color);
+    }
+    &:first-child,
+    &.header + .erd-table-row {
+        border-top: 0;
+        border-top-left-radius: var(--borderRadius);
+        border-top-right-radius: var(--borderRadius);
+    }
+    &:last-child {
+        border-bottom-left-radius: var(--borderRadius);
+        border-bottom-right-radius: var(--borderRadius);
+    }
+    i {
+        font-size: 1em;
+    }
+    .field-icon {
+        color: var(--surfaceTxtHintColor);
+    }
+    .field-name {
+        display: inline-block;
+        vertical-align: top;
+        flex-shrink: 1;
+        min-width: 10px;
+        max-width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .field-hidden-label {
+        padding: 3px;
+        min-height: 0;
+        line-height: 1;
+        font-size: 0.78em;
+    }
+    .meta {
+        display: flex;
+        flex-grow: 0;
+        flex-shrink: 0;
+        font-size: 0.9em;
+        margin-left: auto;
+        white-space: nowrap;
+        color: var(--surfaceTxtHintColor);
+    }
+}
+
+.erd-table {
+    position: relative;
+    display: block;
+    z-index: 2;
+    width: 200px;
+    text-align: left;
+    user-select: none;
+    padding: 2px;
+    word-break: break-word;
+    background: var(--surfaceAlt4Color);
+    color: var(--surfaceTxtHintColor);
+    border-radius: var(--borderRadius);
+    font-size: var(--smFontSize);
+    line-height: var(--smLineHeight);
+    transition:
+        opacity var(--animationSpeed),
+        background var(--animationSpeed),
+        color var(--animationSpeed),
+        box-shadow var(--animationSpeed);
+    &.active {
+        color: var(--surfaceTxtColor);
+        background: var(--surfaceAlt5Color);
+    }
+    &.system {
+        color: var(--dangerTxtColor);
+        background: var(--dangerColor);
+    }
+    &.active,
+    &:hover {
+        box-shadow: var(--boxShadow);
+    }
+}
+
+.erd {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    width: 100%;
+    height: auto;
+    min-height: 300px;
+    background-image: radial-gradient(var(--surfaceAlt3Color) 1px, transparent 1px);
+    background-size: 20px 20px;
+    border-radius: var(--borderRadius);
+    touch-action: none; /* handled by js */
+
+    .erd-area {
+        position: relative;
+        left: 0;
+        top: 0;
+        user-select: none;
+        transform-origin: 0 0;
+    }
+
+    .erd-table {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    /* svg paths */
+    .erd-paths {
+        --pathColor: var(--surfaceAlt2Color);
+
+        position: absolute;
+        z-index: 0;
+        top: 0;
+        left: 0;
+        width: 2000px; /* something large enough to fit the lines */
+        height: 8000px;
+        pointer-events: none;
+        transition: opacity var(--animationSpeed);
+    }
+    .paths-group {
+        fill: none;
+        stroke-width: 2;
+        stroke: var(--pathColor);
+    }
+    .erd-paths.front {
+        --pathColor: var(--surfaceAlt5Color);
+
+        z-index: 2;
+        .active-from {
+            stroke: var(--surfaceTxtHintColor);
+        }
+    }
+
+    .erd-nav {
+        position: absolute;
+        z-index: 3;
+        right: var(--smSpacing);
+        bottom: var(--smSpacing);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* states */
+    &.updating {
+        .erd-paths,
+        .erd-table {
+            opacity: 0;
+        }
+    }
+    &.panning {
+        cursor: grabbing;
+    }
+    &.active {
+        .erd-paths.back {
+            opacity: 0.3;
+        }
+    }
+}

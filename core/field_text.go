@@ -72,11 +72,15 @@ type TextField struct {
 	// Hidden hides the field from the API response.
 	Hidden bool `form:"hidden" json:"hidden"`
 
+	// ---
+
 	// Presentable hints the Dashboard UI to use the underlying
 	// field record value in the relation preview label.
 	Presentable bool `form:"presentable" json:"presentable"`
 
-	// ---
+	// Help is an extra text explaining what the field is about.
+	// It is usually shown in Dashboard UI under the field input.
+	Help string `form:"help" json:"help"`
 
 	// Min specifies the minimum required string characters.
 	//
@@ -283,6 +287,7 @@ func (f *TextField) ValidateSettings(ctx context.Context, app App, collection *C
 			validation.By(DefaultFieldNameValidationRule),
 			validation.When(f.PrimaryKey, validation.In(idColumn).Error(`The primary key must be named "id".`)),
 		),
+		validation.Field(&f.Help, validation.By(DefaultFieldHelpValidationRule)),
 		validation.Field(&f.PrimaryKey, validation.By(f.checkOtherFieldsForPK(collection))),
 		validation.Field(&f.Min, validation.Min(0), validation.Max(maxSafeJSONInt)),
 		validation.Field(&f.Max, validation.Min(f.Min), validation.Max(maxSafeJSONInt)),

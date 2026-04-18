@@ -22,6 +22,8 @@ var _ Provider = (*VK)(nil)
 // NameVK is the unique name of the VK provider.
 const NameVK string = "vk"
 
+// @todo mark as deprecated
+//
 // VK allows authentication via VK OAuth2.
 type VK struct {
 	BaseProvider
@@ -33,6 +35,8 @@ type VK struct {
 func NewVKProvider() *VK {
 	return &VK{BaseProvider{
 		ctx:         context.Background(),
+		order:       15,
+		logo:        `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none"><path fill="#07f" d="M0 23C0 12.2 0 6.7 3.4 3.4 6.7 0 12.2 0 23 0h2c10.8 0 16.3 0 19.6 3.4C48 6.7 48 12.2 48 23v2c0 10.8 0 16.3-3.4 19.6C41.3 48 35.8 48 25 48h-2c-10.8 0-16.3 0-19.6-3.4C0 41.3 0 35.8 0 25z"/><path fill="#fff" d="M25.5 34.6c-10.9 0-17.1-7.5-17.4-20h5.5c.2 9.2 4.2 13 7.4 13.8V14.6h5.2v7.9c3.1-.3 6.4-4 7.6-7.9h5.1a15 15 0 0 1-7 10c2.6 1.2 6.7 4.3 8.2 10h-5.7a10 10 0 0 0-8.2-7.2v7.2z"/></svg>`,
 		displayName: "ВКонтакте",
 		pkce:        false, // VK currently doesn't support PKCE and throws an error if PKCE params are send
 		scopes:      []string{"email"},
