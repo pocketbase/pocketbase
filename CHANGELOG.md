@@ -2,6 +2,8 @@
 
 - @todo
 
+- Updated `modernc.org/sqlite` to v1.49.1 (SQLite 3.53.0).
+
 
 ## v0.36.9
 
