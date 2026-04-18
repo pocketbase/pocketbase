@@ -313,7 +313,7 @@ table {
         max-width: calc(100cqw - (2 * var(--spacing)));
     }
     table {
-        min-width: 1000px;
+        min-width: 900px;
         border-radius: 0;
     }
     tr {
@@ -409,11 +409,11 @@ table {
         td,
         th {
             display: block;
-            height: auto;
-            min-height: 0;
             padding: 0;
             margin: 0;
+            min-height: 0;
             word-break: break-word;
+            height: auto !important;
             white-space: normal !important;
             border: 0 !important;
             width: 100% !important;
