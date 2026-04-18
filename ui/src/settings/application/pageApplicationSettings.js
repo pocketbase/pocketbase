@@ -176,7 +176,11 @@ export function pageApplicationSettings() {
                                 }),
                                 t.label(
                                     { htmlFor: "meta.hideControls" },
-                                    t.span({ className: "txt" }, "Hide collection create and edit controls"),
+                                    t.span({ className: "txt" }, "Hide/Lock collection and record controls"),
+                                    t.i({
+                                        className: "ri-information-line link-hint",
+                                        ariaDescription: app.attrs.tooltip("To prevent accidental changes when in production environment, collections create and update buttons will be hidden.\nRecords update will also require an extra unlock step before save.")
+                                    }),
                                 ),
                             ),
                         ),
