@@ -14,11 +14,11 @@
     - Insert of an audio/video embed tag in the richtext editor from a collection file.
     - Option to bulk export records as JSON.
     - Local search history for all searchbars.
-    - Overview of rules across all collections.
+    - API rules overview across all collections.
     - Very basic ERD-like visualization for the collections structure and relations.
     - New stepped logs chart visualization with panning support.
     - `listAuthMethods()` (aka. `/api/collection/{col}/auth-methods`) now returns the OAuth2 provider logo for each provider as inlined SVG string in its response data.
-        _⚠️ Note that if your app for whatever reason rely on the static dashboard OAuth2 logos available under `/_/images/oauth2/*` they are still available for now but will be removed in future versions!_
+        _⚠️ Note that if your app for whatever reason rely on the dashboard OAuth2 logos available under `/_/images/oauth2/*` they are still available for now but will be removed in future versions and it is recommended to use the new inline SVGs!_
 
 - Added optional `no_ui` build tag to exclude the UI from bundling with the executable ([#7548](https://github.com/pocketbase/pocketbase/issues/7548)).
     ```sh
