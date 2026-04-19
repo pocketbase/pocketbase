@@ -1,6 +1,9 @@
 ## v0.37.1 (WIP)
 
-- Allow opening collections in new tab on middle click.
+- Minor UI fixes:
+    - Allow opening collections in new tab on middle click.
+    - Show collection name in the page title on initial load.
+
 
 ## v0.37.0
 

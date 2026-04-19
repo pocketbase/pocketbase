@@ -58,6 +58,8 @@ export function pageCollections(route) {
         watch(
             () => (app.store.activeCollection?.name || "") + (app.store.activeCollection?.updated || ""),
             (newVal, oldVal) => {
+                app.store.title = app.store.activeCollection?.name || "Collections";
+
                 // skip unnecessery initial params replacement
                 if (!oldVal) {
                     return;
@@ -68,8 +70,6 @@ export function pageCollections(route) {
                     pageData.filter = "";
                     pageData.sort = "";
                 }
-
-                app.store.title = app.store.activeCollection?.name || "Collections";
 
                 app.utils.replaceHashQueryParams({
                     [COLLECTION_QUERY_KEY]: app.store.activeCollection?.name,
