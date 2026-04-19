@@ -1,3 +1,7 @@
+## v0.37.1 (WIP)
+
+- Allow opening collections in new tab on middle click.
+
 ## v0.37.0
 
 - New UI rewritten from scratch and with support for external customizations in mind.
