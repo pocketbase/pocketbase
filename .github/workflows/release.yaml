@@ -30,11 +30,13 @@ jobs:
         with:
           go-version: '>=1.26.2'
 
+      # Temporary disable until the issue with npm ci is resolved.
+      #
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.
       # If the artificats differs, a "dirty error" is thrown - https://goreleaser.com/errors/dirty/
-      - name: Build Admin dashboard UI
-        run: npm --prefix=./ui install && npm --prefix=./ui run build
+      # - name: Build Admin dashboard UI
+      #   run: npm --prefix=./ui install && npm --prefix=./ui run build
 
       # Temporary disable as the types can have random generated identifiers making it non-deterministic.
       #
