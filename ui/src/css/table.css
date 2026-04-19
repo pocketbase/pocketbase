@@ -409,10 +409,10 @@ table {
         td,
         th {
             display: block;
-            padding: 0;
-            margin: 0;
-            min-height: 0;
             word-break: break-word;
+            margin: 0;
+            min-height: 0 !important;
+            padding: 0 !important;
             height: auto !important;
             white-space: normal !important;
             border: 0 !important;
