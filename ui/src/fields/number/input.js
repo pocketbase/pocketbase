@@ -24,7 +24,7 @@ export function input(props) {
                 required: () => props.field.required,
                 min: () => props.field.min,
                 max: () => props.field.max,
-                value: () => props.record[props.field.name] || "",
+                value: () => props.record[props.field.name] || 0,
                 oninput: (e) => props.record[props.field.name] = Number(e.target.value),
             }),
         ),
