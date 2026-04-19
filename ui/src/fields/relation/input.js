@@ -9,7 +9,7 @@ export function input(props) {
 
     // trigger custom change event for clearing field errors
     function triggerChangeEvent() {
-        fieldEl?.dispatchEvent(
+        fieldContentEl?.dispatchEvent(
             new CustomEvent("change", {
                 detail: { data: props },
                 bubbles: true,
@@ -87,6 +87,7 @@ export function input(props) {
 
     function updateRecordValue(ids = []) {
         props.record[props.field.name] = props.field.maxSelect > 1 ? ids : ids?.[0] || "";
+        triggerChangeEvent();
     }
 
     const watchers = [
@@ -96,7 +97,82 @@ export function input(props) {
         ),
     ];
 
-    const fieldEl = t.div(
+    const fieldContentEl = t.output(
+        {
+            className: "field-content",
+            name: () => props.field.name,
+        },
+        // loader
+        t.div(
+            {
+                hidden: () => !local.isLoading,
+                className: "list",
+            },
+            () => {
+                const ids = app.utils.toArray(props.record[props.field.name]);
+                return ids.map(() => {
+                    return t.div({ className: "list-item" }, t.span({ className: "skeleton-loader" }));
+                });
+            },
+        ),
+        // list
+        app.components.sortable({
+            className: "list",
+            hidden: () => local.isLoading,
+            data: () => local.selected,
+            onchange: (sortedList) => {
+                local.selected = sortedList;
+                updateRecordValue(sortedList.map((r) => r.id));
+            },
+            dataItem: (record, relIndex) => {
+                return t.div(
+                    {
+                        rid: record,
+                        className: "list-item highlight",
+                    },
+                    t.div({ className: "content" }, () => app.components.recordSummary(record)),
+                    t.div(
+                        { className: "actions" },
+                        t.button(
+                            {
+                                className: "btn sm secondary transparent circle",
+                                ariaLabel: app.attrs.tooltip("Remove"),
+                                onclick: () => remove(record.id),
+                            },
+                            t.i({ className: "ri-close-line", ariaHidden: true }),
+                        ),
+                    ),
+                );
+            },
+        }),
+        // picker btn
+        t.hr({
+            hidden: () => !app.utils.isEmpty(props.record[props.field.name]),
+            className: "m-t-5 m-b-0",
+        }),
+        t.button(
+            {
+                type: "button",
+                className: "btn sm secondary block",
+                disabled: () => local.isLoading,
+                onclick: (e) => {
+                    app.modals.openRecordsPicker({
+                        collection: props.field.collectionId,
+                        selectedIds: app.utils.toArray(props.record[props.field.name]),
+                        maxSelect: props.field.maxSelect,
+                        onselect: (records) => {
+                            local.selected = records;
+                            updateRecordValue(records.map((r) => r.id));
+                        },
+                    });
+                },
+            },
+            t.i({ className: "ri-magic-line", ariaHidden: true }),
+            t.span({ className: "txt" }, "Open records picker"),
+        ),
+    );
+
+    return t.div(
         {
             className: "record-field-input field-type-relation",
             onunmount: () => {
@@ -110,81 +186,7 @@ export function input(props) {
                 t.i({ className: app.fieldTypes.relation.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => props.field.name),
             ),
-            t.output(
-                {
-                    className: "field-content",
-                    name: () => props.field.name,
-                },
-                // loader
-                t.div(
-                    {
-                        hidden: () => !local.isLoading,
-                        className: "list",
-                    },
-                    () => {
-                        const ids = app.utils.toArray(props.record[props.field.name]);
-                        return ids.map(() => {
-                            return t.div({ className: "list-item" }, t.span({ className: "skeleton-loader" }));
-                        });
-                    },
-                ),
-                // list
-                app.components.sortable({
-                    className: "list",
-                    hidden: () => local.isLoading,
-                    data: () => local.selected,
-                    onchange: (sortedList) => {
-                        local.selected = sortedList;
-                        updateRecordValue(sortedList.map((r) => r.id));
-                        triggerChangeEvent();
-                    },
-                    dataItem: (record, relIndex) => {
-                        return t.div(
-                            {
-                                rid: record,
-                                className: "list-item highlight",
-                            },
-                            t.div({ className: "content" }, () => app.components.recordSummary(record)),
-                            t.div(
-                                { className: "actions" },
-                                t.button(
-                                    {
-                                        className: "btn sm secondary transparent circle",
-                                        ariaLabel: app.attrs.tooltip("Remove"),
-                                        onclick: () => remove(record.id),
-                                    },
-                                    t.i({ className: "ri-close-line", ariaHidden: true }),
-                                ),
-                            ),
-                        );
-                    },
-                }),
-                // picker btn
-                t.hr({
-                    hidden: () => !app.utils.isEmpty(props.record[props.field.name]),
-                    className: "m-t-5 m-b-0",
-                }),
-                t.button(
-                    {
-                        type: "button",
-                        className: "btn sm secondary block",
-                        disabled: () => local.isLoading,
-                        onclick: (e) => {
-                            app.modals.openRecordsPicker({
-                                collection: props.field.collectionId,
-                                selectedIds: app.utils.toArray(props.record[props.field.name]),
-                                maxSelect: props.field.maxSelect,
-                                onselect: (records) => {
-                                    local.selected = records;
-                                    updateRecordValue(records.map((r) => r.id));
-                                },
-                            });
-                        },
-                    },
-                    t.i({ className: "ri-magic-line", ariaHidden: true }),
-                    t.span({ className: "txt" }, "Open records picker"),
-                ),
-            ),
+            fieldContentEl,
         ),
         () => {
             if (props.field.help) {
@@ -192,6 +194,4 @@ export function input(props) {
             }
         },
     );
-
-    return fieldEl;
 }

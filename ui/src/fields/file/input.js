@@ -57,7 +57,7 @@ export function input(props) {
 
     // trigger custom change event for clearing field errors
     function triggerChangeEvent() {
-        fieldEl?.dispatchEvent(
+        fieldContentEl?.dispatchEvent(
             new CustomEvent("change", {
                 detail: { data: props },
                 bubbles: true,
@@ -92,7 +92,6 @@ export function input(props) {
     const fileInput = t.input({
         type: "file",
         hidden: true,
-        name: () => props.field.name,
         multiple: () => props.field.maxSelect > 1,
         accept: () => props.field.mimeTypes?.join(",") || undefined,
         onchange: (e) => {
@@ -101,7 +100,125 @@ export function input(props) {
         },
     });
 
-    const fieldEl = t.div(
+    const fieldContentEl = t.output(
+        {
+            className: "field-content",
+            name: () => props.field.name,
+        },
+        // @todo enable ordering new files before/inbetween existing
+        app.components.sortable({
+            className: "list",
+            data: () => {
+                const vals = app.utils.toArray(props.record[props.field.name]);
+
+                let hadInvalid = false;
+                // filter empty or invalid values (e.g. from old serialized draft)
+                for (let i = vals.length - 1; i >= 0; i--) {
+                    if (typeof vals[i] == "string" || vals[i] instanceof Blob) {
+                        continue; // valid
+                    }
+
+                    hadInvalid = true;
+                    vals.splice(i, 1);
+                }
+
+                // update record model to prevent conflict with required and other validators
+                if (hadInvalid) {
+                    props.record[props.field.name] = vals;
+                }
+
+                return vals;
+            },
+            onchange: (sortedList) => {
+                props.record[props.field.name] = sortedList;
+                triggerChangeEvent();
+            },
+            dataItem: (nameOrFile, i) => {
+                return t.div(
+                    {
+                        rid: nameOrFile,
+                        className: () => `list-item highlight ${isDeleted(nameOrFile) ? "deleted" : ""}`,
+                    },
+                    t.div({ className: "content gap-10" }, () => {
+                        if (typeof nameOrFile == "string") {
+                            return [
+                                app.components.recordFileThumb({
+                                    record: props.record,
+                                    filename: nameOrFile,
+                                }),
+                                t.button(
+                                    {
+                                        type: "button",
+                                        ariaDescription: app.attrs.tooltip("Open in new tab"),
+                                        onclick: async () => {
+                                            const token = await app.getFileToken(props.record.collectionId);
+                                            const url = app.pb.files.getURL(props.record, nameOrFile, {
+                                                token,
+                                            });
+                                            window.open(url, "_blank", "noreferrer,noopener");
+                                        },
+                                    },
+                                    t.span({ className: "txt link-primary" }, nameOrFile),
+                                ),
+                            ];
+                        }
+
+                        return [
+                            app.components.uploadedFileThumb({
+                                file: nameOrFile,
+                            }),
+                            t.span({ className: "label success" }, "New"),
+                            t.span({ className: "txt" }, nameOrFile.name),
+                        ];
+                    }),
+                    t.div(
+                        { className: "actions" },
+                        t.button(
+                            {
+                                type: "button",
+                                className: "btn sm secondary transparent circle",
+                                ariaLabel: app.attrs.tooltip("Remove file"),
+                                hidden: () => isDeleted(nameOrFile),
+                                onclick: () => toDelete(nameOrFile),
+                            },
+                            t.i({ className: "ri-close-line", ariaHidden: true }),
+                        ),
+                        t.button(
+                            {
+                                type: "button",
+                                className: "btn sm warning transparent",
+                                hidden: () => !isDeleted(nameOrFile),
+                                onclick: () => restoreDeleted(nameOrFile),
+                            },
+                            t.span({ className: "txt" }, "Restore"),
+                        ),
+                    ),
+                );
+            },
+        }),
+        t.hr({
+            className: "m-t-5 m-b-0",
+            hidden: () => app.utils.toArray(props.record[props.field.name]).length > 0,
+        }),
+        t.button(
+            {
+                type: "button",
+                className: "btn sm secondary block",
+                title: () => local.maxReached ? "Max allowed files reached" : undefined,
+                disabled: () => local.maxReached,
+                onclick: (e) => {
+                    if (!local.maxReached) {
+                        fileInput?.click();
+                    }
+                    document.activeElement?.blur();
+                },
+            },
+            t.i({ className: "ri-upload-cloud-line", ariaHidden: true }),
+            t.span({ className: "txt" }, "Upload or drop new file"),
+        ),
+    );
+
+    return t.div(
         {
             className: "record-field-input field-type-file",
             ondragover: (e) => {
@@ -130,120 +247,7 @@ export function input(props) {
                 t.span({ className: "txt" }, () => props.field.name),
             ),
             fileInput,
-            t.div(
-                { className: "field-content" },
-                // @todo enable ordering new files before/inbetween existing
-                app.components.sortable({
-                    className: "list",
-                    data: () => {
-                        const vals = app.utils.toArray(props.record[props.field.name]);
-
-                        let hadInvalid = false;
-                        // filter empty or invalid values (e.g. from old serialized draft)
-                        for (let i = vals.length - 1; i >= 0; i--) {
-                            if (typeof vals[i] == "string" || vals[i] instanceof Blob) {
-                                continue; // valid
-                            }
-
-                            hadInvalid = true;
-                            vals.splice(i, 1);
-                        }
-
-                        // update record model to prevent conflict with required and other validators
-                        if (hadInvalid) {
-                            props.record[props.field.name] = vals;
-                        }
-
-                        return vals;
-                    },
-                    onchange: (sortedList) => {
-                        props.record[props.field.name] = sortedList;
-                        triggerChangeEvent();
-                    },
-                    dataItem: (nameOrFile, i) => {
-                        return t.div(
-                            {
-                                rid: nameOrFile,
-                                className: () => `list-item highlight ${isDeleted(nameOrFile) ? "deleted" : ""}`,
-                            },
-                            t.div({ className: "content gap-10" }, () => {
-                                if (typeof nameOrFile == "string") {
-                                    return [
-                                        app.components.recordFileThumb({
-                                            record: props.record,
-                                            filename: nameOrFile,
-                                        }),
-                                        t.button(
-                                            {
-                                                type: "button",
-                                                ariaDescription: app.attrs.tooltip("Open in new tab"),
-                                                onclick: async () => {
-                                                    const token = await app.getFileToken(props.record.collectionId);
-                                                    const url = app.pb.files.getURL(props.record, nameOrFile, {
-                                                        token,
-                                                    });
-                                                    window.open(url, "_blank", "noreferrer,noopener");
-                                                },
-                                            },
-                                            t.span({ className: "txt link-primary" }, nameOrFile),
-                                        ),
-                                    ];
-                                }
-
-                                return [
-                                    app.components.uploadedFileThumb({
-                                        file: nameOrFile,
-                                    }),
-                                    t.span({ className: "label success" }, "New"),
-                                    t.span({ className: "txt" }, nameOrFile.name),
-                                ];
-                            }),
-                            t.div(
-                                { className: "actions" },
-                                t.button(
-                                    {
-                                        type: "button",
-                                        className: "btn sm secondary transparent circle",
-                                        ariaLabel: app.attrs.tooltip("Remove file"),
-                                        hidden: () => isDeleted(nameOrFile),
-                                        onclick: () => toDelete(nameOrFile),
-                                    },
-                                    t.i({ className: "ri-close-line", ariaHidden: true }),
-                                ),
-                                t.button(
-                                    {
-                                        type: "button",
-                                        className: "btn sm warning transparent",
-                                        hidden: () => !isDeleted(nameOrFile),
-                                        onclick: () => restoreDeleted(nameOrFile),
-                                    },
-                                    t.span({ className: "txt" }, "Restore"),
-                                ),
-                            ),
-                        );
-                    },
-                }),
-                t.hr({
-                    className: "m-t-5 m-b-0",
-                    hidden: () => app.utils.toArray(props.record[props.field.name]).length > 0,
-                }),
-                t.button(
-                    {
-                        type: "button",
-                        className: "btn sm secondary block",
-                        title: () => local.maxReached ? "Max allowed files reached" : undefined,
-                        disabled: () => local.maxReached,
-                        onclick: (e) => {
-                            if (!local.maxReached) {
-                                fileInput.click();
-                            }
-                            document.activeElement?.blur();
-                        },
-                    },
-                    t.i({ className: "ri-upload-cloud-line", ariaHidden: true }),
-                    t.span({ className: "txt" }, "Upload or drop new file"),
-                ),
-            ),
+            fieldContentEl,
         ),
         () => {
             if (props.field.help) {
@@ -251,6 +255,4 @@ export function input(props) {
             }
         },
     );
-
-    return fieldEl;
 }
