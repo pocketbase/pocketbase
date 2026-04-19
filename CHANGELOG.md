@@ -1,6 +1,7 @@
-## v0.37.1 (WIP)
+## v0.37.1
 
-- Minor UI fixes:
+- Minor UI bugfixes:
+    - Fixed `number` field min/max input value normalization ([#7646](https://github.com/pocketbase/pocketbase/issues/7646)).
     - Allow opening collections in new tab on middle click.
     - Show collection name in the page title on initial load.
 

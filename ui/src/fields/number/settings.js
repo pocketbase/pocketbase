@@ -21,8 +21,14 @@ export function settings(data) {
                             type: "text",
                             id: uniqueId + ".min",
                             name: () => `fields.${data.fieldIndex}.min`,
-                            value: () => data.field.min || "",
-                            oninput: (e) => (data.field.min = Number(e.target.value)),
+                            value: () => typeof data.field.min == "number" ? data.field.min : "",
+                            oninput: (e) => {
+                                if (!e.target.value) {
+                                    data.field.min = null;
+                                } else {
+                                    data.field.min = Number(e.target.value);
+                                }
+                            },
                         }),
                     ),
                 ),
@@ -36,8 +42,14 @@ export function settings(data) {
                             id: uniqueId + ".max",
                             min: () => data.field.min,
                             name: () => `fields.${data.fieldIndex}.max`,
-                            value: () => data.field.max || "",
-                            oninput: (e) => (data.field.max = Number(e.target.value)),
+                            value: () => typeof data.field.max == "number" ? data.field.max : "",
+                            oninput: (e) => {
+                                if (!e.target.value) {
+                                    data.field.max = null;
+                                } else {
+                                    data.field.max = Number(e.target.value);
+                                }
+                            },
                         }),
                     ),
                 ),

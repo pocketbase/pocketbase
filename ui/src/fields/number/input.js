@@ -25,7 +25,7 @@ export function input(props) {
                 min: () => props.field.min,
                 max: () => props.field.max,
                 value: () => props.record[props.field.name] || "",
-                oninput: (e) => (props.record[props.field.name] = Number(e.target.value)),
+                oninput: (e) => props.record[props.field.name] = Number(e.target.value),
             }),
         ),
         () => {
