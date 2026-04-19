@@ -113,7 +113,7 @@ video {
 }
 
 ::selection {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--selectionColor);
 }
 
 :root {

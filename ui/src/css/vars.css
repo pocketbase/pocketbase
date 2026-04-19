@@ -68,7 +68,7 @@
     --surfaceSuccessColor: color-mix(in srgb, var(--successColor), white 80%);
     --surfaceWarningColor: color-mix(in srgb, var(--warningColor), white 80%);
     --surfaceDangerColor: color-mix(in srgb, var(--dangerColor), white 80%);
-    --selectionColor: var(--surfaceAlt3Color);
+    --selectionColor: rgba(34, 36, 42, 0.22);
     --inputColor: var(--surfaceAlt2Color);
     --inputFocusColor: var(--surfaceAlt3Color);
     --inputBorderColor: var(--surfaceAlt4Color);
@@ -138,28 +138,27 @@
 /* dark */
 [data-color-scheme="dark"],
 [data-color-scheme="dark"] .dropdown {
-    --surfaceColor: #282828;
-    --surfaceAlt1Color: color-mix(in srgb, var(--surfaceColor), white 2%);
-    --surfaceAlt2Color: color-mix(in srgb, var(--surfaceColor), white 4%);
-    --surfaceAlt3Color: color-mix(in srgb, var(--surfaceColor), white 6%);
-    --surfaceAlt4Color: color-mix(in srgb, var(--surfaceColor), white 9%);
-    --surfaceAlt5Color: color-mix(in srgb, var(--surfaceColor), white 12%);
+    --surfaceColor: #212121;
+    --surfaceAlt1Color: color-mix(in srgb, var(--surfaceColor), white 3%);
+    --surfaceAlt2Color: color-mix(in srgb, var(--surfaceColor), white 7%);
+    --surfaceAlt3Color: color-mix(in srgb, var(--surfaceColor), white 12%);
+    --surfaceAlt4Color: color-mix(in srgb, var(--surfaceColor), white 14%);
+    --surfaceAlt5Color: color-mix(in srgb, var(--surfaceColor), white 16%);
 
     --surfaceTxtColor: #dedede;
     --tooltipTxtColor: var(--surfaceTxtColor);
     --surfaceTxtHintColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 45%);
     --surfaceTxtDisabledColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 65%);
 
-    --secondaryColor: var(--surfaceAlt3Color);
+    --secondaryColor: var(--surfaceAlt2Color);
     --secondaryTxtColor: var(--surfaceTxtColor);
-    --secondaryTxtColor: var(--surfaceTxtColor);
-    --secondaryAlt1Color: var(--surfaceAlt4Color);
-    --secondaryAlt2Color: var(--surfaceAlt5Color);
+    --secondaryAlt1Color: var(--surfaceAlt3Color);
+    --secondaryAlt2Color: var(--surfaceAlt4Color);
 
-    --primaryColor: #1e1e1e;
+    --primaryColor: #161616;
     --primaryTxtColor: var(--surfaceTxtColor);
-    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), black 8%);
-    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), black 16%);
+    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), white 1.2%);
+    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), white 1.7%);
     --primaryTxtHintColor: color-mix(in srgb, var(--primaryTxtColor), transparent 35%);
     --primaryTxtDisabledColor: color-mix(in srgb, var(--primaryTxtColor), transparent 50%);
 
@@ -187,6 +186,7 @@
     --dangerAlt2Color: color-mix(in srgb, var(--dangerColor), black 15%);
     --surfaceDangerColor: color-mix(in srgb, var(--dangerColor), var(--surfaceColor) 45%);
 
+    --selectionColor: rgba(255, 255, 255, 0.22);
     --inputColor: var(--surfaceAlt2Color);
     --inputFocusColor: var(--surfaceAlt3Color);
     --inputBorderColor: var(--surfaceAlt4Color);

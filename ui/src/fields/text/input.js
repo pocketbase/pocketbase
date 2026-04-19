@@ -33,17 +33,32 @@ export function input(props) {
                     }),
                     t.span({ className: "txt" }, () => props.field.name),
                 ),
-                t.textarea({
-                    id: uniqueId,
-                    className: "autoexpand",
-                    rows: 1,
-                    name: () => props.field.name,
-                    required: () => data.isRequired,
-                    disabled: () => data.isDisabled,
-                    placeholder: () => (data.hasAutogenerate ? "Leave empty to autogenerate..." : ""),
-                    value: () => props.record[props.field.name] || "",
-                    oninput: (e) => (props.record[props.field.name] = e.target.value || ""),
-                }),
+                // @todo remove after Firefox add support for "field-sizing:content"
+                //
+                // note1: not using contenteditable because it requires keeping
+                // track of the cursor offset when replacing the content in oninput
+                //
+                // note2: based on https://chriscoyier.net/2023/09/29/css-solves-auto-expanding-textareas-probably-eventually/
+                t.div(
+                    { className: "autoexpand-wrapper" },
+                    t.textarea({
+                        id: uniqueId,
+                        // className: "autoexpand",
+                        rows: 1,
+                        name: () => props.field.name,
+                        required: () => data.isRequired,
+                        disabled: () => data.isDisabled,
+                        placeholder: () => (data.hasAutogenerate ? "Leave empty to autogenerate..." : ""),
+                        value: () => props.record[props.field.name] || "",
+                        oninput: (e) => (props.record[props.field.name] = e.target.value || ""),
+                    }),
+                    t.div(
+                        { className: "input" },
+                        () => props.record[props.field.name],
+                        // the empty space is necessary to prevent jumpy behavior
+                        " ",
+                    ),
+                ),
             ),
             // list the autodate field values in a tooltip next to the primary key
             () => {

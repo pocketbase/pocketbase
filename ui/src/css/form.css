@@ -487,17 +487,38 @@ button {
             border-radius: var(--borderRadius);
         }
     }
+    .autoexpand-wrapper > .input,
     textarea {
         padding-top: 8px;
         padding-bottom: 9px;
         line-height: 1.5;
         resize: vertical;
+        min-height: 38px;
+        max-height: 300px;
         &.autoexpand {
-            /* @todo check firefox support */
-            field-sizing: content;
+            @supports (field-sizing: content) {
+                field-sizing: content;
+                resize: none;
+            }
+        }
+    }
+
+    /* @todo remove after Firefox add support for "field-sizing:content" */
+    /* note: based on https://chriscoyier.net/2023/09/29/css-solves-auto-expanding-textareas-probably-eventually/ */
+    .autoexpand-wrapper {
+        display: grid;
+        > textarea {
             resize: none;
-            min-height: 38px;
-            max-height: 300px;
+        }
+        > .input {
+            white-space: pre-wrap;
+            visibility: hidden;
+            overflow: auto;
+        }
+        > .input,
+        > textarea {
+            /* Place on top of each other */
+            grid-area: 1 / 1 / 2 / 2;
         }
     }
 

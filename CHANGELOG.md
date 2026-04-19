@@ -1,3 +1,10 @@
+## v0.37.2 (WIP)
+
+- Fixed autoexpandable input in Firefox ([#7648](https://github.com/pocketbase/pocketbase/discussions/7648)).
+
+- Slightly adjusted the dark theme colors for better readability ([#7648](https://github.com/pocketbase/pocketbase/discussions/7648)).
+
+
 ## v0.37.1
 
 - Minor UI bugfixes:
