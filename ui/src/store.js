@@ -179,12 +179,18 @@ window.app.store = store({
         app.store.isLoadingCollections = true;
 
         try {
-            const [resultScaffolds, resultCollections] = await Promise.all([
+            let [resultScaffolds, resultCollections] = await Promise.all([
                 app.pb.collections.getScaffolds({ requestKey: "appStore.loadCollections.getScaffolds" }),
                 app.pb.collections.getFullList({ requestKey: "appStore.loadCollections.getFullList" }),
             ]);
 
-            app.store.collections = app.utils.sortedCollectionsByType(resultCollections);
+            resultCollections = app.utils.sortedCollectionsByType(resultCollections);
+
+            // replace only if there are changes to minimize flickering
+            if (JSON.stringify(app.store.collections) != JSON.stringify(resultCollections)) {
+                app.store.collections = resultCollections;
+            }
+
             app.store.collectionScaffolds = resultScaffolds;
             app.store._activeCollectionIdOrName = activeIdOrName || app.store._activeCollectionIdOrName
                 || app.store.collections[0]?.id || "";

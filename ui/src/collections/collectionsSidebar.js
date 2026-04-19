@@ -94,9 +94,12 @@ export function collectionsSidebar() {
                     ),
                     t.button(
                         {
-                            hidden: () => app.store.isLoadingCollections,
                             type: "button",
-                            className: "btn sm circle transparent secondary link-faded",
+                            disabled: () => app.store.isLoadingCollections,
+                            className: () =>
+                                `btn sm circle transparent secondary link-faded ${
+                                    app.store.isLoadingCollections ? "loading" : ""
+                                }`,
                             ariaDescription: app.attrs.tooltip("Collections overview", "left"),
                             onclick: () => app.modals.openCollectionsOverview(),
                         },
@@ -125,11 +128,13 @@ export function collectionsSidebar() {
                 }),
             );
         },
+        // show the standalone loader only when there are no other collections loaded
         () => {
-            if (app.store.isLoadingCollections) {
+            if (app.store.isLoadingCollections && !data.filteredCollections.length) {
                 return t.div({ className: "sidebar-content txt-center" }, t.span({ className: "loader sm" }));
             }
-
+        },
+        () => {
             return [
                 t.nav(
                     {
@@ -208,7 +213,14 @@ function collectionItem(collection, data) {
             className: () =>
                 `nav-item responsive-close ${collection.id == app.store.activeCollection?.id ? "active" : ""}`,
             title: () => collection.name,
-            onclick: () => app.store.activeCollection = collection.name,
+            onauxclick: (e) => {
+                e.preventDefault();
+                window.open(`#/collections?collection=${collection.name}`, "_blank", "noreferrer,noopener");
+            },
+            onclick: (e) => {
+                e.preventDefault();
+                app.store.activeCollection = collection.name;
+            },
         },
         t.i({
             className: () => app.collectionTypes[collection.type]?.icon || app.utils.fallbackCollectionIcon,
