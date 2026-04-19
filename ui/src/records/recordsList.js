@@ -240,18 +240,6 @@ window.app.components.recordsList = function(propsArg = {}) {
         return field.hidden;
     }
 
-    // trigger load before mount and on props change
-    watchers.push(
-        watch(
-            () => JSON.stringify([props.collection?.id, props.filter, props.sort, props.reset]),
-            (newVal, oldVal) => {
-                if (newVal != oldVal) {
-                    loadRecords(true);
-                }
-            },
-        ),
-    );
-
     let deleteRefreshTimeoutId;
 
     const documentEvents = {
@@ -302,16 +290,45 @@ window.app.components.recordsList = function(propsArg = {}) {
                 }
 
                 watchers.push(
-                    watch(() => props.collection?.id, (newId, oldId) => {
-                        data.columnsPreferences = app.utils.getLocalHistory(
-                            app.consts.COLUMNS_STORAGE_PREFIX + newId,
-                            {},
-                        );
+                    watch(
+                        () => props.collection?.id,
+                        (newId, oldId) => {
+                            data.columnsPreferences = app.utils.getLocalHistory(
+                                app.consts.COLUMNS_STORAGE_PREFIX + newId,
+                                {},
+                            );
 
-                        if (oldId && oldId != newId) {
-                            clearList();
-                        }
-                    }),
+                            if (oldId && oldId != newId) {
+                                clearList();
+                            }
+                        },
+                    ),
+                );
+
+                // trigger load on props change
+                watchers.push(
+                    watch(
+                        () =>
+                            (props.collection?.id || "") + (props.filter || "") + (props.sort || "")
+                            + (props.reset || ""),
+                        (newVal, oldVal) => {
+                            if (newVal != oldVal) {
+                                loadRecords(true);
+                            }
+                        },
+                    ),
+                );
+
+                // always scroll to top on first page load
+                watchers.push(
+                    watch(
+                        () => data.lastPage,
+                        (page) => {
+                            if (page == 1 && el) {
+                                el.scrollTop = 0;
+                            }
+                        },
+                    ),
                 );
 
                 watchers.push(
@@ -323,17 +340,6 @@ window.app.components.recordsList = function(propsArg = {}) {
                                     app.consts.COLUMNS_STORAGE_PREFIX + props.collection.id,
                                     data.columnsPreferences,
                                 );
-                            }
-                        },
-                    ),
-                );
-
-                watchers.push(
-                    watch(
-                        () => data.lastPage,
-                        (page) => {
-                            if (page == 1 && el) {
-                                el.scrollTop = 0;
                             }
                         },
                     ),

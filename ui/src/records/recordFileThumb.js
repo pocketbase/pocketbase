@@ -16,6 +16,7 @@ function semaphoreAdd(fn) {
         semaphoreProcess();
     }
 
+    // release func that must be called manually after done with the loading
     return () => {
         semaphore.pending.delete(fn);
         semaphore.processing.delete(fn);

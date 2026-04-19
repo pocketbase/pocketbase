@@ -5,6 +5,7 @@ const FILTER_QUERY_KEY = "filter";
 const COLLECTION_QUERY_KEY = "collection";
 const RECORD_QUERY_KEY = "record";
 const LAST_ACTIVE_STORAGE_KEY = "pbLastActiveCollection";
+const TOTAL_COUNT_REQUEST_KEY = "recordsTotalCountRequest";
 
 export function pageCollections(route) {
     app.store.activeCollection = route.query[COLLECTION_QUERY_KEY]?.[0]
@@ -33,6 +34,7 @@ export function pageCollections(route) {
             );
 
             const result = await app.pb.collection(app.store.activeCollection.name).getList(1, 1, {
+                requestKey: TOTAL_COUNT_REQUEST_KEY,
                 filter: normalizedFilter,
                 fields: "id",
             });
@@ -182,6 +184,8 @@ export function pageCollections(route) {
                 }
             },
             onunmount: () => {
+                app.pb.cancelRequest(TOTAL_COUNT_REQUEST_KEY);
+
                 watchers.forEach((w) => w?.unwatch());
 
                 for (let event in documentEvents) {

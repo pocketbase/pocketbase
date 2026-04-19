@@ -69,13 +69,15 @@ export function otpAccordion(collection) {
                     }),
                     () => {
                         if (!data.isSuperusers) {
-                            return
+                            return;
                         }
 
                         return t.i({
                             className: "ri-information-line link-hint",
-                            ariaDescription: app.attrs.tooltip("Superusers can have OTP only as part of Two-factor authentication."),
-                        })
+                            ariaDescription: app.attrs.tooltip(
+                                "Superusers can have OTP only as part of Two-factor authentication.",
+                            ),
+                        });
                     },
                 ),
             ),
