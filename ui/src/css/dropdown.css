@@ -1,24 +1,3 @@
-@keyframes popoverHide {
-    from {
-        opacity: 1;
-    }
-    to {
-        opacity: 0;
-        transform: translateY(3px);
-    }
-}
-
-@keyframes popoverShow {
-    from {
-        transform: translateY(3px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0px);
-        opacity: 1;
-    }
-}
-
 .dropdown {
     display: inline-flex;
     flex-direction: column;
@@ -41,17 +20,34 @@
     border-radius: var(--borderRadius);
     border: 1px solid var(--surfaceAlt3Color);
     &[popover] {
-        display: none;
         position-area: bottom span-left;
         position-try-fallbacks: flip-block;
+        display: none;
+        opacity: 0;
+        transform: translateY(3px);
         transition:
+            opacity var(--animationSpeed),
+            transform var(--animationSpeed),
             display var(--animationSpeed) allow-discrete,
             overlay var(--animationSpeed) allow-discrete;
-        animation: popoverHide var(--animationSpeed) forwards;
         &:popover-open {
-            animation: popoverShow var(--animationSpeed) forwards;
             display: inline-flex;
+            opacity: 1;
+            transform: translateY(0);
         }
+        @starting-style {
+            &:popover-open {
+                opacity: 0;
+                transform: translateY(3px);
+            }
+        }
+
+        /* @todo temp Safari freeze workaround (#7650) */
+        @supports not (fill: context-stroke) {
+            position-try-fallbacks: none !important;
+            transition: none !important;
+        }
+
         &.left {
             position-area: bottom span-right;
         }
