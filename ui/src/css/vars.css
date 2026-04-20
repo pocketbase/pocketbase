@@ -138,7 +138,7 @@
 /* dark */
 [data-color-scheme="dark"],
 [data-color-scheme="dark"] .dropdown {
-    --surfaceColor: #212121;
+    --surfaceColor: #1f1f1f;
     --surfaceAlt1Color: color-mix(in srgb, var(--surfaceColor), white 3%);
     --surfaceAlt2Color: color-mix(in srgb, var(--surfaceColor), white 7%);
     --surfaceAlt3Color: color-mix(in srgb, var(--surfaceColor), white 12%);
@@ -157,8 +157,8 @@
 
     --primaryColor: #161616;
     --primaryTxtColor: var(--surfaceTxtColor);
-    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), white 1.2%);
-    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), white 1.7%);
+    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), white 1%);
+    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), white 1.5%);
     --primaryTxtHintColor: color-mix(in srgb, var(--primaryTxtColor), transparent 35%);
     --primaryTxtDisabledColor: color-mix(in srgb, var(--primaryTxtColor), transparent 50%);
 
@@ -174,7 +174,7 @@
     --successAlt2Color: color-mix(in srgb, var(--successColor), black 15%);
     --surfaceSuccessColor: color-mix(in srgb, var(--successColor), var(--surfaceColor) 45%);
 
-    --warningColor: #ae4d0e;
+    --warningColor: #b94f09;
     --warningTxtColor: var(--surfaceTxtColor);
     --warningAlt1Color: color-mix(in srgb, var(--warningColor), black 10%);
     --warningAlt2Color: color-mix(in srgb, var(--warningColor), black 15%);
