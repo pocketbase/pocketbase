@@ -60,6 +60,9 @@
         border-top-left-radius: var(--borderRadius);
         border-bottom-left-radius: var(--borderRadius);
         border-right: 1px solid color-mix(in srgb, var(--toastAccentColor), transparent 90%);
+        [data-color-scheme="dark"] & {
+            border-color: color-mix(in srgb, var(--toastAccentColor), transparent 75%);
+        }
         &::before {
             content: "\F414";
             font-family: var(--iconFontFamily);

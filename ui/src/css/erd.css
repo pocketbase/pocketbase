@@ -108,7 +108,7 @@
     width: 100%;
     height: auto;
     min-height: 300px;
-    background-image: radial-gradient(var(--surfaceAlt3Color) 1px, transparent 1px);
+    background-image: radial-gradient(var(--surfaceAlt2Color) 1px, transparent 1px);
     background-size: 20px 20px;
     border-radius: var(--borderRadius);
     touch-action: none; /* handled by js */

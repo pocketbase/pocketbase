@@ -168,19 +168,19 @@
     --infoAlt2Color: color-mix(in srgb, var(--infoColor), black 15%);
     --surfaceInfoColor: color-mix(in srgb, var(--infoColor), var(--surfaceColor) 45%);
 
-    --successColor: #257e58;
+    --successColor: #27865d;
     --successTxtColor: var(--surfaceTxtColor);
     --successAlt1Color: color-mix(in srgb, var(--successColor), black 10%);
     --successAlt2Color: color-mix(in srgb, var(--successColor), black 15%);
     --surfaceSuccessColor: color-mix(in srgb, var(--successColor), var(--surfaceColor) 45%);
 
-    --warningColor: #b94f09;
+    --warningColor: #c3430c;
     --warningTxtColor: var(--surfaceTxtColor);
     --warningAlt1Color: color-mix(in srgb, var(--warningColor), black 10%);
     --warningAlt2Color: color-mix(in srgb, var(--warningColor), black 15%);
     --surfaceWarningColor: color-mix(in srgb, var(--warningColor), var(--surfaceColor) 45%);
 
-    --dangerColor: #b6354c;
+    --dangerColor: #bb303e;
     --dangerTxtColor: var(--surfaceTxtColor);
     --dangerAlt1Color: color-mix(in srgb, var(--dangerColor), black 10%);
     --dangerAlt2Color: color-mix(in srgb, var(--dangerColor), black 15%);
