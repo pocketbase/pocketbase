@@ -374,18 +374,12 @@ export function logsList(logsSettings) {
                                                     if (app.utils.logDataFormatters[keyItem.key]) {
                                                         value = app.utils.logDataFormatters[keyItem.key](log);
                                                     } else {
-                                                        value = app.utils.stringifyValue(
-                                                            log.data[keyItem.key],
-                                                            "N/A",
-                                                            80,
-                                                        );
+                                                        value = app.utils.displayValue(log.data[keyItem.key], 80);
                                                     }
 
                                                     labels.push(
                                                         t.span(
-                                                            {
-                                                                className: `label sm ${keyItem.label || ""}`,
-                                                            },
+                                                            { className: `label sm ${keyItem.label || ""}` },
                                                             `${keyItem.key}: ${value}`,
                                                         ),
                                                     );

@@ -73,7 +73,7 @@ export function input(props) {
 
                 const autodateValues = [];
                 for (let f of autodateFields) {
-                    autodateValues.push(`${f.name}: ${app.utils.stringifyValue(props.record[f.name])}`);
+                    autodateValues.push(`${f.name}: ${app.utils.displayValue(props.record[f.name])}`);
                 }
 
                 return t.div(

@@ -4,18 +4,20 @@
 
 - Slightly adjusted the dark theme colors for better readability ([#7648](https://github.com/pocketbase/pocketbase/discussions/7648)).
 
+- Removed unnecessery tags stripping from the displayed log attributes ([#7649](https://github.com/pocketbase/pocketbase/issues/7649)).
+
 
 ## v0.37.1
 
 - Minor UI bugfixes:
     - Fixed `number` field input values normalization ([#7646](https://github.com/pocketbase/pocketbase/issues/7646)).
-    - Allow opening collections in new tab on middle click.
+    - Allow opening collections in new tab with middle click.
     - Show collection name in the page title on initial load.
 
 
 ## v0.37.0
 
-- New UI rewritten from scratch and with support for external customizations in mind.
+- New UI rewritten from scratch and with support for external customization in mind.
     > Note that as explained in [#7612](https://github.com/pocketbase/pocketbase/discussions/7612) the new UI kit and extensions APIs will intentionally remain undocumented until "Stage 2 completion" _(there no ETAs)_.
 
     The new UI also introduced several other small improvements:

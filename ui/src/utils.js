@@ -606,47 +606,36 @@ const utils = {
     },
 
     /**
-     * Stringifies the provided value or fallback to missingValue in case it is empty.
+     * Returns a stringified truncated version of the provided value
+     * or fallback to `missingValue` in case it is empty.
      *
      * @param  {Mixed}  val
+     * @param  {number} [truncateLength]
      * @param  {string} [missingValue]
-     * @param  {string} [truncateLength]
      * @return {string}
      */
-    stringifyValue(val, missingValue = "N/A", truncateLength = 150) {
+    displayValue(val, truncateLength = 150, missingValue = "N/A") {
+        // check the raw value for "emptiness"
         if (utils.isEmpty(val)) {
             return missingValue;
         }
 
-        if (typeof val == "number") {
-            return "" + val;
-        }
-
-        if (typeof val == "boolean") {
-            return val ? "True" : "False";
-        }
-
         if (typeof val == "string") {
-            val = val.indexOf("<") >= 0 ? utils.plainText(val) : val;
-            return utils.truncate(val, truncateLength) || missingValue;
-        }
-
-        // plain array
-        if (Array.isArray(val) && typeof val[0] != "object") {
-            return utils.truncate(val.join(","), truncateLength);
-        }
-
-        // json
-        if (typeof val == "object") {
+            // already a string
+        } else if (typeof val == "boolean") {
+            val = val ? "True" : "False";
+        } else if (Array.isArray(val) && typeof val[0] != "object") {
+            // assuming primitive array values
+            val = val.map((child) => utils.displayValue(child, truncateLength, missingValue)).join(", ");
+        } else {
             try {
-                return utils.truncate(JSON.stringify(val), truncateLength) || missingValue;
+                val = JSON.stringify(val) || "";
             } catch (_) {
-                return missingValue;
+                val = "" + val;
             }
         }
 
-        // return as it is
-        return val;
+        return val ? utils.truncate(val, truncateLength) : missingValue;
     },
 
     /**

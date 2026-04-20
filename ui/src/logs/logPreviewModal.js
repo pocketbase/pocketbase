@@ -239,7 +239,7 @@ function logPreviewModal(logIdOrModel, settings) {
 
                                         return t.span({
                                             className: "txt",
-                                            textContent: app.utils.stringifyValue(value, "N/A", 1000),
+                                            textContent: app.utils.displayValue(value, 1000),
                                         });
                                     }),
                                     t.td({ className: "col-copy min-width" }, app.components.copyButton(value)),

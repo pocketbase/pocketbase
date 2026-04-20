@@ -213,7 +213,7 @@ function recordPreviewModal(rawRecord, modalSettings) {
                                         });
                                     }
 
-                                    return app.utils.stringifyValue(data.record[f.name]);
+                                    return app.utils.displayValue(data.record[f.name], 1000);
                                 },
                             ),
                         );
