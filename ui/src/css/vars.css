@@ -174,7 +174,7 @@
     --successAlt2Color: color-mix(in srgb, var(--successColor), black 15%);
     --surfaceSuccessColor: color-mix(in srgb, var(--successColor), var(--surfaceColor) 45%);
 
-    --warningColor: #c3430c;
+    --warningColor: #cf4e17;
     --warningTxtColor: var(--surfaceTxtColor);
     --warningAlt1Color: color-mix(in srgb, var(--warningColor), black 10%);
     --warningAlt2Color: color-mix(in srgb, var(--warningColor), black 15%);
@@ -186,13 +186,13 @@
     --dangerAlt2Color: color-mix(in srgb, var(--dangerColor), black 15%);
     --surfaceDangerColor: color-mix(in srgb, var(--dangerColor), var(--surfaceColor) 45%);
 
-    --selectionColor: rgba(255, 255, 255, 0.22);
+    --selectionColor: rgba(255,255,255, 0.22);
     --inputColor: var(--surfaceAlt2Color);
     --inputFocusColor: var(--surfaceAlt3Color);
     --inputBorderColor: var(--surfaceAlt4Color);
     scrollbar-color: var(--surfaceAlt5Color) transparent;
 
-    --modalOverlayColor: rgb(0,0,0,0.5);
+    --modalOverlayColor: rgb(0,0,0, 0.45);
 
     --boxShadow: 0px 8px 5px -5px rgba(0,0,0, 0.3);
     --leftBoxShadow: -1px 0px 5px 0 rgba(0,0,0, 0.3);

@@ -613,4 +613,9 @@
     flex-direction: column;
     align-items: normal;
     gap: 0;
+
+    /* Safari negative margin workaround to hide the extra horizontal scroll */
+    @supports not (fill: context-stroke) {
+        overflow-x: hidden;
+    }
 }
