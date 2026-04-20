@@ -3,7 +3,7 @@ const optionClass = "dropdown-item";
 document.addEventListener(
     "toggle",
     (e) => {
-        if (e.newState != "open" || !e.target || !e.target.matches(".dropdown") || e.target.__keyboardNavRegistered) {
+        if (e.newState != "open" || !e.target || e.target.__keyboardNavRegistered || !e.target.matches(".dropdown")) {
             return;
         }
 
