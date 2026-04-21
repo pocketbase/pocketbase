@@ -5,9 +5,10 @@ const FILTER_QUERY_KEY = "filter";
 const COLLECTION_QUERY_KEY = "collection";
 const RECORD_QUERY_KEY = "record";
 const LAST_ACTIVE_STORAGE_KEY = "pbLastActiveCollection";
-const TOTAL_COUNT_REQUEST_KEY = "recordsTotalCountRequest";
 
 export function pageCollections(route) {
+    const uniqueId = "page_collections_" + app.utils.randomString();
+
     app.store.activeCollection = route.query[COLLECTION_QUERY_KEY]?.[0]
         || window.localStorage.getItem(LAST_ACTIVE_STORAGE_KEY);
 
@@ -34,7 +35,8 @@ export function pageCollections(route) {
             );
 
             const result = await app.pb.collection(app.store.activeCollection.name).getList(1, 1, {
-                requestKey: TOTAL_COUNT_REQUEST_KEY,
+                // use a per page unique id and not a global constant to prevent race issues with the async unmount
+                requestKey: uniqueId,
                 filter: normalizedFilter,
                 fields: "id",
             });
@@ -184,7 +186,7 @@ export function pageCollections(route) {
                 }
             },
             onunmount: () => {
-                app.pb.cancelRequest(TOTAL_COUNT_REQUEST_KEY);
+                app.pb.cancelRequest(uniqueId);
 
                 watchers.forEach((w) => w?.unwatch());
 

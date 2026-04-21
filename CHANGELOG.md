@@ -1,3 +1,8 @@
+## v0.37.3 (WIP)
+
+- Fixed 0 total count on page back/forward navigation.
+
+
 ## v0.37.2
 
 - Fixed autoexpandable input in Firefox ([#7648](https://github.com/pocketbase/pocketbase/discussions/7648)).
