@@ -2,6 +2,8 @@
 
 - Fixed 0 total count on page back/forward navigation.
 
+- Enabled text wrapping for the API rule fileds.
+
 
 ## v0.37.2
 

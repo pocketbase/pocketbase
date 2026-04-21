@@ -3,11 +3,14 @@
     .code-editor {
         z-index: 0;
         min-height: 41px;
+        .editor-content:empty::before {
+            font-family: var(--baseFontFamily);
+        }
         .highlight-overlay {
             color: var(--surfaceTxtColor);
         }
-        .editor-content:empty::before {
-            font-family: var(--baseFontFamily);
+        .editor-content, .highlight-overlay {
+            white-space: pre-wrap;
         }
     }
     .superuser-toggle,
