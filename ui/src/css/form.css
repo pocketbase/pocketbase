@@ -585,6 +585,7 @@ button {
     &.required label,
     label.required,
     .required > label,
+    label:has(~ .autoexpand-wrapper textarea[required]),
     label:has(~ [required]),
     label:has(~ .input.required) {
         &::after {
@@ -599,6 +600,7 @@ button {
     &.disabled label,
     label.disabled,
     .disabled > label,
+    label:has(~ .autoexpand-wrapper textarea[disabled]),
     label:has(~ [disabled]),
     label:has(~ .input.disabled) {
         color: var(--surfaceTxtDisabledColor);
@@ -672,14 +674,14 @@ button {
 }
 
 .field-list {
-    label {
-        padding-bottom: 9px;
-    }
     .field-list-content {
         overflow: auto;
         max-height: 500px;
         scrollbar-width: thin;
         color: var(--surfaceTxtColor);
+    }
+    label + .field-list-content {
+        margin-top: 8px;
     }
     .field-list-item {
         display: flex;

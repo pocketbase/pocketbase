@@ -357,7 +357,7 @@ function removeErrorState(input, container) {
 watch(
     () => JSON.stringify(app.store.errors) && app.store.errors,
     (errs) => {
-        // search for input or other elements wiht "name" attribute
+        // search for input or other elements with "name" attribute
         const inputs = document.querySelectorAll(`[name]`);
 
         for (let input of inputs) {
@@ -365,7 +365,8 @@ watch(
                 continue;
             }
 
-            const container = input.closest(".fields") || input.closest(".field");
+            // find the top-most wrapper field element
+            const container = input.closest(".field-list") || input.closest(".fields") || input.closest(".field");
             if (!container) {
                 continue;
             }

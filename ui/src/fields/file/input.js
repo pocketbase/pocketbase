@@ -240,7 +240,7 @@ export function input(props) {
             },
         },
         t.div(
-            { className: () => `field ${props.field.required ? "required" : ""}` },
+            { className: () => `field-list ${props.field.required ? "required" : ""}` },
             t.label(
                 { htmlFor: uniqueId },
                 t.i({ className: app.fieldTypes.file.icon, ariaHidden: true }),

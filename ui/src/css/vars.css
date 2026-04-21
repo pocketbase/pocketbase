@@ -12,9 +12,9 @@
     --primaryTxtHintColor: color-mix(in srgb, var(--primaryTxtColor), transparent 35%);
     --primaryTxtDisabledColor: color-mix(in srgb, var(--primaryTxtColor), transparent 50%);
 
-    --secondaryColor: #e8eaee;
-    --secondaryAlt1Color: #dcdfe5;
-    --secondaryAlt2Color: #c4cbd4;
+    --secondaryColor: #e4e8ec;
+    --secondaryAlt1Color: #dbe0e6;
+    --secondaryAlt2Color: #d2d9df;
     --secondaryTxtColor: var(--primaryColor);
     --secondaryTxtHintColor: color-mix(in srgb, var(--secondaryTxtColor), transparent 35%);
     --secondaryTxtDisabledColor: color-mix(in srgb, var(--secondaryTxtColor), transparent 50%);
@@ -55,20 +55,20 @@
     --accentTxtDisabledColor: color-mix(in srgb, var(--accentTxtColor), transparent 50%);
 
     --surfaceColor: #fff;
-    --surfaceAlt1Color: #f6f7f9;
-    --surfaceAlt2Color: #e8eaee;
-    --surfaceAlt3Color: #dfe2e7;
-    --surfaceAlt4Color: #d9dde2;
-    --surfaceAlt5Color: #d1d6dc;
+    --surfaceAlt1Color: #f8f9fa;
+    --surfaceAlt2Color: #e4e8ec;
+    --surfaceAlt3Color: #dbe0e6;
+    --surfaceAlt4Color: #d2d9df;
+    --surfaceAlt5Color: #cbd4dc;
     --surfaceTxtColor: #25272d;
-    --surfaceTxtHintColor: #6b747b;
-    --surfaceTxtDisabledColor: #abaeba;
+    --surfaceTxtHintColor: #687278;
+    --surfaceTxtDisabledColor: #a2a9ae;
     --surfaceAccentColor: color-mix(in srgb, var(--accentColor), white 80%);
     --surfaceInfoColor: color-mix(in srgb, var(--infoColor), white 80%);
     --surfaceSuccessColor: color-mix(in srgb, var(--successColor), white 80%);
     --surfaceWarningColor: color-mix(in srgb, var(--warningColor), white 80%);
     --surfaceDangerColor: color-mix(in srgb, var(--dangerColor), white 80%);
-    --selectionColor: rgba(34, 36, 42, 0.22);
+    --selectionColor: rgba(70, 90, 115, 0.25);
     --inputColor: var(--surfaceAlt2Color);
     --inputFocusColor: var(--surfaceAlt3Color);
     --inputBorderColor: var(--surfaceAlt4Color);
@@ -85,7 +85,7 @@
     /* ---------------- */
 
     --modalAnimationSpeed: 200ms;
-    --modalOverlayColor: rgba(34, 36, 42, 0.22);
+    --modalOverlayColor: rgba(70, 90, 115, 0.25);
 
     --tooltipTxtColor: #fff;
     --tooltipSurfaceColor: rgba(34, 36, 36, 0.9);
