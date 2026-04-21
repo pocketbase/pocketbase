@@ -162,6 +162,7 @@ window.app.components.tinymce = function(propsArg = {}) {
             autoresize_bottom_margin: 30,
             media_poster: false,
             media_alt_source: false,
+            ui_mode: "split",
             codesample_languages: [
                 { text: "HTML/XML", value: "markup" },
                 { text: "CSS", value: "css" },

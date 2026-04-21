@@ -4,6 +4,8 @@
 
 - Enabled text wrapping for the API rule fileds.
 
+- Fixed `editor` floating dialogs position when scrolling ([#7653](https://github.com/pocketbase/pocketbase/issues/7653)).
+
 
 ## v0.37.2
 
