@@ -171,9 +171,13 @@ export function collectionViewQueryTab(upsertData) {
             ),
             t.div(
                 { className: "col-12" },
-                t.p({ className: "txt-sm txt-bold" }, "Sample output:"),
+                t.p(
+                    { className: "txt-sm txt-bold" },
+                    "Sample output:",
+                ),
                 t.div(
                     { className: "view-query-sample-wrapper" },
+                    t.span({ hidden: () => !local.isTesting, className: "loader sm" }),
                     app.components.codeBlock({
                         language: () => local.testError ? "plain" : "js",
                         className: () => `view-query-sample ${local.testError ? "txt-danger" : ""}`,

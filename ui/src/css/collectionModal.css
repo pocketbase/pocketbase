@@ -88,7 +88,17 @@
     padding: var(--smSpacing);
 }
 
+.view-query-sample-wrapper {
+    position: relative;
+    .loader {
+        position: absolute;
+        z-index: 1;
+        right: 10px;
+        top: 10px;
+    }
+}
 .view-query-sample code {
+    z-index: 0;
     max-height: 300px;
     background: none;
     border: 1px solid var(--surfaceAlt2Color);
