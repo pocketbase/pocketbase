@@ -6,7 +6,7 @@
 
 - Fixed `editor` floating dialogs position when scrolling ([#7653](https://github.com/pocketbase/pocketbase/issues/7653)).
 
-- Other minor UI contrast and styles improvements.
+- Other minor light UI contrast and styles improvements.
 
 
 ## v0.37.2

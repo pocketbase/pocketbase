@@ -298,6 +298,7 @@ table {
 .page-table-wrapper {
     display: block;
     width: auto;
+    min-height: 130px;
     overflow: auto;
     margin-left: calc(-1 * var(--spacing));
     margin-right: calc(-1 * var(--spacing));

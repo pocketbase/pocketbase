@@ -13,8 +13,8 @@
     --primaryTxtDisabledColor: color-mix(in srgb, var(--primaryTxtColor), transparent 50%);
 
     --secondaryColor: #e4e8ec;
-    --secondaryAlt1Color: #dbe0e6;
-    --secondaryAlt2Color: #d2d9df;
+    --secondaryAlt1Color: #dce0e5;
+    --secondaryAlt2Color: #d3d9df;
     --secondaryTxtColor: var(--primaryColor);
     --secondaryTxtHintColor: color-mix(in srgb, var(--secondaryTxtColor), transparent 35%);
     --secondaryTxtDisabledColor: color-mix(in srgb, var(--secondaryTxtColor), transparent 50%);
@@ -57,9 +57,9 @@
     --surfaceColor: #fff;
     --surfaceAlt1Color: #f8f9fa;
     --surfaceAlt2Color: #e4e8ec;
-    --surfaceAlt3Color: #dbe0e6;
-    --surfaceAlt4Color: #d2d9df;
-    --surfaceAlt5Color: #cbd4dc;
+    --surfaceAlt3Color: #dce0e5;
+    --surfaceAlt4Color: #d3d9df;
+    --surfaceAlt5Color: #ccd4db;
     --surfaceTxtColor: #25272d;
     --surfaceTxtHintColor: #687278;
     --surfaceTxtDisabledColor: #a2a9ae;
