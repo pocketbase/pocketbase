@@ -62,13 +62,10 @@ export function pageCollections(route) {
             (newVal, oldVal) => {
                 app.store.title = app.store.activeCollection?.name || "Collections";
 
-                // skip unnecessery initial params replacement
-                if (!oldVal) {
-                    return;
-                }
+                const hasChanged = oldVal && oldVal != newVal;
 
                 // reset filter and sort params on collection change
-                if (oldVal != newVal) {
+                if (hasChanged) {
                     pageData.filter = "";
                     pageData.sort = "";
                 }
@@ -77,7 +74,7 @@ export function pageCollections(route) {
                     [COLLECTION_QUERY_KEY]: app.store.activeCollection?.name,
                     [FILTER_QUERY_KEY]: pageData.filter || null,
                     [SORT_QUERY_KEY]: pageData.sort || null,
-                }, newVal != oldVal ? true : null);
+                }, hasChanged ? true : null);
 
                 if (app.store.activeCollection?.id) {
                     window.localStorage.setItem(LAST_ACTIVE_STORAGE_KEY, app.store.activeCollection.id);

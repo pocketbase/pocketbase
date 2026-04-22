@@ -1,4 +1,4 @@
-## v0.37.3 (WIP)
+## v0.37.3
 
 - Fixed 0 total count on page back/forward navigation.
 

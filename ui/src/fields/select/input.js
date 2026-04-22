@@ -4,7 +4,7 @@
 //     record: undefined,
 //     field: undefined,
 // }
-export function input(data) {
+export function input(props) {
     const uniqueId = "select_" + app.utils.randomString();
 
     return t.div(
@@ -14,33 +14,34 @@ export function input(data) {
             t.label(
                 { htmlFor: uniqueId },
                 t.i({ className: app.fieldTypes.select.icon, ariaHidden: true }),
-                t.span({ className: "txt" }, () => data.field.name),
+                t.span({ className: "txt" }, () => props.field.name),
             ),
             app.components.select({
                 id: uniqueId,
-                max: () => data.field.maxSelect || 1,
-                required: () => data.field.required,
+                name: () => props.field.name,
+                max: () => props.field.maxSelect || 1,
+                required: () => props.field.required,
                 options: () => {
-                    return data.field.values.map((v) => {
+                    return props.field.values.map((v) => {
                         return { value: v };
                     });
                 },
                 value: () => {
-                    return app.utils.toArray(data.record[data.field.name]);
+                    return app.utils.toArray(props.record[props.field.name]);
                 },
                 onchange: (opts) => {
-                    if (data.field.maxSelect <= 1) {
-                        data.record[data.field.name] = opts?.[0]?.value || "";
+                    if (props.field.maxSelect <= 1) {
+                        props.record[props.field.name] = opts?.[0]?.value || "";
                         return;
                     }
 
-                    data.record[data.field.name] = opts.map((o) => o.value);
+                    props.record[props.field.name] = opts.map((o) => o.value);
                 },
             }),
         ),
         () => {
-            if (data.field.help) {
-                return t.div({ className: "field-help" }, data.field.help);
+            if (props.field.help) {
+                return t.div({ className: "field-help" }, props.field.help);
             }
         },
     );
