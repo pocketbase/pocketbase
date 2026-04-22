@@ -36,34 +36,51 @@ export function input(props) {
             return;
         }
 
-        try {
-            const fieldCollection = app.store.collections.find((c) => c.id == props.field.collectionId);
+        const resultRecords = [];
+        const idsToLoad = [];
 
-            // eagerly expand first level presentable relations (if any and the collections are loaded)
-            const relExpands = [];
-            const presentableRelationFields = fieldCollection?.fields?.filter(
-                (f) => !f.hidden && f.presentable && f.type == "relation",
-            ) || [];
-            for (const field of presentableRelationFields) {
-                relExpands.push(field.name);
+        // check for preloaded expand
+        const expanded = app.utils.toArray(props.record.expand?.[props.field.name]);
+        for (const id of ids) {
+            const found = expanded.find((r) => r.id == id);
+            if (found) {
+                resultRecords.push(found);
+            } else {
+                idsToLoad.push(id);
             }
+        }
 
-            const records = await app.pb.collection(props.field.collectionId).getFullList({
-                requestKey: null,
-                filter: ids.map((id) => app.pb.filter("id={:id}", { id })).join("||"),
-                expand: relExpands.join(",") || undefined,
-            });
+        try {
+            if (idsToLoad.length) {
+                const fieldCollection = app.store.collections.find((c) => c.id == props.field.collectionId);
 
-            // preserve the original order
-            const orderedRecords = [];
-            for (let id of ids) {
-                const record = records.find((r) => r.id == id);
-                if (record) {
-                    orderedRecords.push(record);
+                // eagerly expand first level presentable relations (if any and the collections are loaded)
+                const relExpands = [];
+                const presentableRelationFields = fieldCollection?.fields?.filter(
+                    (f) => !f.hidden && f.presentable && f.type == "relation",
+                ) || [];
+                for (const field of presentableRelationFields) {
+                    relExpands.push(field.name);
+                }
+
+                const records = await app.pb.collection(props.field.collectionId).getFullList({
+                    requestKey: null,
+                    filter: idsToLoad.map((id) => app.pb.filter("id={:id}", { id })).join("||"),
+                    expand: relExpands.join(",") || undefined,
+                });
+
+                // preserve the original order
+                for (const id of idsToLoad) {
+                    const found = records.find((r) => r.id == id);
+                    if (found) {
+                        resultRecords.push(found);
+                    } else {
+                        console.warn("missing relation id:", id);
+                    }
                 }
             }
 
-            local.selected = orderedRecords;
+            local.selected = resultRecords;
             local.isLoading = false;
         } catch (err) {
             if (!err.isAbort) {

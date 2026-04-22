@@ -348,6 +348,8 @@ const utils = {
                 clone[prop] = "";
             } else if (typeof clone[prop] == "number") {
                 clone[prop] = 0;
+            } else if (typeof clone[prop] == "boolean") {
+                clone[prop] = false;
             } else if (Array.isArray(clone[prop])) {
                 clone[prop] = [];
             } else if (app.utils.isObject(clone[prop])) {

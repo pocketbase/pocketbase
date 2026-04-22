@@ -196,12 +196,6 @@
     }
 }
 
-.record-field-input {
-    .record-summary {
-        animation: fadeIn var(--animationSpeed);
-    }
-}
-
 .field-type-bool {
     &.record-field-view .label {
         min-width: 48px;

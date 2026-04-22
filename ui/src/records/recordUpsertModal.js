@@ -193,36 +193,67 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
         data.record = draftClone;
     }
 
+    let draftWatcher;
+
+    function initDraftWatcher() {
+        data.initialDraft = getDraft();
+
+        draftWatcher?.unwatch();
+        draftWatcher = watch(() => data.recordHash, (newVal, oldVal) => {
+            if (typeof oldVal == "undefined") {
+                return;
+            }
+
+            if (data.hasChanges) {
+                saveDraft(data.recordHash);
+            } else {
+                deleteDraft();
+            }
+        });
+    }
+
     async function initRecord(rawRecord) {
         data.isLoading = true;
 
-        const recordId = typeof rawRecord == "string" ? rawRecord : rawRecord?.id;
+        draftWatcher?.unwatch();
+
+        // normalize rawRecord (could be plain id string)
+        rawRecord = app.utils.isObject(rawRecord) ? rawRecord : { id: rawRecord || "" };
 
         // new record
-        if (!recordId) {
-            const record = app.utils.isObject(rawRecord) ? JSON.parse(JSON.stringify(rawRecord)) : {};
-            data.originalRecord = app.utils.emptyClone(record, ["collectionId", "collectionName"]);
-            data.initialDraft = getDraft();
-            data.record = record;
+        if (!rawRecord.id) {
+            data.originalRecord = JSON.parse(JSON.stringify(rawRecord));
+            data.record = JSON.parse(JSON.stringify(rawRecord));
+
             data.isLoading = false;
             data.isLocked = false;
+            initDraftWatcher();
             return;
         }
 
-        data.isLocked = !!app.store.settings?.meta?.hideControls;
-
         try {
-            // eagerly load to allow elements to show their "update" UI and minimize flickering
-            data.originalRecord = { id: recordId };
+            data.isLocked = !!app.store.settings?.meta?.hideControls;
 
-            const record = await app.pb.collection(collection.name).getOne(recordId, {
-                requestKey: "upsert_load_" + recordId,
+            // preload to minimize content jumps
+            data.originalRecord = JSON.parse(JSON.stringify(rawRecord));
+            data.record = JSON.parse(JSON.stringify(rawRecord));
+
+            // fetch to ensure that the main record fields are up-to-date
+            let record = await app.pb.collection(collection.name).getOne(rawRecord.id, {
+                requestKey: "upsert_load_" + rawRecord.id,
             });
 
-            data.originalRecord = record;
-            data.initialDraft = getDraft();
-            data.record = JSON.parse(JSON.stringify(record));
+            // preload existing expands (if any)
+            if (rawRecord.expand) {
+                record.expand = JSON.parse(JSON.stringify(rawRecord.expand));
+            }
+
+            // extend, not overwrite, to prevent reseting the reference passed down to the inputs
+            Object.assign(data.originalRecord, JSON.parse(JSON.stringify(record)));
+            Object.assign(data.record, JSON.parse(JSON.stringify(record)));
+
             data.isLoading = false;
+            initDraftWatcher();
         } catch (err) {
             if (!err?.isAbort) {
                 app.checkApiError(err);
@@ -297,12 +328,12 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                 data.originalRecord = structuredClone(record);
                 data.record = structuredClone(record);
             } else {
-                // don't overwrite to prevent loosing the reference passed down to the inputs
+                // extend, not overwrite, to prevent reseting the reference passed down to the inputs
                 Object.assign(data.originalRecord, structuredClone(record));
                 Object.assign(data.record, structuredClone(record));
             }
 
-            modalSettings.onsave?.(structuredClone(record), isNew);
+            modalSettings.onsave?.(record, isNew);
 
             // reset all errors
             app.store.errors = null;
@@ -359,8 +390,6 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
 
         initRecord(clone);
     }
-
-    const watchers = [];
 
     function mainTab() {
         return [
@@ -605,31 +634,12 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
             onbeforeopen: () => {
                 initRecord(rawRecord);
 
-                watchers.push(
-                    watch(() => data.recordHash, (newHash, oldHash) => {
-                        if (!oldHash || !newHash || newHash == "{}" || oldHash == "{}") {
-                            return;
-                        }
-
-                        saveDraft(newHash);
-                    }),
-                );
-
                 return modalSettings.onbeforeopen?.(el);
             },
             onafteropen: (el) => {
                 modalSettings.onafteropen?.(el);
             },
             onbeforeclose: (el, forceClosed) => {
-                if (
-                    // there are no unsaved changes
-                    !data.hasChanges
-                    // the form has been edited
-                    && data.initialDraftHash != getDraftHash()
-                ) {
-                    deleteDraft();
-                }
-
                 if (forceClosed) {
                     return modalSettings.onbeforeclose?.(el);
                 }
@@ -656,11 +666,10 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
             },
             onafterclose: (el) => {
                 modalSettings.onafterclose?.(el);
-                watchers.forEach((w) => w?.unwatch());
                 el?.remove();
             },
             onunmount: () => {
-                watchers.forEach((w) => w?.unwatch());
+                draftWatcher?.unwatch();
             },
         },
         t.header(

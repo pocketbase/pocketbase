@@ -94,9 +94,9 @@ window.app.components.recordsList = function(propsArg = {}) {
             // eagerly expand first level relations
             // (to prevent too many relation queries)
             const relExpands = [];
-            const relationFields = props.collection.fields.filter(
+            const relationFields = props.collection.fields?.filter(
                 (f) => !f.hidden && f.type == "relation",
-            );
+            ) || [];
             for (const field of relationFields) {
                 relExpands.push(field.name);
             }
