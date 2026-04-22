@@ -73,7 +73,7 @@ function serializeRecord(record) {
         return "";
     }
 
-    return JSON.stringify(record);
+    return JSON.stringify(redacted(record));
 }
 
 const TAB_MAIN = "main";
