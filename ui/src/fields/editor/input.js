@@ -7,27 +7,9 @@
 export function input(props) {
     const uniqueId = "editor_" + app.utils.randomString();
 
-    const local = store({
-        lazyEditor: null,
-    });
-
     return t.div(
         {
             className: "record-field-input field-type-editor large-modal",
-            onmount: () => {
-                requestAnimationFrame(() => {
-                    local.lazyEditor = app.components.tinymce({
-                        id: uniqueId,
-                        required: () => props.field.required,
-                        convertURLs: () => props.field.convertURLs,
-                        name: () => props.field.name,
-                        value: () => props.record[props.field.name] || "",
-                        onchange: (val) => {
-                            props.record[props.field.name] = val;
-                        },
-                    });
-                });
-            },
         },
         t.div(
             { className: "field" },
@@ -36,7 +18,18 @@ export function input(props) {
                 t.i({ className: app.fieldTypes.editor.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => props.field.name),
             ),
-            () => local.lazyEditor,
+            () => {
+                return app.components.tinymce({
+                    id: uniqueId,
+                    name: () => props.field.name,
+                    required: () => props.field.required,
+                    convertURLs: () => props.field.convertURLs,
+                    value: () => props.record[props.field.name] || "",
+                    onchange: (val) => {
+                        props.record[props.field.name] = val;
+                    },
+                });
+            },
         ),
         () => {
             if (props.field.help) {
