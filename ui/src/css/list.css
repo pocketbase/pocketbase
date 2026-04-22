@@ -15,6 +15,14 @@
         display: none;
     }
 
+    .list-group {
+        display: block;
+        width: 100%;
+        max-height: 425px;
+        overflow: auto;
+        scrollbar-width: thin;
+    }
+
     .list-item {
         word-break: break-word;
         position: relative;

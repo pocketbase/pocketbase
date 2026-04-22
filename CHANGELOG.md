@@ -1,3 +1,8 @@
+## v0.37.4 (WIP)
+
+- Added backups list scroll container ([#7655](https://github.com/pocketbase/pocketbase/issues/7655)).
+
+
 ## v0.37.3
 
 - Fixed total count load on page back/forward navigation.

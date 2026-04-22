@@ -100,7 +100,8 @@ export function backupsList(propsArg = {}) {
 
     return t.div(
         {
-            className: "list",
+            pbEvent: "backupsList",
+            className: "list backups-list",
             onmount: (el) => {
                 watchers.push(watch(() => props.reset, () => {
                     loadBackups();
@@ -116,83 +117,86 @@ export function backupsList(propsArg = {}) {
             },
         },
         t.div(
-            {
-                hidden: () => !data.isLoading || data.backups.length,
-                className: "list-item",
+            { className: "list-group" },
+            t.div(
+                {
+                    hidden: () => !data.isLoading || data.backups.length,
+                    className: "list-item",
+                },
+                t.div({ className: "skeleton-loader" }),
+            ),
+            t.div(
+                {
+                    hidden: () => data.isLoading || data.backups.length,
+                    className: () => "list-item",
+                },
+                t.div({ className: "content block txt-hint" }, "No backups found."),
+            ),
+            () => {
+                return data.backups.map((backup) => {
+                    return t.div(
+                        { className: () => `list-item ${data.isLoading ? "faded" : ""}` },
+                        t.i({ className: "ri-folder-zip-line", ariaHidden: true }),
+                        t.div(
+                            { className: "content" },
+                            t.span({
+                                className: "backup-name txt-ellipsis",
+                                title: () => backup.key,
+                                textContent: () => backup.key,
+                            }),
+                            t.small(
+                                { className: "backup-size txt-hint txt-nowrap" },
+                                "(",
+                                () => app.utils.formattedFileSize(backup.size),
+                                ")",
+                            ),
+                        ),
+                        t.nav(
+                            {
+                                hidden: () => data.isLoading,
+                                className: "actions autohide",
+                            },
+                            t.button(
+                                {
+                                    type: "button",
+                                    ariaLabel: app.attrs.tooltip("Download"),
+                                    className: () =>
+                                        `btn sm circle secondary transparent ${
+                                            data.isDownloading[backup.key] ? "loading" : ""
+                                        }`,
+                                    disabled: () => data.isDeleting[backup.key] || data.isDownloading[backup.key],
+                                    onclick: () => downloadBackup(backup.key),
+                                },
+                                t.i({ className: "ri-download-line", ariaHidden: true }),
+                            ),
+                            t.button(
+                                {
+                                    type: "button",
+                                    ariaLabel: app.attrs.tooltip("Restore"),
+                                    className: () => `btn sm circle secondary transparent`,
+                                    disabled: () => data.isDeleting[backup.key] || data.isDownloading[backup.key],
+                                    onclick: () => openBackupRestoreModal(backup.key),
+                                },
+                                t.i({ className: "ri-restart-line", ariaHidden: true }),
+                            ),
+                            t.button(
+                                {
+                                    type: "button",
+                                    ariaLabel: app.attrs.tooltip("Delete"),
+                                    className: () =>
+                                        `btn sm circle secondary transparent ${
+                                            data.isDeleting[backup.key] ? "loading" : ""
+                                        }`,
+                                    disabled: () => data.isDeleting[backup.key] || data.isDownloading[backup.key],
+                                    onclick: () => confirmBackupDelete(backup.key),
+                                },
+                                t.i({ className: "ri-delete-bin-7-line", ariaHidden: true }),
+                            ),
+                        ),
+                    );
+                });
             },
-            t.div({ className: "skeleton-loader" }),
         ),
-        t.div(
-            {
-                hidden: () => data.isLoading || data.backups.length,
-                className: () => "list-item",
-            },
-            t.div({ className: "content block txt-hint" }, "No backups found."),
-        ),
-        () => {
-            return data.backups.map((backup) => {
-                return t.div(
-                    { className: () => `list-item ${data.isLoading ? "faded" : ""}` },
-                    t.i({ className: "ri-folder-zip-line", ariaHidden: true }),
-                    t.div(
-                        { className: "content" },
-                        t.span({
-                            className: "backup-name txt-ellipsis",
-                            title: () => backup.key,
-                            textContent: () => backup.key,
-                        }),
-                        t.small(
-                            { className: "backup-size txt-hint txt-nowrap" },
-                            "(",
-                            () => app.utils.formattedFileSize(backup.size),
-                            ")",
-                        ),
-                    ),
-                    t.nav(
-                        {
-                            hidden: () => data.isLoading,
-                            className: "actions autohide",
-                        },
-                        t.button(
-                            {
-                                type: "button",
-                                ariaLabel: app.attrs.tooltip("Download"),
-                                className: () =>
-                                    `btn sm circle secondary transparent ${
-                                        data.isDownloading[backup.key] ? "loading" : ""
-                                    }`,
-                                disabled: () => data.isDeleting[backup.key] || data.isDownloading[backup.key],
-                                onclick: () => downloadBackup(backup.key),
-                            },
-                            t.i({ className: "ri-download-line", ariaHidden: true }),
-                        ),
-                        t.button(
-                            {
-                                type: "button",
-                                ariaLabel: app.attrs.tooltip("Restore"),
-                                className: () => `btn sm circle secondary transparent`,
-                                disabled: () => data.isDeleting[backup.key] || data.isDownloading[backup.key],
-                                onclick: () => openBackupRestoreModal(backup.key),
-                            },
-                            t.i({ className: "ri-restart-line", ariaHidden: true }),
-                        ),
-                        t.button(
-                            {
-                                type: "button",
-                                ariaLabel: app.attrs.tooltip("Delete"),
-                                className: () =>
-                                    `btn sm circle secondary transparent ${
-                                        data.isDeleting[backup.key] ? "loading" : ""
-                                    }`,
-                                disabled: () => data.isDeleting[backup.key] || data.isDownloading[backup.key],
-                                onclick: () => confirmBackupDelete(backup.key),
-                            },
-                            t.i({ className: "ri-delete-bin-7-line", ariaHidden: true }),
-                        ),
-                    ),
-                );
-            });
-        },
         t.div(
             { className: "list-item" },
             t.button(
