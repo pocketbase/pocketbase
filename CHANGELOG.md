@@ -2,7 +2,7 @@
 
 - Added backups list scroll container ([#7655](https://github.com/pocketbase/pocketbase/issues/7655)).
 
-- Optimized record upsert panel loading to minimize layout jumps.
+- Optimized record upsert and preview modals loading to minimize layout jumps.
 
 
 ## v0.37.3

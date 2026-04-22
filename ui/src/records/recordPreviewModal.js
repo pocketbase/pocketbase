@@ -54,6 +54,18 @@ function copyJSON(record) {
 }
 
 function recordPreviewModal(rawRecord, modalSettings) {
+    if (!rawRecord?.id) {
+        app.toasts.error("Failed to load record.");
+        console.warn("[recordPreviewModal] missing required record id field:", rawRecord);
+        return;
+    }
+
+    if (!rawRecord.collectionId && !rawRecord.collectionName) {
+        app.toasts.error("Failed to load record.");
+        console.warn("[recordPreviewModal] missing required collectionId or collectionName field:", rawRecord);
+        return;
+    }
+
     let modal;
 
     const uniqueId = app.utils.randomString();
@@ -69,38 +81,30 @@ function recordPreviewModal(rawRecord, modalSettings) {
     });
 
     async function loadRecord() {
-        if (!rawRecord?.id) {
-            app.toasts.error("Failed to load record.");
-            setTimeout(() => app.modals.close(modal), 0);
-            console.warn("[recordPreviewModal] missing required record id field:", rawRecord);
-            return;
-        }
-
-        if (!rawRecord.collectionId && !rawRecord.collectionName) {
-            app.toasts.error("Failed to load record.");
-            setTimeout(() => app.modals.close(modal), 0);
-            console.warn("[recordPreviewModal] missing required collectionId or collectionName field:", rawRecord);
-            return;
-        }
-
         data.isLoading = true;
 
         try {
-            // eagerly expand first level presentable relations (if any and the collections are loaded)
+            // preload to minimize content jumps
+            data.record = JSON.parse(JSON.stringify(rawRecord));
+
+            // eagerly expand first level relations (if any and the collections are loaded)
             let relExpands = [];
             const presentableRelationFields = data.collection?.fields?.filter(
-                (f) => !f.hidden && f.presentable && f.type == "relation",
+                (f) => !f.hidden && f.type == "relation",
             ) || [];
             for (let field of presentableRelationFields) {
                 relExpands.push(field.name);
             }
 
-            data.record = await app.pb
-                .collection(rawRecord.collectionId || rawRecord.collectionName)
+            const record = await app.pb
+                .collection(rawRecord.collectionName || rawRecord.collectionId)
                 .getOne(rawRecord.id, {
                     requestKey: "record_preview_" + rawRecord.id,
                     expand: relExpands.join(",") || undefined,
                 });
+
+            // populate with an up-to-date fields
+            Object.assign(data.record, record);
 
             data.isLoading = false;
         } catch (err) {
@@ -130,10 +134,6 @@ function recordPreviewModal(rawRecord, modalSettings) {
                 modalSettings.onafterclose?.(el);
                 el?.remove();
             },
-            onmount: (el) => {
-            },
-            onunmount: (el) => {
-            },
         },
         t.header(
             { className: "modal-header" },
@@ -145,45 +145,32 @@ function recordPreviewModal(rawRecord, modalSettings) {
             t.button(
                 {
                     title: "More options",
-                    className: "btn sm circle transparent m-l-auto",
+                    className: () => `btn sm circle transparent m-l-auto ${data.isLoading ? "loading" : ""}`,
+                    disabled: () => data.isLoading,
                     "html-popovertarget": uniqueId + "preview-dropdown",
                 },
                 t.i({ className: "ri-more-line", ariaHidden: true }),
             ),
-            t.div({ id: uniqueId + "preview-dropdown", className: "dropdown", popover: "auto" }, (el) => {
-                return t.button(
-                    {
-                        className: "dropdown-item",
-                        onclick: () => {
-                            copyJSON(data.record);
-                            el.hidePopover();
+            t.div(
+                { id: uniqueId + "preview-dropdown", className: "dropdown", popover: "auto" },
+                (el) => {
+                    return t.button(
+                        {
+                            className: "dropdown-item",
+                            onclick: () => {
+                                copyJSON(data.record);
+                                el.hidePopover();
+                            },
                         },
-                    },
-                    t.i({ className: "ri-braces-line", ariaHidden: true }),
-                    t.span({ className: "txt" }, "Copy JSON"),
-                );
-            }),
+                        t.i({ className: "ri-braces-line", ariaHidden: true }),
+                        t.span({ className: "txt" }, "Copy JSON"),
+                    );
+                },
+            ),
         ),
-        t.div({ className: "modal-content" }, () => {
-            // loader
-            if (data.isLoading || !data.record?.id || !data.collection?.id) {
-                return t.table(
-                    null,
-                    t.tbody(null, () => {
-                        const totalRows = data.collection?.fields?.filter((f) => f.type != "password").length || 1;
-                        const rows = [];
-
-                        for (let i = 0; i < totalRows; i++) {
-                            rows.push(t.tr(null, t.td(null, t.span({ className: "skeleton-loader" }))));
-                        }
-
-                        return rows;
-                    }),
-                );
-            }
-
-            // attrs
-            return t.table(
+        t.div(
+            { className: "modal-content" },
+            t.table(
                 {
                     pbEvent: "recordPreviewTable",
                     className: "record-preview-table responsive-table",
@@ -219,8 +206,8 @@ function recordPreviewModal(rawRecord, modalSettings) {
                         );
                     });
                 }),
-            );
-        }),
+            ),
+        ),
         t.footer(
             { className: "modal-footer" },
             t.button(
@@ -234,7 +221,8 @@ function recordPreviewModal(rawRecord, modalSettings) {
             t.button(
                 {
                     type: "button",
-                    className: "btn",
+                    className: () => `btn ${data.isLoading ? "loading" : ""}`,
+                    disabled: () => data.isLoading,
                     onclick: () => downloadJSON(data.record),
                 },
                 t.i({ className: "ri-download-line", ariaHidden: true }),
