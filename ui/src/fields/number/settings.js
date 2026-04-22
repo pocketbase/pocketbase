@@ -74,25 +74,6 @@ export function settings(data) {
                 t.input({
                     className: "sm",
                     type: "checkbox",
-                    id: uniqueId + ".onlyInt",
-                    name: () => `fields.${data.fieldIndex}.onlyInt`,
-                    checked: () => !!data.field.onlyInt,
-                    onchange: (e) => (data.field.onlyInt = e.target.checked),
-                }),
-                t.label(
-                    { htmlFor: uniqueId + ".onlyInt" },
-                    t.span({ className: "txt" }, "No decimals"),
-                    t.i({
-                        className: "ri-information-line link-hint",
-                        ariaDescription: app.attrs.tooltip("Existing decimal numbers will not be affected."),
-                    }),
-                ),
-            ),
-            t.div(
-                { className: "field" },
-                t.input({
-                    className: "sm",
-                    type: "checkbox",
                     id: uniqueId + ".required",
                     name: () => `fields.${data.fieldIndex}.required`,
                     checked: () => !!data.field.required,
@@ -105,6 +86,25 @@ export function settings(data) {
                     t.i({
                         className: "ri-information-line link-hint",
                         ariaDescription: app.attrs.tooltip("Requires the field value to be not 0."),
+                    }),
+                ),
+            ),
+            t.div(
+                { className: "field" },
+                t.input({
+                    className: "sm",
+                    type: "checkbox",
+                    id: uniqueId + ".onlyInt",
+                    name: () => `fields.${data.fieldIndex}.onlyInt`,
+                    checked: () => !!data.field.onlyInt,
+                    onchange: (e) => (data.field.onlyInt = e.target.checked),
+                }),
+                t.label(
+                    { htmlFor: uniqueId + ".onlyInt" },
+                    t.span({ className: "txt" }, "No decimals"),
+                    t.i({
+                        className: "ri-information-line link-hint",
+                        ariaDescription: app.attrs.tooltip("Existing decimal numbers will not be affected."),
                     }),
                 ),
             ),
