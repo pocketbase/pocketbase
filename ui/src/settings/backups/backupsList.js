@@ -117,7 +117,7 @@ export function backupsList(propsArg = {}) {
             },
         },
         t.div(
-            { className: "list-group" },
+            { className: "list-content" },
             t.div(
                 {
                     hidden: () => !data.isLoading || data.backups.length,
