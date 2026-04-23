@@ -146,7 +146,7 @@
         stroke: var(--pathColor);
     }
     .erd-paths.front {
-        --pathColor: var(--surfaceAlt5Color);
+        --pathColor: var(--surfaceAlt3Color);
 
         z-index: 2;
         .active-from {
@@ -176,6 +176,12 @@
         cursor: grabbing;
     }
     &.active {
+        .erd-table {
+            opacity: 0.7;
+            &.active {
+                opacity: 1;
+            }
+        }
         .erd-paths.back {
             opacity: 0.3;
         }
