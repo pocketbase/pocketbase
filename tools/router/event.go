@@ -349,7 +349,7 @@ const DefaultMaxMemory = 16 << 20 // 16mb
 //
 //	   Title string `json:"title" form:"title"`
 //	   Total int    `json:"total" form:"total"`
-//	}
+//	}{}
 //	err := e.BindBody(&data)
 func (e *Event) BindBody(dst any) error {
 	if e.Request.ContentLength == 0 {
