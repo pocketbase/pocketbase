@@ -6,8 +6,9 @@ export function collectionViewQueryTab(upsertData) {
     // dprint-ignore
     const autocomplete = [
         "SELECT", "FROM", "WHERE", "LEFT JOIN", "INNER JOIN", "ON",
-        "GROUP BY", "HAVING", "ORDER BY", "LIMIT", "OFFSET", "AS",
-        "WITH", "NOT", "IN", "EXISTS", "LIKE", "CAST",
+        "AS", "GROUP BY", "HAVING", "ORDER BY", "ASC", "DESC", "LIMIT",
+        "OFFSET", "WITH", "NOT", "IN", "AND", "OR", "EXISTS", "LIKE",
+        "CAST", "REAL", "DECIMAL", "NUMERIC", "INT", "TEXT", "BOOL",
     ];
 
     const local = store({
