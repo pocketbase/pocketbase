@@ -4,6 +4,8 @@
 
 - Optimized record upsert and preview modals loading to minimize layout jumps.
 
+- Fixed SMTP IPv6 network address format ([#7659](https://github.com/pocketbase/pocketbase/issues/7659)).
+
 
 ## v0.37.3
 

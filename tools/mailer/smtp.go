@@ -3,7 +3,9 @@ package mailer
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/smtp"
+	"strconv"
 	"strings"
 
 	"github.com/domodwyer/mailyak/v3"
@@ -70,16 +72,18 @@ func (c *SMTPClient) send(m *Message) error {
 		}
 	}
 
+	hostWithPort := net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+
 	// create mail instance
 	var yak *mailyak.MailYak
 	if c.TLS {
 		var tlsErr error
-		yak, tlsErr = mailyak.NewWithTLS(fmt.Sprintf("%s:%d", c.Host, c.Port), smtpAuth, nil)
+		yak, tlsErr = mailyak.NewWithTLS(hostWithPort, smtpAuth, nil)
 		if tlsErr != nil {
 			return tlsErr
 		}
 	} else {
-		yak = mailyak.New(fmt.Sprintf("%s:%d", c.Host, c.Port), smtpAuth)
+		yak = mailyak.New(hostWithPort, smtpAuth)
 	}
 
 	if c.LocalName != "" {
@@ -133,15 +137,16 @@ func (c *SMTPClient) send(m *Message) error {
 	}
 
 	// add custom headers (if any)
-	var hasMessageId bool
+	var hasMessageIdHeader bool
 	for k, v := range m.Headers {
-		if strings.EqualFold(k, "Message-ID") {
-			hasMessageId = true
+		if !hasMessageIdHeader && strings.EqualFold(k, "Message-ID") {
+			hasMessageIdHeader = true
 		}
 		yak.AddHeader(k, v)
 	}
-	if !hasMessageId {
-		// add a default message id if missing
+
+	// add a default message id if missing
+	if !hasMessageIdHeader {
 		fromParts := strings.Split(m.From.Address, "@")
 		if len(fromParts) == 2 {
 			yak.AddHeader("Message-ID", fmt.Sprintf("<%s@%s>",
