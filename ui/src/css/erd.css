@@ -138,7 +138,6 @@
         width: 2000px; /* something large enough to fit the lines */
         height: 8000px;
         pointer-events: none;
-        transition: opacity var(--animationSpeed);
     }
     .paths-group {
         fill: none;
@@ -146,7 +145,7 @@
         stroke: var(--pathColor);
     }
     .erd-paths.front {
-        --pathColor: var(--surfaceAlt3Color);
+        --pathColor: var(--surfaceTxtDisabledColor);
 
         z-index: 2;
         .active-from {
