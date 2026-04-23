@@ -894,14 +894,14 @@ hr {
     background: var(--surfaceAlt1Color);
     background: linear-gradient(
         90deg,
-        var(--surfaceAlt1Color) 8%,
-        var(--surfaceAlt2Color) 18%,
-        var(--surfaceAlt1Color) 33%
+        var(--surfaceAlt1Color) 10%,
+        var(--surfaceAlt2Color) 25%,
+        var(--surfaceAlt1Color) 60%
     );
     background-size: 200% 100%;
     animation:
         fadeIn var(--animationSpeed),
-        shine 0.8s linear infinite;
+        shine 1s linear infinite;
     &.sm {
         height: 8px;
     }

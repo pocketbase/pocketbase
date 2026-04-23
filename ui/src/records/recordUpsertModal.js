@@ -678,20 +678,15 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                 { className: "grid" },
                 t.div(
                     { className: "col-12 flex" },
-                    t.h6({ className: "modal-title" }, () => {
-                        if (data.isLoading) {
-                            return t.span({ className: "loader sm" });
-                        }
-
-                        return [
-                            t.span(null, () => (data.isNew ? "Create " : "Edit ")),
-                            t.strong(
-                                { className: "txt-ellipsis collection-name", style: "max-width: 220px" },
-                                () => collection.name,
-                            ),
-                            t.span(null, " record"),
-                        ];
-                    }),
+                    t.h6(
+                        { className: "modal-title" },
+                        t.span(null, () => (data.isNew ? "Create " : "Edit ")),
+                        t.strong(
+                            { className: "txt-ellipsis collection-name", style: "max-width: 220px" },
+                            () => collection.name,
+                        ),
+                        t.span(null, " record"),
+                    ),
                     t.div({ className: "flex-fill" }),
                     () => {
                         if (app.utils.isEmpty(data.originalRecord?.id)) {
@@ -702,8 +697,8 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                             t.button(
                                 {
                                     type: "button",
-                                    className: "btn sm circle transparent",
                                     title: "More options",
+                                    className: () => `btn sm circle transparent ${data.isLoading ? "loading" : ""}`,
                                     disabled: () => data.isLoading,
                                     "html-popovertarget": uniqueId + "modal-header-dropdown",
                                 },
