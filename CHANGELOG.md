@@ -6,7 +6,7 @@
 
 - Fixed SMTP IPv6 network address format ([#7659](https://github.com/pocketbase/pocketbase/issues/7659)).
 
-- Fixed rule autocomplete not firing the related input event ([#7664](https://github.com/pocketbase/pocketbase/issues/7664)).
+- Fixed autocomplete selection not properly updating the underlying input value ([#7664](https://github.com/pocketbase/pocketbase/issues/7664)).
 
 
 ## v0.37.3

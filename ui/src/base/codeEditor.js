@@ -123,8 +123,8 @@ window.app.components.codeEditor = function(propsArg = {}) {
 
     function updateValue(newVal) {
         props.value = newVal;
-        props.oninput?.(props.value);
-        editorContent.dispatchEvent(new CustomEvent("change", { detail: props.value }));
+        props.oninput?.(newVal);
+        editorContent.dispatchEvent(new CustomEvent("change", { detail: newVal }));
     }
 
     let isCtrlOrCmdKey = false;
