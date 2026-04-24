@@ -41,9 +41,9 @@ window.app.components.codeEditor = function(propsArg = {}) {
         // ]
         autocomplete: undefined, // Array<string|Object> | function(word): Array<string|Object>,
         // ---
-        oninput: function(val, e) {},
-        onfocus: function(val, e) {},
-        onblur: function(val, e) {},
+        oninput: function(val) {},
+        onfocus: function(val) {},
+        onblur: function(val) {},
     });
 
     const extendWatchers = app.utils.extendStore(props, propsArg, "autocomplete");
@@ -121,6 +121,12 @@ window.app.components.codeEditor = function(propsArg = {}) {
         isFieldVisible = true;
     }
 
+    function updateValue(newVal) {
+        props.value = newVal;
+        props.oninput?.(props.value);
+        editorContent.dispatchEvent(new CustomEvent("change", { detail: props.value }));
+    }
+
     let isCtrlOrCmdKey = false;
 
     let valueWatcher;
@@ -155,8 +161,8 @@ window.app.components.codeEditor = function(propsArg = {}) {
             valueWatcher?.unwatch();
             closeAutocompleteDropdown();
         },
-        onfocus: (e) => {
-            props.onfocus?.(props.value, e);
+        onfocus: () => {
+            props.onfocus?.(props.value);
         },
         onblur: (e) => {
             // not blurred because of dropdown click
@@ -164,16 +170,12 @@ window.app.components.codeEditor = function(propsArg = {}) {
                 closeAutocompleteDropdown();
             }
 
-            props.onblur?.(props.value, e);
+            props.onblur?.(props.value);
         },
         oninput: (e) => {
             closeAutocompleteDropdown();
 
-            props.value = editorContent.textContent;
-
-            props.oninput?.(props.value, e);
-
-            editorContent.dispatchEvent(new CustomEvent("change", { detail: props.value }));
+            updateValue(editorContent.textContent);
 
             if (!props.value?.length) {
                 editorContent.textContent = ""; // ensure that no comments, br, etc. tags are left
@@ -235,7 +237,8 @@ window.app.components.codeEditor = function(propsArg = {}) {
                             editorContent.textContent = editorContent.textContent.substring(0, match.start)
                                 + word
                                 + editorContent.textContent.substring(match.end + 1);
-                            props.value = editorContent.textContent;
+
+                            updateValue(editorContent.textContent);
 
                             try {
                                 window
@@ -316,13 +319,13 @@ window.app.components.codeEditor = function(propsArg = {}) {
                     selection.modify("extend", "backward", "character");
                     if (selection.toString()[0] == "\t") {
                         selection.deleteFromDocument();
-                        props.value = editorContent.textContent;
+                        updateValue(editorContent.textContent);
                     } else {
                         // check ahead and restore
                         selection.modify("extend", "forward", "character");
                         if (selection.toString()[0] == "\t") {
                             selection.deleteFromDocument();
-                            props.value = editorContent.textContent;
+                            updateValue(editorContent.textContent);
                         }
                     }
 
@@ -335,7 +338,7 @@ window.app.components.codeEditor = function(propsArg = {}) {
                     range.deleteContents();
                     range.insertNode(document.createTextNode("\t"));
                     range.collapse();
-                    props.value = editorContent.textContent;
+                    updateValue(editorContent.textContent);
                 }
 
                 return;

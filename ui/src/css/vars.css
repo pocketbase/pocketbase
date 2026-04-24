@@ -145,7 +145,7 @@
     --surfaceAlt4Color: color-mix(in srgb, var(--surfaceColor), white 14%);
     --surfaceAlt5Color: color-mix(in srgb, var(--surfaceColor), white 16%);
 
-    --surfaceTxtColor: #dedede;
+    --surfaceTxtColor: #e6e6e6;
     --tooltipTxtColor: var(--surfaceTxtColor);
     --surfaceTxtHintColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 45%);
     --surfaceTxtDisabledColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 65%);
