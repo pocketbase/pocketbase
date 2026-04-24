@@ -152,6 +152,7 @@ export function input(props) {
                         { className: "actions" },
                         t.button(
                             {
+                                type: "button",
                                 className: "btn sm secondary transparent circle",
                                 ariaLabel: app.attrs.tooltip("Remove"),
                                 onclick: () => remove(record.id),

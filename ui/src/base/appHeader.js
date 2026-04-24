@@ -59,6 +59,7 @@ export function appHeader() {
             colorSchemeButton(),
             t.button(
                 {
+                    type: "button",
                     className: "header-link logged-user txt-normal",
                     "html-popovertarget": "logged-user-dropdown",
                 },
@@ -108,6 +109,7 @@ function colorSchemeButton() {
     return [
         t.button(
             {
+                type: "button",
                 className: "header-link color-scheme-picker",
                 "html-popovertarget": "color-scheme-dropdown",
                 title: "Color scheme",

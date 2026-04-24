@@ -247,6 +247,7 @@ function initSearch(selectFunc = null) {
             if (data.searchTerm.length) {
                 return t.button(
                     {
+                        type: "button",
                         className: "link-hint",
                         title: "Clear search",
                         onclick: () => reset(),

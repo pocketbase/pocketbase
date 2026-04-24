@@ -199,13 +199,13 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
         data.initialDraft = getDraft();
 
         draftWatcher?.unwatch();
-        draftWatcher = watch(() => data.recordHash, (newVal, oldVal) => {
-            if (typeof oldVal == "undefined") {
+        draftWatcher = watch(() => data.recordHash, (newHash, oldHash) => {
+            if (typeof oldHash == "undefined") {
                 return;
             }
 
             if (data.hasChanges) {
-                saveDraft(data.recordHash);
+                saveDraft(newHash);
             } else {
                 deleteDraft();
             }
@@ -395,15 +395,11 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
         return [
             t.div(
                 { className: "modal-content" },
-                t.form(
+                t.div(
                     {
                         id: uniqueId + "form",
                         className: "grid",
                         inert: () => data.isLoading || data.isSaving,
-                        onsubmit: (e) => {
-                            e.preventDefault();
-                            // save(); // don't allow to prevent accidental save on input enter
-                        },
                         onmount: (el) => {
                             el._quickSaveHandler = (e) => {
                                 if ((e.ctrlKey || e.metaKey) && e.code == "KeyS") {

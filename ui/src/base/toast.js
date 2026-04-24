@@ -133,6 +133,7 @@ function addToast(textOrElem, options = {}) {
                 textOrElem,
                 t.button(
                     {
+                        type: "button",
                         className: "m-l-auto btn circle sm transparent secondary toast-remove",
                         title: "Clear",
                         onclick: () => removeToast(toastRef),
