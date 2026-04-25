@@ -3,6 +3,9 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"strconv"
 
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -15,10 +18,10 @@ func init() {
 
 var _ Provider = (*Gitea)(nil)
 
-// NameGitea is the unique name of the Gitea provider.
+// NameGitea is the unique name of the Gitea/Forgejo provider.
 const NameGitea string = "gitea"
 
-// Gitea allows authentication via Gitea OAuth2.
+// Gitea allows authentication via Gitea/Forgejo OAuth2.
 type Gitea struct {
 	BaseProvider
 }
@@ -38,9 +41,9 @@ func NewGiteaProvider() *Gitea {
 	}}
 }
 
-// FetchAuthUser returns an AuthUser instance based on Gitea's user api.
+// FetchAuthUser returns an AuthUser instance based on Gitea/Forgejo's user api.
 //
-// API reference: https://try.gitea.io/api/swagger#/user/userGetCurrent
+// API reference: https://codeberg.org/api/swagger#/user/userGetCurrent
 func (p *Gitea) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
@@ -55,26 +58,81 @@ func (p *Gitea) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	extracted := struct {
 		Name      string `json:"full_name"`
 		Username  string `json:"login"`
-		Email     string `json:"email"`
 		AvatarURL string `json:"avatar_url"`
 		Id        int64  `json:"id"`
+		Active    bool   `json:"active"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
+	}
+
+	if !extracted.Active {
+		return nil, errors.New("user account is not active")
 	}
 
 	user := &AuthUser{
 		Id:           strconv.FormatInt(extracted.Id, 10),
 		Name:         extracted.Name,
 		Username:     extracted.Username,
-		Email:        extracted.Email,
 		AvatarURL:    extracted.AvatarURL,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
 	}
 
+	email, err := p.fetchVerifiedPrimaryEmail(token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch primary email: %w", err)
+	}
+	user.Email = email
+
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	return user, nil
+}
+
+// fetchVerifiedPrimaryEmail sends an API request to retrieve the verified
+// primary email, in case "Keep my email address private" was set.
+//
+// NB! This method can succeed and still return an empty email.
+// Error responses that are result of insufficient scopes permissions are ignored.
+//
+// API reference: https://codeberg.org/api/swagger#/user/userListEmails
+func (p *Gitea) fetchVerifiedPrimaryEmail(token *oauth2.Token) (string, error) {
+	client := p.Client(token)
+
+	response, err := client.Get(p.userInfoURL + "/emails")
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	// ignore common http errors caused by insufficient scope permissions
+	// (the email field is optional, aka. return the auth user without it)
+	if response.StatusCode == 401 || response.StatusCode == 403 || response.StatusCode == 404 {
+		return "", nil
+	}
+
+	content, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	emails := []struct {
+		Email    string
+		Verified bool
+		Primary  bool
+	}{}
+	if err := json.Unmarshal(content, &emails); err != nil {
+		return "", err
+	}
+
+	// extract the verified primary email
+	for _, email := range emails {
+		if email.Verified && email.Primary {
+			return email.Email, nil
+		}
+	}
+
+	return "", nil
 }

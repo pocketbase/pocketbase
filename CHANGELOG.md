@@ -8,6 +8,10 @@
 
 - Fixed autocomplete selection not properly updating the underlying input value ([#7664](https://github.com/pocketbase/pocketbase/issues/7664)).
 
+- Adjusted Bitbucket, GitHub and Gitea/Forgejo OAuth2 providers to better reflect recent API updates and doc references.
+    _The providers also now always send an extra emails_list request to fetch only the explicitly verified primary email in order to eliminate eventual security issues caused by misconfigured onpremise setups._
+
+
 
 ## v0.37.3
 

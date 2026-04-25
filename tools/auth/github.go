@@ -42,7 +42,7 @@ func NewGithubProvider() *Github {
 
 // FetchAuthUser returns an AuthUser instance based the Github's user api.
 //
-// API reference: https://docs.github.com/en/rest/reference/users#get-the-authenticated-user
+// API reference: https://docs.github.com/en/rest/users/users?apiVersion=2026-03-10#get-the-authenticated-user
 func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
@@ -55,9 +55,8 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	extracted := struct {
-		Login     string `json:"login"`
 		Name      string `json:"name"`
-		Email     string `json:"email"`
+		Login     string `json:"login"`
 		AvatarURL string `json:"avatar_url"`
 		Id        int64  `json:"id"`
 	}{}
@@ -69,7 +68,6 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id:           strconv.FormatInt(extracted.Id, 10),
 		Name:         extracted.Name,
 		Username:     extracted.Login,
-		Email:        extracted.Email,
 		AvatarURL:    extracted.AvatarURL,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
@@ -78,27 +76,26 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
-	// in case user has set "Keep my email address private", send an
-	// **optional** API request to retrieve the verified primary email
-	if user.Email == "" {
-		email, err := p.fetchPrimaryEmail(token)
-		if err != nil {
-			return nil, err
-		}
-		user.Email = email
+	// always send a primary email request even though the email is
+	// returned in the userinfo endpoint since the API may change and
+	// enterprise setups may have configuration that could allow unverified emails
+	email, err := p.fetchVerifiedPrimaryEmail(token)
+	if err != nil {
+		return nil, err
 	}
+	user.Email = email
 
 	return user, nil
 }
 
-// fetchPrimaryEmail sends an API request to retrieve the verified
+// fetchVerifiedPrimaryEmail sends an API request to retrieve the verified
 // primary email, in case "Keep my email address private" was set.
 //
 // NB! This method can succeed and still return an empty email.
 // Error responses that are result of insufficient scopes permissions are ignored.
 //
-// API reference: https://docs.github.com/en/rest/users/emails?apiVersion=2022-11-28
-func (p *Github) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
+// API reference: https://docs.github.com/en/rest/users/emails?apiVersion=2022-11-28#list-email-addresses-for-the-authenticated-user
+func (p *Github) fetchVerifiedPrimaryEmail(token *oauth2.Token) (string, error) {
 	client := p.Client(token)
 
 	response, err := client.Get(p.userInfoURL + "/emails")
