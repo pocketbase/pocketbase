@@ -85,6 +85,11 @@ func recordAuthWithPassword(e *core.RequestEvent) error {
 
 	return e.App.OnRecordAuthWithPasswordRequest().Trigger(event, func(e *core.RecordAuthWithPasswordRequestEvent) error {
 		if e.Record == nil || !e.Record.ValidatePassword(e.Password) {
+			// dummy password check to minimize enumeration side-channel attacks
+			if e.Record == nil {
+				dummyPasswordCheck(e.App, e.Collection)
+			}
+
 			return e.BadRequestError("Failed to authenticate.", errors.New("invalid login credentials"))
 		}
 
@@ -113,6 +118,21 @@ func (form *authWithPasswordForm) validate(collection *core.Collection) error {
 			validation.In(list.ToInterfaceSlice(collection.PasswordAuth.IdentityFields)...),
 		),
 	)
+}
+
+// dummy password check to minimize side-channel attacks
+// (performed with the collection configured field cost)
+func dummyPasswordCheck(app core.App, collection *core.Collection) {
+	record := &core.Record{}
+
+	// find any random existing record
+	err := app.RecordQuery(collection).Limit(1).One(record)
+	if err != nil {
+		return
+	}
+
+	// the value and result doesn't matter, we just need a constant-time check
+	_ = record.ValidatePassword("")
 }
 
 func findRecordByIdentityField(app core.App, collection *core.Collection, field string, value any) (*core.Record, error) {
