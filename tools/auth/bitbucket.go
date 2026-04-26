@@ -114,8 +114,9 @@ func (p *Bitbucket) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
 
 	expected := struct {
 		Values []struct {
-			Email     string `json:"email"`
-			IsPrimary bool   `json:"is_primary"`
+			Email       string `json:"email"`
+			IsPrimary   bool   `json:"is_primary"`
+			IsConfirmed bool   `json:"is_confirmed"`
 		} `json:"values"`
 	}{}
 	if err := json.Unmarshal(data, &expected); err != nil {
@@ -123,7 +124,7 @@ func (p *Bitbucket) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
 	}
 
 	for _, v := range expected.Values {
-		if v.IsPrimary {
+		if v.IsPrimary && v.IsConfirmed {
 			return v.Email, nil
 		}
 	}

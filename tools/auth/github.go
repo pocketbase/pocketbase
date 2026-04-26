@@ -50,10 +50,9 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	extracted := struct {
 		Login     string `json:"login"`
-		Id        int    `json:"id"`
 		Name      string `json:"name"`
-		Email     string `json:"email"`
 		AvatarUrl string `json:"avatar_url"`
+		Id        int    `json:"id"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
@@ -63,7 +62,6 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id:           strconv.Itoa(extracted.Id),
 		Name:         extracted.Name,
 		Username:     extracted.Login,
-		Email:        extracted.Email,
 		AvatarUrl:    extracted.AvatarUrl,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
@@ -72,15 +70,11 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
-	// in case user has set "Keep my email address private", send an
-	// **optional** API request to retrieve the verified primary email
-	if user.Email == "" {
-		email, err := p.fetchPrimaryEmail(token)
-		if err != nil {
-			return nil, err
-		}
-		user.Email = email
+	email, err := p.fetchPrimaryEmail(token)
+	if err != nil {
+		return nil, err
 	}
+	user.Email = email
 
 	return user, nil
 }

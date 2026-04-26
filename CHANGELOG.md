@@ -1,6 +1,9 @@
 ## v0.22.42
 
-- (_Backported from v0.37.4_) ⚠️ Fixed a pre-hijacking OAuth2 linking vulnerability ([#7662](https://github.com/pocketbase/pocketbase/discussions/7662); thanks @Alardiians for reporting it privately).
+- (_Backported from v0.37.4_) Adjusted Bitbucket, GitHub and Gitea/Forgejo OAuth2 providers to better reflect recent API updates and doc references.
+    _The providers also now always send a sepatate emails list internal request since it contains more information about the fetched email than the userinfo endpoint in order to minimize eventual linking security issues caused by custom onpremise setups (e.g. Gitea/Forgejo allows skipping the emails verification if an ENV variable is configured)._
+
+- (_Backported from v0.37.4_) ⚠️ Fixed a pre-hijacking OAuth2 linking vulnerability ([#7662](https://github.com/pocketbase/pocketbase/discussions/7662)).
 
 
 ## v0.22.41
