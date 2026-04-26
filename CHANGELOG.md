@@ -1,4 +1,4 @@
-## v0.37.4 (WIP)
+## v0.37.4
 
 - Added backups list scroll container ([#7655](https://github.com/pocketbase/pocketbase/issues/7655)).
 
@@ -14,6 +14,8 @@
     _The providers also now always send a sepatate emails list internal request since it contains more information about the fetched email than the userinfo endpoint in order to minimize eventual linking security issues caused by custom onpremise setups (e.g. Gitea/Forgejo allows skipping the emails verification if an ENV variable is configured)._
 
 - ⚠️ Fixed a pre-hijacking OAuth2 linking vulnerability ([#7662](https://github.com/pocketbase/pocketbase/discussions/7662); thanks @Alardiians for reporting it privately).
+
+- Bumped Go and npm dependencies.
 
 
 ## v0.37.3
