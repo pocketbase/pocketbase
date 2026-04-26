@@ -3,8 +3,10 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -123,5 +125,30 @@ func (app *BaseApp) registerOTPHooks() {
 		if err := app.DeleteExpiredOTPs(); err != nil {
 			app.Logger().Warn("Failed to delete expired OTP sessions", "error", err)
 		}
+	})
+
+	// delete all record OTPs on tokenKey change to minimize the risk of hijacking attacks
+	app.OnRecordUpdateExecute().Bind(&hook.Handler[*RecordEvent]{
+		Func: func(e *RecordEvent) error {
+			err := e.Next()
+			if err != nil || !e.Record.Collection().IsAuth() {
+				return err
+			}
+
+			if e.Record.Original().TokenKey() != e.Record.TokenKey() {
+				err := e.App.DeleteAllOTPsByRecord(e.Record)
+				if err != nil {
+					return fmt.Errorf(
+						"[%s] failed to delete all previos OTPs for record %q: %w",
+						e.Record.Collection().Name,
+						e.Record.Id,
+						err,
+					)
+				}
+			}
+
+			return nil
+		},
+		Priority: 99,
 	})
 }

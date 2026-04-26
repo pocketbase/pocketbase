@@ -6,7 +6,7 @@ export function mfaAccordion(collection) {
             if (!collection.mfa) {
                 collection.mfa = {
                     enabled: false,
-                    duration: 900,
+                    duration: 600,
                     rule: "",
                 };
             }

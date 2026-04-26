@@ -60,7 +60,7 @@ func (m *Collection) setDefaultAuthOptions() {
 		},
 		MFA: MFAConfig{
 			Enabled:  false,
-			Duration: 1800, // 30min
+			Duration: 600, // 10min
 		},
 		OTP: OTPConfig{
 			Enabled:       false,

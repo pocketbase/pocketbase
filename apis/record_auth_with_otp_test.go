@@ -406,10 +406,10 @@ func TestRecordAuthWithOTP(t *testing.T) {
 				"OnModelCreate":             1,
 				"OnModelCreateExecute":      1,
 				"OnModelAfterCreateSuccess": 1,
-				// OTP delete + 2 ExternalAuth delete
-				"OnModelDelete":             3,
-				"OnModelDeleteExecute":      3,
-				"OnModelAfterDeleteSuccess": 3,
+				// 2 record OTPs + 2 ExternalAuths delete
+				"OnModelDelete":             4,
+				"OnModelDeleteExecute":      4,
+				"OnModelAfterDeleteSuccess": 4,
 				// user verified update
 				"OnModelUpdate":             1,
 				"OnModelUpdateExecute":      1,
@@ -419,9 +419,9 @@ func TestRecordAuthWithOTP(t *testing.T) {
 				"OnRecordCreate":             1,
 				"OnRecordCreateExecute":      1,
 				"OnRecordAfterCreateSuccess": 1,
-				"OnRecordDelete":             3,
-				"OnRecordDeleteExecute":      3,
-				"OnRecordAfterDeleteSuccess": 3,
+				"OnRecordDelete":             4,
+				"OnRecordDeleteExecute":      4,
+				"OnRecordAfterDeleteSuccess": 4,
 				"OnRecordUpdate":             1,
 				"OnRecordUpdateExecute":      1,
 				"OnRecordAfterUpdateSuccess": 1,
@@ -434,6 +434,15 @@ func TestRecordAuthWithOTP(t *testing.T) {
 
 				if !user.Verified() {
 					t.Fatal("Expected the user to be marked as verified")
+				}
+
+				// ensure that all pre-existing OTPs are cleared
+				otps, err := app.FindAllOTPsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(otps) > 0 {
+					t.Fatalf("Expected all OTPs to be cleared, found %d", len(otps))
 				}
 
 				// ensure that all pre-existing OAuth2 links are cleared

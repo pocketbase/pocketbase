@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/pocketbase/pocketbase/tools/hook"
@@ -141,11 +142,11 @@ func (app *BaseApp) registerMFAHooks() {
 			if old != new {
 				err = e.App.DeleteAllMFAsByRecord(e.Record)
 				if err != nil {
-					e.App.Logger().Warn(
-						"Failed to delete all previous mfas",
-						"error", err,
-						"recordId", e.Record.Id,
-						"collectionId", e.Record.Collection().Id,
+					return fmt.Errorf(
+						"[%s] failed to delete all previos MFAs for record %q: %w",
+						e.Record.Collection().Name,
+						e.Record.Id,
+						err,
 					)
 				}
 			}
