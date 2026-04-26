@@ -135,7 +135,7 @@ func (app *BaseApp) registerOTPHooks() {
 				return err
 			}
 
-			if e.Record.Original().TokenKey() != e.Record.TokenKey() {
+			if !e.Record.Original().IsNew() && e.Record.Original().TokenKey() != e.Record.TokenKey() {
 				err := e.App.DeleteAllOTPsByRecord(e.Record)
 				if err != nil {
 					return fmt.Errorf(

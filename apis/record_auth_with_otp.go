@@ -65,10 +65,19 @@ func recordAuthWithOTP(e *core.RequestEvent) error {
 	// ---
 
 	return e.App.OnRecordAuthWithOTPRequest().Trigger(event, func(e *core.RecordAuthWithOTPRequestEvent) error {
+		otpId := e.OTP.Id
+		otpSentTo := e.OTP.SentTo()
+
+		// eagerly delete the OTP to avoid unnecessery double delete model hook calls
+		// triggered by the password change below
+		err := e.App.Delete(e.OTP)
+		if err != nil {
+			e.App.Logger().Error("Failed to delete used OTP", "error", err, "otpId", e.OTP.Id)
+		}
+
 		// update the user email verified state in case the OTP originate from an email address matching the current record one
 		//
 		// note: don't wait for success auth response (it could fail because of MFA) and because we already validated the OTP above
-		otpSentTo := e.OTP.SentTo()
 		if !e.Record.Verified() && otpSentTo != "" && e.Record.Email() == otpSentTo {
 			e.Record.SetVerified(true)
 
@@ -82,16 +91,10 @@ func recordAuthWithOTP(e *core.RequestEvent) error {
 			if err := e.App.Save(e.Record); err != nil {
 				e.App.Logger().Error("Failed to update record verified state after successful OTP validation",
 					"error", err,
-					"otpId", e.OTP.Id,
+					"otpId", otpId,
 					"recordId", e.Record.Id,
 				)
 			}
-		}
-
-		// try to delete the used otp
-		err = e.App.Delete(e.OTP)
-		if err != nil {
-			e.App.Logger().Error("Failed to delete used OTP", "error", err, "otpId", e.OTP.Id)
 		}
 
 		return RecordAuthResponse(e.RequestEvent, e.Record, core.MFAMethodOTP, nil)

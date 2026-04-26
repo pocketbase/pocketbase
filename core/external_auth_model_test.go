@@ -308,3 +308,104 @@ func TestExternalAuthValidateHook(t *testing.T) {
 		})
 	}
 }
+
+func TestExternalAuthClearOnVerfiedUpgrade(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	t.Run("unverified->no changes", func(t *testing.T) {
+		user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if user.Verified() {
+			t.Fatal("Expected user to be unverified")
+		}
+
+		beforeAuths, err := app.FindAllExternalAuthsByRecord(user)
+		if err != nil || len(beforeAuths) == 0 {
+			t.Fatalf("Expected at least one external auth (%v)", err)
+		}
+
+		oldTokenKey := user.TokenKey()
+
+		if err = app.Save(user); err != nil {
+			t.Fatal(err)
+		}
+
+		if oldTokenKey != user.TokenKey() {
+			t.Fatal("Expected tokenKey to remain unchanged")
+		}
+
+		afterAuths, err := app.FindAllExternalAuthsByRecord(user)
+		if err != nil || len(afterAuths) != len(beforeAuths) {
+			t.Fatalf("Expected %d external auths, found %d (%v)", len(afterAuths), len(beforeAuths), err)
+		}
+	})
+
+	t.Run("unverified->verified", func(t *testing.T) {
+		user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if user.Verified() {
+			t.Fatal("Expected user to be unverified")
+		}
+
+		externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+		if err != nil || len(externalAuths) == 0 {
+			t.Fatalf("Expected at least one external auth (%v)", err)
+		}
+
+		oldTokenKey := user.TokenKey()
+
+		user.SetVerified(true)
+		if err = app.Save(user); err != nil {
+			t.Fatal(err)
+		}
+
+		if oldTokenKey == user.TokenKey() {
+			t.Fatal("Expected tokenKey to be renewed")
+		}
+
+		externalAuths, err = app.FindAllExternalAuthsByRecord(user)
+		if err != nil || len(externalAuths) != 0 {
+			t.Fatalf("Expected all user external auths to be deleted, found %d (%v)", len(externalAuths), err)
+		}
+	})
+
+	t.Run("verified->no changes", func(t *testing.T) {
+		user, err := app.FindAuthRecordByEmail("users", "test3@example.com")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !user.Verified() {
+			t.Fatal("Expected user to be verified")
+		}
+
+		beforeAuths, err := app.FindAllExternalAuthsByRecord(user)
+		if err != nil || len(beforeAuths) == 0 {
+			t.Fatalf("Expected at least one external auth (%v)", err)
+		}
+
+		oldTokenKey := user.TokenKey()
+
+		if err = app.Save(user); err != nil {
+			t.Fatal(err)
+		}
+
+		if oldTokenKey != user.TokenKey() {
+			t.Fatal("Expected tokenKey to remain unchanged")
+		}
+
+		afterAuths, err := app.FindAllExternalAuthsByRecord(user)
+		if err != nil || len(afterAuths) != len(beforeAuths) {
+			t.Fatalf("Expected %d external auths, found %d (%v)", len(afterAuths), len(beforeAuths), err)
+		}
+	})
+}

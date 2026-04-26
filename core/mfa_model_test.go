@@ -300,3 +300,64 @@ func TestMFAValidateHook(t *testing.T) {
 		})
 	}
 }
+
+func TestMFAClearOnPasswordChange(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	user1, err := app.FindAuthRecordByEmail("users", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	user2, err := app.FindAuthRecordByEmail("users", "test2@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mfasToCreate := map[*core.Record]int{
+		user1: 3,
+		user2: 2,
+	}
+	for user, total := range mfasToCreate {
+		for range total {
+			mfa := core.NewMFA(app)
+			mfa.SetCollectionRef(user.Collection().Id)
+			mfa.SetRecordRef(user.Id)
+			mfa.SetMethod(core.MFAMethodPassword)
+			if err := app.Save(mfa); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+
+	// update both users
+	err = app.Save(user1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	user2.SetRandomPassword()
+	err = app.Save(user2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedMFAs := map[*core.Record]int{
+		user1: 3,
+		user2: 0,
+	}
+
+	for user, expected := range expectedMFAs {
+		mfas, err := app.FindAllMFAsByRecord(user)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(mfas) != expected {
+			t.Fatalf("Expected %d MFAs, got %d", expected, len(mfas))
+		}
+	}
+}
