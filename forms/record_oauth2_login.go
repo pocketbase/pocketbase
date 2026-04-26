@@ -260,6 +260,27 @@ func (form *RecordOAuth2Login) submit(data *RecordOAuth2LoginData) error {
 				}
 			}
 
+			// prevent pre-hijacking with different OAuth2 provider
+			//
+			// delete all other previous OAuth2 record links for the cases
+			// when the user was precreated by malicious OAuth2 auth with custom payload data
+			//
+			// while this would be also done automatically on unverified -> verified upgrade,
+			// doing it manually here ensures that a single unverified record could have
+			// max 1 OAuth2 link to prevent further abuse when mixed with other auth flows
+			if !data.Record.Verified() {
+				externalAuths, err := txDao.FindAllExternalAuthsByRecord(data.Record)
+				if err != nil {
+					return err
+				}
+				for _, ea := range externalAuths {
+					if err := txDao.DeleteExternalAuth(ea); err != nil {
+						return err
+					}
+				}
+				data.ExternalAuth = nil // clear to allow recreate below
+			}
+
 			// update the existing auth record empty email if the data.OAuth2User has one
 			// (this is in case previously the auth record was created
 			// with an OAuth2 provider that didn't return an email address)

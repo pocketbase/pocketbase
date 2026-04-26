@@ -663,10 +663,13 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 			}`),
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":                        1,
 				"OnModelBeforeUpdate":                       1,
+				"OnModelAfterUpdate":                        1,
 				"OnRecordBeforeConfirmPasswordResetRequest": 1,
 				"OnRecordAfterConfirmPasswordResetRequest":  1,
+				// external auths deletion
+				"OnModelBeforeDelete": 2,
+				"OnModelAfterDelete":  2,
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				user, err := app.Dao().FindAuthRecordByEmail("users", "test@example.com")
@@ -770,10 +773,18 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 					t.Fatalf("Failed to fetch confirm password user: %v", err)
 				}
 
+				oldTokenKey := user.TokenKey()
+
 				// ensure that the user is already verified
 				user.SetVerified(true)
 				if err := app.Dao().WithoutHooks().SaveRecord(user); err != nil {
-					t.Fatalf("Failed to update user verified state")
+					t.Fatal("Failed to update user verified state")
+				}
+
+				// restore original token key that was reseted after the verified change
+				user.SetTokenKey(oldTokenKey)
+				if err := app.Dao().WithoutHooks().SaveRecord(user); err != nil {
+					t.Fatal("Failed to reset user tokenKey")
 				}
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
@@ -812,10 +823,13 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":                        1,
 				"OnModelBeforeUpdate":                       1,
+				"OnModelAfterUpdate":                        1,
 				"OnRecordBeforeConfirmPasswordResetRequest": 1,
 				"OnRecordAfterConfirmPasswordResetRequest":  1,
+				// external auths deletion
+				"OnModelBeforeDelete": 2,
+				"OnModelAfterDelete":  2,
 			},
 		},
 	}
@@ -987,10 +1001,13 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 			}`),
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":                       1,
 				"OnModelBeforeUpdate":                      1,
+				"OnModelAfterUpdate":                       1,
 				"OnRecordBeforeConfirmVerificationRequest": 1,
 				"OnRecordAfterConfirmVerificationRequest":  1,
+				// external auths deletion
+				"OnModelBeforeDelete": 2,
+				"OnModelAfterDelete":  2,
 			},
 		},
 		{
@@ -1037,10 +1054,13 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":                       1,
 				"OnModelBeforeUpdate":                      1,
+				"OnModelAfterUpdate":                       1,
 				"OnRecordBeforeConfirmVerificationRequest": 1,
 				"OnRecordAfterConfirmVerificationRequest":  1,
+				// external auths deletion
+				"OnModelBeforeDelete": 2,
+				"OnModelAfterDelete":  2,
 			},
 		},
 	}
@@ -1227,10 +1247,13 @@ func TestRecordAuthConfirmEmailChange(t *testing.T) {
 			}`),
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":                      1,
 				"OnModelBeforeUpdate":                     1,
+				"OnModelAfterUpdate":                      1,
 				"OnRecordBeforeConfirmEmailChangeRequest": 1,
 				"OnRecordAfterConfirmEmailChangeRequest":  1,
+				// external auths deletion
+				"OnModelBeforeDelete": 2,
+				"OnModelAfterDelete":  2,
 			},
 		},
 		{
@@ -1267,6 +1290,9 @@ func TestRecordAuthConfirmEmailChange(t *testing.T) {
 				"OnModelBeforeUpdate":                     1,
 				"OnRecordBeforeConfirmEmailChangeRequest": 1,
 				"OnRecordAfterConfirmEmailChangeRequest":  1,
+				// external auths deletion
+				"OnModelBeforeDelete": 2,
+				"OnModelAfterDelete":  2,
 			},
 		},
 	}

@@ -584,6 +584,8 @@ func (dao *Dao) CanAccessRecord(record *models.Record, requestInfo *models.Reque
 // If record.IsNew() is true, the method will perform a create, otherwise an update.
 // To explicitly mark a record for update you can use record.MarkAsNotNew().
 func (dao *Dao) SaveRecord(record *models.Record) error {
+	var needToDeleteExternalAuths bool
+
 	if record.Collection().IsAuth() {
 		if record.Username() == "" {
 			return errors.New("unable to save auth record without username")
@@ -604,9 +606,44 @@ func (dao *Dao) SaveRecord(record *models.Record) error {
 				return errors.New("the auth record ID must be unique across all auth collections")
 			}
 		}
+
+		if !record.IsNew() && record.Verified() {
+			lastSavedRecord, err := dao.FindRecordById(record.Collection().Id, record.Id)
+			if err != nil {
+				return err
+			}
+
+			// in case upgrading from "unverified" -> "verified" mark all pre-existing OAuth2 links
+			// for deletion since there is no reliable way to verify that they weren't created by an attacker
+			if !lastSavedRecord.Verified() && record.Verified() {
+				needToDeleteExternalAuths = true
+			}
+		}
 	}
 
-	return dao.Save(record)
+	if !needToDeleteExternalAuths {
+		return dao.Save(record)
+	}
+
+	return dao.RunInTransaction(func(txDao *Dao) error {
+		externalAuths, err := txDao.FindAllExternalAuthsByRecord(record)
+		if err != nil {
+			return err
+		}
+		if len(externalAuths) > 0 {
+			// delete all pre-existing external auths
+			for _, ea := range externalAuths {
+				if err := txDao.DeleteExternalAuth(ea); err != nil {
+					return err
+				}
+			}
+
+			// force refresh tokens reset (if not already)
+			record.RefreshTokenKey()
+		}
+
+		return txDao.Save(record)
+	})
 }
 
 // DeleteRecord deletes the provided Record model.

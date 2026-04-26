@@ -1,3 +1,8 @@
+## v0.22.42
+
+- (_Backported from v0.37.4_) ⚠️ Fixed a pre-hijacking OAuth2 linking vulnerability ([#7662](https://github.com/pocketbase/pocketbase/discussions/7662); thanks @Alardiians for reporting it privately).
+
+
 ## v0.22.41
 
 - (_Backported from v0.36.9_) Updated the Discord `AuthUser.Name` field to use `global_name`.
