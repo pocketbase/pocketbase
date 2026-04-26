@@ -124,10 +124,10 @@ window.app.components.tinymce = function(propsArg = {}) {
 
         clearTimeout(changeTimeoutId);
 
-        // workaround for https://github.com/tinymce/tinymce/issues/9377
-        editorRef.dom?.unbind(document);
-
         catchError(() => {
+            // workaround for https://github.com/tinymce/tinymce/issues/9377
+            editorRef.dom?.unbind(document);
+
             window.tinymce?.remove(editorRef);
         });
         editorRef = null;

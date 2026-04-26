@@ -43,28 +43,27 @@ window.app.modals.openRecordUpsert = function(collection, record = null, modalSe
     app.modals.open(modal);
 };
 
-const defaultRedactFields = ["expand"];
-
-function redacted(record, redactFields = defaultRedactFields) {
-    // create redacted clone only if necessery
-    if (redactFields.find((f) => typeof record[f] !== "undefined")) {
-        record = Object.assign({}, record);
-        for (let f of redactFields) {
-            delete record[f];
-        }
+// redact common sensitive fields
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#the_replacer_parameter
+function redactedReplacer(key, val) {
+    switch (key) {
+        case "expand":
+        case "password":
+        case "passwordConfirm":
+        case "tokenKey":
+            return undefined;
     }
 
-    return record;
+    return val;
 }
 
 function downloadJSON(record) {
-    record = redacted(record);
-    app.utils.downloadJSON(record, record.collectionName + "_" + record.id + ".json");
+    const pojo = JSON.parse(JSON.stringify(record, redactedReplacer));
+    app.utils.downloadJSON(pojo, record.collectionName + "_" + record.id + ".json");
 }
 
 function copyJSON(record) {
-    record = redacted(record);
-    app.utils.copyToClipboard(JSON.stringify(record, null, 2));
+    app.utils.copyToClipboard(JSON.stringify(record, redactedReplacer, 2));
     app.toasts.success("Record copied to clipboard!");
 }
 
@@ -73,7 +72,7 @@ function serializeRecord(record) {
         return "";
     }
 
-    return JSON.stringify(redacted(record));
+    return JSON.stringify(record, redactedReplacer);
 }
 
 const TAB_MAIN = "main";
@@ -253,7 +252,11 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
             Object.assign(data.record, JSON.parse(JSON.stringify(record)));
 
             data.isLoading = false;
-            initDraftWatcher();
+
+            // schedule a macro task to allow fields to populate their reactive values
+            setTimeout(() => {
+                initDraftWatcher();
+            }, 0);
         } catch (err) {
             if (!err?.isAbort) {
                 app.checkApiError(err);
@@ -263,24 +266,32 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
         }
     }
 
+    function deleteInternalKeys(record) {
+        for (let key in record) {
+            if (key.startsWith("@@")) {
+                delete record[key];
+            }
+        }
+    }
+
     async function exportPayload() {
         const payload = {};
 
         // shallow copy of the record fields
-        for (const prop in data.record) {
+        for (const key in data.record) {
             // skip expand and internal dynamic enumerable props
-            if (prop == "expand" || prop.startsWith("@@")) {
+            if (key == "expand" || key.startsWith("@@")) {
                 continue;
             }
 
-            let val = data.record[prop]?.__raw || data.record[prop];
+            let val = data.record[key]?.__raw || data.record[key];
 
             // normalize undefined values
             if (typeof val == "undefined") {
                 val = null;
             }
 
-            payload[prop] = val;
+            payload[key] = val;
         }
 
         // apply fields save normalization funcs
@@ -331,6 +342,8 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                 // extend, not overwrite, to prevent reseting the reference passed down to the inputs
                 Object.assign(data.originalRecord, structuredClone(record));
                 Object.assign(data.record, structuredClone(record));
+                deleteInternalKeys(data.originalRecord);
+                deleteInternalKeys(data.record);
             }
 
             modalSettings.onsave?.(record, isNew);

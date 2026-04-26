@@ -304,7 +304,7 @@ export function settings(data) {
                             t.span({ className: "txt" }, "Protected"),
                             t.small(
                                 { className: "txt-hint" },
-                                "Files will require View API rule permissions and file token (",
+                                "File download requests will need to satisfy the View API rule (",
                                 t.a({
                                     href: import.meta.env.PB_PROTECTED_FILE_DOCS,
                                     target: "_blank",
