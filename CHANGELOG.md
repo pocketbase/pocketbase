@@ -8,9 +8,12 @@
 
 - Fixed autocomplete selection not properly updating the underlying input value ([#7664](https://github.com/pocketbase/pocketbase/issues/7664)).
 
-- Adjusted Bitbucket, GitHub and Gitea/Forgejo OAuth2 providers to better reflect recent API updates and doc references.
-    _The providers also now always send an extra emails_list request to fetch only the explicitly verified primary email in order to eliminate eventual security issues caused by misconfigured onpremise setups._
+- Added dummy bcrypt password check for the failure auth path to minimize enumaration timing attacks.
 
+- Adjusted Bitbucket, GitHub and Gitea/Forgejo OAuth2 providers to better reflect recent API updates and doc references.
+    _The providers also now always send their respective dedicated emails_list request to fetch only the verified primary email in order to minimize eventual linking security issues caused by specific onpremise setups._
+
+- ⚠️ Fixed a pre-hijacking OAuth2 linking vulnerability ([#7662](https://github.com/pocketbase/pocketbase/discussions/7662); thanks @Alardiians for reporting it privately).
 
 
 ## v0.37.3

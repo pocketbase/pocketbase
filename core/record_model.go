@@ -1427,22 +1427,31 @@ func onRecordValidate(e *RecordEvent) error {
 }
 
 func onRecordSaveExecute(e *RecordEvent) error {
+	var needToDeleteExternalAuths bool
+
 	if e.Record.Collection().IsAuth() {
-		// ensure that the token key is regenerated on password change or email change
+		// auth resets to prevent (pre)hijacking vulnerabilities
 		if !e.Record.IsNew() {
 			lastSavedRecord, err := e.App.FindRecordById(e.Record.Collection(), e.Record.Id)
 			if err != nil {
 				return err
 			}
 
+			// ensure that the token key is regenerated on password change or email change
 			if lastSavedRecord.TokenKey() == e.Record.TokenKey() &&
 				(lastSavedRecord.Get(FieldNamePassword) != e.Record.Get(FieldNamePassword) ||
 					lastSavedRecord.Email() != e.Record.Email()) {
 				e.Record.RefreshTokenKey()
 			}
+
+			// in case upgrading from "unverified" -> "verified" mark all pre-existing OAuth2 links
+			// for deletion since there is no reliable way to verify that they weren't created by an attacker
+			if !lastSavedRecord.Verified() && e.Record.Verified() {
+				needToDeleteExternalAuths = true
+			}
 		}
 
-		// cross-check that the auth record id is unique across all auth collections.
+		// cross-check that the auth record id is unique across all auth collections
 		authCollections, err := e.App.FindAllCollections(CollectionTypeAuth)
 		if err != nil {
 			return fmt.Errorf("unable to fetch the auth collections for cross-id unique check: %w", err)
@@ -1460,16 +1469,45 @@ func onRecordSaveExecute(e *RecordEvent) error {
 		}
 	}
 
-	err := e.Next()
-	if err == nil {
-		return nil
+	finalizer := func() error {
+		err := e.Next()
+		if err == nil {
+			return nil
+		}
+
+		return validators.NormalizeUniqueIndexError(
+			err,
+			e.Record.Collection().Name,
+			e.Record.Collection().Fields.FieldNames(),
+		)
 	}
 
-	return validators.NormalizeUniqueIndexError(
-		err,
-		e.Record.Collection().Name,
-		e.Record.Collection().Fields.FieldNames(),
-	)
+	if needToDeleteExternalAuths {
+		originalApp := e.App
+
+		return e.App.RunInTransaction(func(txApp App) error {
+			e.App = txApp
+			defer func() { e.App = originalApp }()
+
+			externalAuths, err := txApp.FindAllExternalAuthsByRecord(e.Record)
+			if err != nil {
+				return err
+			}
+			if len(externalAuths) > 0 {
+				// delete all pre-existing external auths
+				if err := txApp.DeleteAllExternalAuthsByRecord(e.Record); err != nil {
+					return err
+				}
+
+				// force refresh tokens reset (if not already)
+				e.Record.RefreshTokenKey()
+			}
+
+			return finalizer()
+		})
+	}
+
+	return finalizer()
 }
 
 func onRecordDeleteExecute(e *RecordEvent) error {

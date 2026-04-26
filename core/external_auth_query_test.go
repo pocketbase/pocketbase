@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/pocketbase/dbx"
@@ -170,6 +171,71 @@ func TestFindFirstExternalAuthByExpr(t *testing.T) {
 
 			if result.Id != s.expectedId {
 				t.Errorf("Expected id %q, got %q", s.expectedId, result.Id)
+			}
+		})
+	}
+}
+
+func TestDeleteAllExternalAuthsByRecord(t *testing.T) {
+	t.Parallel()
+
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	demo1, err := testApp.FindRecordById("demo1", "84nmscqy84lsi1t")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	user1, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client1, err := testApp.FindAuthRecordByEmail("clients", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client2, err := testApp.FindAuthRecordByEmail("clients", "test2@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scenarios := []struct {
+		record     *core.Record
+		deletedIds []string
+	}{
+		{demo1, nil}, // non-auth record
+		{user1, []string{"dlmflokuq1xl342", "clmflokuq1xl341"}},
+		{client1, []string{"f1z5b3843pzc964"}},
+		{client2, nil},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%s_%s", i, s.record.Collection().Name, s.record.Id), func(t *testing.T) {
+			app, _ := tests.NewTestApp()
+			defer app.Cleanup()
+
+			deletedIds := []string{}
+			app.OnRecordDelete().BindFunc(func(e *core.RecordEvent) error {
+				deletedIds = append(deletedIds, e.Record.Id)
+				return e.Next()
+			})
+
+			err := app.DeleteAllExternalAuthsByRecord(s.record)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(deletedIds) != len(s.deletedIds) {
+				t.Fatalf("Expected deleted ids\n%v\ngot\n%v", s.deletedIds, deletedIds)
+			}
+
+			for _, id := range s.deletedIds {
+				if !slices.Contains(deletedIds, id) {
+					t.Errorf("Expected to find deleted id %q in %v", id, deletedIds)
+				}
 			}
 		})
 	}

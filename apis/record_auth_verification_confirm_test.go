@@ -105,6 +105,51 @@ func TestRecordConfirmVerification(t *testing.T) {
 				"OnRecordValidate":                   1,
 				"OnRecordUpdateExecute":              1,
 				"OnRecordAfterUpdateSuccess":         1,
+				// unverified->verified external auths removal
+				"OnModelDelete":              2,
+				"OnModelDeleteExecute":       2,
+				"OnModelAfterDeleteSuccess":  2,
+				"OnRecordDelete":             2,
+				"OnRecordDeleteExecute":      2,
+				"OnRecordAfterDeleteSuccess": 2,
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if user.Verified() {
+					t.Fatalf("Expected the user to be unverified before the confirmation")
+				}
+
+				// ensure that there is at least one pre-existing OAuth2 link
+				externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(externalAuths) == 0 {
+					t.Fatal("Expected at least one external auths")
+				}
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if !user.Verified() {
+					t.Fatalf("Expected the user to be verified after the confirmation")
+				}
+
+				// ensure that all pre-existing OAuth2 links are cleared
+				externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(externalAuths) > 0 {
+					t.Fatalf("Expected all external auths to be cleared, found %d", len(externalAuths))
+				}
 			},
 		},
 		{

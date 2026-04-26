@@ -327,6 +327,15 @@ func TestRecordAuthWithOTP(t *testing.T) {
 				if user.Verified() {
 					t.Fatal("Expected the user to remain unverified because sentTo != email")
 				}
+
+				// ensure that all pre-existing OAuth2 were NOT deleted
+				externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(externalAuths) != 2 {
+					t.Fatalf("Expected 2 external auths, found %d", len(externalAuths))
+				}
 			},
 		},
 		{
@@ -364,6 +373,15 @@ func TestRecordAuthWithOTP(t *testing.T) {
 				if err := app.Save(otp); err != nil {
 					t.Fatal(err)
 				}
+
+				// verify that there are at least one pre-existing OAuth2 link
+				externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(externalAuths) == 0 {
+					t.Fatal("Expected at least one external auth")
+				}
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -388,10 +406,10 @@ func TestRecordAuthWithOTP(t *testing.T) {
 				"OnModelCreate":             1,
 				"OnModelCreateExecute":      1,
 				"OnModelAfterCreateSuccess": 1,
-				// OTP delete
-				"OnModelDelete":             1,
-				"OnModelDeleteExecute":      1,
-				"OnModelAfterDeleteSuccess": 1,
+				// OTP delete + 2 ExternalAuth delete
+				"OnModelDelete":             3,
+				"OnModelDeleteExecute":      3,
+				"OnModelAfterDeleteSuccess": 3,
 				// user verified update
 				"OnModelUpdate":             1,
 				"OnModelUpdateExecute":      1,
@@ -401,9 +419,9 @@ func TestRecordAuthWithOTP(t *testing.T) {
 				"OnRecordCreate":             1,
 				"OnRecordCreateExecute":      1,
 				"OnRecordAfterCreateSuccess": 1,
-				"OnRecordDelete":             1,
-				"OnRecordDeleteExecute":      1,
-				"OnRecordAfterDeleteSuccess": 1,
+				"OnRecordDelete":             3,
+				"OnRecordDeleteExecute":      3,
+				"OnRecordAfterDeleteSuccess": 3,
 				"OnRecordUpdate":             1,
 				"OnRecordUpdateExecute":      1,
 				"OnRecordAfterUpdateSuccess": 1,
@@ -416,6 +434,15 @@ func TestRecordAuthWithOTP(t *testing.T) {
 
 				if !user.Verified() {
 					t.Fatal("Expected the user to be marked as verified")
+				}
+
+				// ensure that all pre-existing OAuth2 links are cleared
+				externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(externalAuths) > 0 {
+					t.Fatalf("Expected all external auths to be cleared, found %d", len(externalAuths))
 				}
 			},
 		},

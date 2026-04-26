@@ -502,6 +502,11 @@ type App interface {
 	// ExternalAuth model that satisfies the non-nil expression.
 	FindFirstExternalAuthByExpr(expr dbx.Expression) (*ExternalAuth, error)
 
+	// DeleteAllExternalAuthsByRecord deletes all ExternalAuth models associated with the provided record.
+	//
+	// Returns a combined error with the failed deletes.
+	DeleteAllExternalAuthsByRecord(authRecord *Record) error
+
 	// ---------------------------------------------------------------
 
 	// FindAllMFAsByRecord returns all MFA models linked to the provided auth record.

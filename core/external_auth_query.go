@@ -1,6 +1,8 @@
 package core
 
 import (
+	"errors"
+
 	"github.com/pocketbase/dbx"
 )
 
@@ -58,4 +60,26 @@ func (app *BaseApp) FindFirstExternalAuthByExpr(expr dbx.Expression) (*ExternalA
 	}
 
 	return model, nil
+}
+
+// DeleteAllExternalAuthsByRecord deletes all ExternalAuth models associated with the provided record.
+//
+// Returns a combined error with the failed deletes.
+func (app *BaseApp) DeleteAllExternalAuthsByRecord(authRecord *Record) error {
+	models, err := app.FindAllExternalAuthsByRecord(authRecord)
+	if err != nil {
+		return err
+	}
+
+	var errs []error
+	for _, m := range models {
+		if err := app.Delete(m); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	return nil
 }

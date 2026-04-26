@@ -71,8 +71,15 @@ func recordAuthWithOTP(e *core.RequestEvent) error {
 		otpSentTo := e.OTP.SentTo()
 		if !e.Record.Verified() && otpSentTo != "" && e.Record.Email() == otpSentTo {
 			e.Record.SetVerified(true)
-			err = e.App.Save(e.Record)
-			if err != nil {
+
+			// this is technically not required but we enforce password
+			// reset on verified upgrades in case the OTP is used on its own
+			// since this makes it less error prone to pre-hijacking attacks
+			if !e.Record.Collection().MFA.Enabled {
+				e.Record.SetRandomPassword()
+			}
+
+			if err := e.App.Save(e.Record); err != nil {
 				e.App.Logger().Error("Failed to update record verified state after successful OTP validation",
 					"error", err,
 					"otpId", e.OTP.Id,

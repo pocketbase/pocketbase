@@ -114,11 +114,18 @@ func TestRecordConfirmPasswordReset(t *testing.T) {
 				"OnModelUpdate":                       1,
 				"OnModelUpdateExecute":                1,
 				"OnModelAfterUpdateSuccess":           1,
-				"OnModelValidate":                     1,
 				"OnRecordUpdate":                      1,
 				"OnRecordUpdateExecute":               1,
 				"OnRecordAfterUpdateSuccess":          1,
+				"OnModelValidate":                     1,
 				"OnRecordValidate":                    1,
+				// ---
+				"OnModelDelete":              2, // pre-existing OAuth2 links
+				"OnModelDeleteExecute":       2,
+				"OnModelAfterDeleteSuccess":  2,
+				"OnRecordDelete":             2,
+				"OnRecordDeleteExecute":      2,
+				"OnRecordAfterDeleteSuccess": 2,
 			},
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
 				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
@@ -150,6 +157,15 @@ func TestRecordConfirmPasswordReset(t *testing.T) {
 
 				if !user.ValidatePassword("1234567!") {
 					t.Fatal("Password wasn't changed")
+				}
+
+				// ensure that all pre-existing OAuth2 links are cleared
+				externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(externalAuths) > 0 {
+					t.Fatalf("Expected all external auths to be cleared, found %d", len(externalAuths))
 				}
 			},
 		},
@@ -221,6 +237,15 @@ func TestRecordConfirmPasswordReset(t *testing.T) {
 				if !user.ValidatePassword("1234567!") {
 					t.Fatal("Password wasn't changed")
 				}
+
+				// ensure that all pre-existing OAuth2 were NOT deleted
+				externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(externalAuths) != 2 {
+					t.Fatalf("Expected 2 external auths, found %d", len(externalAuths))
+				}
 			},
 		},
 		{
@@ -251,10 +276,19 @@ func TestRecordConfirmPasswordReset(t *testing.T) {
 					t.Fatalf("Failed to fetch confirm password user: %v", err)
 				}
 
+				oldTokenKey := user.TokenKey()
+
 				// ensure that the user is already verified
 				user.SetVerified(true)
 				if err := app.Save(user); err != nil {
 					t.Fatalf("Failed to update user verified state")
+				}
+
+				// resave with the old token key since the verified change above
+				// would refresh it and will make the password token invalid
+				user.SetTokenKey(oldTokenKey)
+				if err = app.Save(user); err != nil {
+					t.Fatalf("Failed to restore original user tokenKey: %v", err)
 				}
 			},
 			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
