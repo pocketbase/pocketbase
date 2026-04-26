@@ -46,6 +46,12 @@ type Config struct {
 	// (default to "pocketbase"; an additional ".exe" check is also performed as a fallback).
 	ArchiveExecutable string
 
+	// BaseURL is the base URL of the GitHub API (or similar compatible)
+	// used to fetch the latest releases information.
+	//
+	// Defaults to "https://api.github.com".
+	BaseURL string
+
 	// Optional context to use when fetching and downloading the latest release.
 	Context context.Context
 
@@ -80,6 +86,12 @@ func Register(app core.App, rootCmd *cobra.Command, config Config) error {
 
 	if p.config.ArchiveExecutable == "" {
 		p.config.ArchiveExecutable = "pocketbase"
+	}
+
+	if p.config.BaseURL == "" {
+		p.config.BaseURL = "https://api.github.com"
+	} else {
+		p.config.BaseURL = strings.TrimRight(p.config.BaseURL, "/")
 	}
 
 	if p.config.HttpClient == nil {
@@ -145,12 +157,9 @@ func (p *plugin) updateCmd() *cobra.Command {
 func (p *plugin) update(withBackup bool) error {
 	color.Yellow("Fetching release information...")
 
-	latest, err := fetchLatestRelease(
-		p.config.Context,
-		p.config.HttpClient,
-		p.config.Owner,
-		p.config.Repo,
-	)
+	url := fmt.Sprintf("%s/repos/%s/%s/releases/latest", p.config.BaseURL, p.config.Owner, p.config.Repo)
+
+	latest, err := fetchLatestRelease(p.config.Context, p.config.HttpClient, url)
 	if err != nil {
 		return err
 	}
@@ -260,11 +269,8 @@ func (p *plugin) update(withBackup bool) error {
 func fetchLatestRelease(
 	ctx context.Context,
 	client HttpClient,
-	owner string,
-	repo string,
+	url string,
 ) (*release, error) {
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", owner, repo)
-
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err

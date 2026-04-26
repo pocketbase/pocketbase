@@ -15,6 +15,8 @@
 
 - ⚠️ Fixed a pre-hijacking OAuth2 linking vulnerability ([#7662](https://github.com/pocketbase/pocketbase/discussions/7662); thanks @Alardiians for reporting it privately).
 
+- Added `ghupdate.BaseURL` config option ([#7665](https://github.com/pocketbase/pocketbase/issues/7665)).
+
 - Bumped Go and npm dependencies.
 
 
