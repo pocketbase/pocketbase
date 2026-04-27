@@ -41,7 +41,7 @@ func NewGitlabProvider() *Gitlab {
 
 // FetchAuthUser returns an AuthUser instance based the Gitlab's user api.
 //
-// API reference: https://docs.gitlab.com/ee/api/users.html#for-admin
+// API reference: https://docs.gitlab.com/api/users/#retrieve-the-current-user
 func (p *Gitlab) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
