@@ -1,3 +1,5 @@
+const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 // {
 //     collection: undefined,
 //     originalRecord: undefined,
@@ -14,7 +16,7 @@ export function input(props) {
             t.label(
                 { htmlFor: uniqueId },
                 t.i({ className: app.fieldTypes.date.icon, ariaHidden: true }),
-                t.span({ className: "txt" }, () => props.field.name),
+                t.span({ className: "txt" }, () => props.field.name, " (", tzName, ")"),
             ),
             t.input({
                 id: uniqueId,
