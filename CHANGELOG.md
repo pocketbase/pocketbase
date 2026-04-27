@@ -12,8 +12,8 @@
 
 - Added dummy bcrypt password check for the failure auth path to minimize enumaration timing attacks when registrations are disabled.
 
-- Adjusted Bitbucket, GitHub and Gitea/Forgejo OAuth2 providers to better reflect recent API updates and doc references.
-    _The providers also now always send a sepatate emails list request since it has more information about the fetched email than the userinfo endpoint in order to minimize eventual linking security issues caused by custom onpremise setups (e.g. Gitea/Forgejo allows skipping the email verification if an ENV variable is configured)._
+- Adjusted Bitbucket, GitHub, GitLab and Gitea/Forgejo OAuth2 providers to better reflect recent API updates and doc references.
+    _In case the userinfo data is not sufficient, some of the providers now send a sepatate list emails request in order to minimize eventual linking security issues caused by custom onpremise setups (e.g. Gitea/Forgejo allows skipping the email verification if an ENV variable is configured)._
 
 - ⚠️ Fixed a pre-hijacking OAuth2 linking vulnerability ([#7662](https://github.com/pocketbase/pocketbase/discussions/7662); thanks @Alardiians for reporting it privately).
 
