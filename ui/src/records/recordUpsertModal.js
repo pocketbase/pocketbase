@@ -43,38 +43,6 @@ window.app.modals.openRecordUpsert = function(collection, record = null, modalSe
     app.modals.open(modal);
 };
 
-// redact common sensitive fields
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#the_replacer_parameter
-function redactedReplacer(key, val) {
-    switch (key) {
-        case "expand":
-        case "password":
-        case "passwordConfirm":
-        case "tokenKey":
-            return undefined;
-    }
-
-    return val;
-}
-
-function downloadJSON(record) {
-    const pojo = JSON.parse(JSON.stringify(record, redactedReplacer));
-    app.utils.downloadJSON(pojo, record.collectionName + "_" + record.id + ".json");
-}
-
-function copyJSON(record) {
-    app.utils.copyToClipboard(JSON.stringify(record, redactedReplacer, 2));
-    app.toasts.success("Record copied to clipboard!");
-}
-
-function serializeRecord(record) {
-    if (!record) {
-        return "";
-    }
-
-    return JSON.stringify(record, redactedReplacer);
-}
-
 const TAB_MAIN = "main";
 const TAB_AUTH_PROVIDERS = "authProviders";
 
@@ -143,6 +111,34 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
             return data.isLoading || data.isSaving || (!data.isNew && !data.hasChanges);
         },
     });
+
+    // --- serialization helpers:
+
+    // redact common sensitive fields
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#the_replacer_parameter
+    function redactedReplacer(key, val) {
+        switch (key) {
+            case "expand":
+                return undefined;
+            // exclude internal auth record sensitive fields
+            case "password":
+            case "passwordConfirm":
+            case "tokenKey":
+                return data.isAuthCollection ? undefined : val;
+        }
+
+        return val;
+    }
+
+    function serializeRecord(record) {
+        if (!record) {
+            return "";
+        }
+
+        return JSON.stringify(record, redactedReplacer);
+    }
+
+    // ---
 
     // note: not a getter to avoid the microtask batching
     function draftKey() {
@@ -764,7 +760,10 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
                                         className: "dropdown-item",
                                         onclick: (e) => {
                                             e.target.closest(".dropdown").hidePopover();
-                                            copyJSON(data.originalRecord);
+                                            app.utils.copyToClipboard(
+                                                JSON.stringify(data.originalRecord, redactedReplacer, 2),
+                                            );
+                                            app.toasts.success("Record copied to clipboard!");
                                         },
                                     },
                                     t.i({ className: "ri-braces-line", ariaHidden: true }),
