@@ -203,7 +203,7 @@ window.app.components.tinymce = function(propsArg = {}) {
                 "wordcount",
             ],
             toolbar:
-                "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link table media_picker codesample | direction code",
+                "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link media_picker table codesample | direction code",
             paste_postprocess: (editor, args) => {
                 cleanupPastedNode(args.node);
             },
