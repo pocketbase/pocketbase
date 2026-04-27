@@ -130,7 +130,14 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
             return serializeRecord(data.originalRecord);
         },
         get hasChanges() {
-            return data.originalRecordHash != data.recordHash;
+            return (
+                data.originalRecordHash != data.recordHash
+                // manually check the password fields as they are out of the serialized hash
+                || (
+                    data.isAuthCollection
+                    && (!!data.record.password || !!data.record.passwordConfirm)
+                )
+            );
         },
         get isFormDisabled() {
             return data.isLoading || data.isSaving || (!data.isNew && !data.hasChanges);
@@ -268,7 +275,10 @@ function recordUpsertModal(collection, rawRecord, modalSettings) {
 
     function deleteInternalKeys(record) {
         for (let key in record) {
-            if (key.startsWith("@@")) {
+            if (
+                key.startsWith("@@")
+                || (data.isAuthCollection && (key == "password" || key == "passwordConfirm"))
+            ) {
                 delete record[key];
             }
         }
