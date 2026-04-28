@@ -73,6 +73,18 @@ If someone is able to tamper with the OAuth2 responses then the entire OAuth2 fl
 </details>
 
 <details>
+<summary><strong>Users enumeration</strong></summary>
+
+This is a common and usually valid report but there is no easy solution without confusing and degrading the users experience.
+
+Some endpoints, like the user create/register, can be used for username or emails enumeration based on various response heuristics - timing, specific error messages, etc.
+
+In many places where applicable we've tried to minimize the impact by using constant time checks, returning non-descriptive error messages, applying an internal rate limit for some operations, etc. but it is not bulletproof and if somebody wants to find out if a user is registered they will be able to do it one way or another.
+
+If you think that there is a place where we can improve the handling without hurting too much the user experience, feel free to open a regular public issue and it will be considered.
+</details>
+
+<details>
 <summary><strong><code>disintegration/imaging</code> CVE-2023-36308</strong></summary>
 
 Just for the past month, due to some corporate security scanners 5 different people raised concerns over [CVE-2023-36308](https://nvd.nist.gov/vuln/detail/CVE-2023-36308) but this is not really a vulnerability, especially not in PocketBase.
