@@ -4,6 +4,8 @@
 
 - Added the local time zone name next to the `date` field label.
 
+- Reload trusted proxy info UI after settings save.
+
 
 ## v0.37.4
 

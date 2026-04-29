@@ -24,8 +24,6 @@ export function trustedProxyAccordion(pageData) {
         },
     });
 
-    loadProxyInfo();
-
     async function loadProxyInfo() {
         proxyInfo.isLoading = true;
 
@@ -48,7 +46,17 @@ export function trustedProxyAccordion(pageData) {
             pbEvent: "trustedProxyAccordion",
             className: "accordion trusted-proxy-accordion",
             name: "settingsAccordion",
-            open: () => (proxyInfo.isLoading ? false : null),
+            onmount: (el) => {
+                el._infoWatcher?.unwatch();
+                el._infoWatcher = watch(() => JSON.stringify(app.store.settings?.trustedProxy), (newHash, oldHash) => {
+                    if (newHash != oldHash) {
+                        loadProxyInfo();
+                    }
+                });
+            },
+            onunmount: (el) => {
+                el._infoWatcher?.unwatch();
+            },
         },
         t.summary(
             null,
@@ -104,19 +112,16 @@ export function trustedProxyAccordion(pageData) {
             "Below you should see your real IP. If not - configure the correct proxy header for your environment.",
         ),
         t.div(
-            {
-                hidden: () => proxyInfo.isLoading,
-                className: "alert info m-b-sm",
-            },
+            { className: "alert info m-b-sm" },
             t.div(
                 { className: "flex gap-5" },
                 t.span(null, "Resolved user IP:"),
-                t.strong(null, () => proxyInfo.realIP || "N/A"),
+                t.strong(null, () => proxyInfo.isLoading ? "..." : (proxyInfo.realIP || "N/A")),
             ),
             t.div(
                 { className: "flex gap-5" },
                 t.span(null, "Detected proxy header:"),
-                t.strong(null, () => proxyInfo.possibleProxyHeader || "N/A"),
+                t.strong(null, () => proxyInfo.isLoading ? "..." : (proxyInfo.possibleProxyHeader || "N/A")),
             ),
         ),
         t.div(
@@ -198,8 +203,8 @@ export function trustedProxyAccordion(pageData) {
                     t.div({ className: "inline-flex gap-5" }, () => {
                         return proxyInfo.suggestedProxyHeaders.map((header) => {
                             return t.div({
-                                type: "button",
-                                className: "label sm link-hint",
+                                role: "button",
+                                className: "label sm link-primary",
                                 onclick: () => {
                                     pageData.formSettings.trustedProxy.headers = [header];
                                 },
