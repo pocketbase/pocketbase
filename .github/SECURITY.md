@@ -77,7 +77,7 @@ If someone is able to tamper with the OAuth2 responses then the entire OAuth2 fl
 
 This is a common and usually valid report but there is no easy solution without confusing and degrading the users experience.
 
-Some endpoints, like the user create/register, can be used for username or emails enumeration based on various response heuristics - timing, specific error messages, etc.
+Some endpoints, like the user create/register, can be used for usernames or emails enumeration based on various response heuristics - timing, specific error messages, etc.
 
 In many places where applicable we've tried to minimize the impact by using constant time checks, returning non-descriptive error messages, applying an internal rate limit for some operations, etc. but it is not bulletproof and if somebody wants to find out if a user is registered they will be able to do it one way or another.
 
