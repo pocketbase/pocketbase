@@ -134,18 +134,18 @@ window.app.components.tinymce = function(propsArg = {}) {
         oldChange = null;
     }
 
-    async function initEditor(el) {
+    async function initEditor(editorTarget) {
         await loadTinyMCE();
 
         destroyEditor();
 
         // removed while loading
-        if (!el.isConnected) {
+        if (!editorTarget?.isConnected) {
             return;
         }
 
         const opts = {
-            target: el,
+            target: editorTarget,
             content_style: cssVars,
             branding: false,
             promotion: false,
@@ -254,10 +254,10 @@ window.app.components.tinymce = function(propsArg = {}) {
 
                 // propagate save shortcut to the parent
                 editor.on("keydown", (e) => {
-                    if ((e.ctrlKey || e.metaKey) && e.code == "KeyS" && editor.formElement) {
+                    if ((e.ctrlKey || e.metaKey) && e.code == "KeyS" && editorTarget) {
                         e.preventDefault();
                         e.stopPropagation();
-                        editor.formElement.dispatchEvent(new KeyboardEvent("keydown", e));
+                        editorTarget.dispatchEvent(new KeyboardEvent("keydown", e));
                     }
                 });
 
