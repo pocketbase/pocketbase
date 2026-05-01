@@ -1,11 +1,15 @@
 package core_test
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -482,5 +486,43 @@ func TestBackRelationExpandSingeVsArrayResult(t *testing.T) {
 		if !ok {
 			t.Fatalf("Expected the expanded result to be a single model, got %v", result)
 		}
+	}
+}
+
+func TestExpandRecordsQuerySkipDuplicatedIds(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	// fetch records that are known to have at least 1 common relation between them
+	records, err := app.FindRecordsByIds("demo1", []string{"84nmscqy84lsi1t", "al1h9ijdeojtsjy"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// log selects
+	concurrentQueries := []string{}
+	app.ConcurrentDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		concurrentQueries = append(concurrentQueries, sql)
+	}
+	app.ConcurrentDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+		concurrentQueries = append(concurrentQueries, sql)
+	}
+
+	// expand
+	failed := app.ExpandRecords(records, []string{"rel_many"}, nil)
+	if len(failed) > 0 {
+		t.Fatalf("Expected no expand errors, got %v", failed)
+	}
+
+	if len(concurrentQueries) != 1 {
+		t.Fatalf("Expected exactly 1 expand query, got %d:\n%v", len(concurrentQueries), concurrentQueries)
+	}
+
+	// "oap640cot4yru2s" is used in both relations but must exists only once
+	expected := "SELECT `users`.* FROM `users` WHERE `users`.`id` IN ('oap640cot4yru2s', 'bgs820n361vj1qd', '4q1xlclmfloku33')"
+	if concurrentQueries[0] != expected {
+		t.Fatalf("Expected query\n%v\ngot\n%v", expected, concurrentQueries[0])
 	}
 }

@@ -162,11 +162,20 @@ func (app *BaseApp) expandRecords(records []*Record, expandPath string, fetchFun
 
 	// ---------------------------------------------------------------
 
-	// extract the id of the relations to expand
+	// extract the unique ids of the relations to expand
+	// (the initial size assumes that most of the relations are single and unique)
+	existsSet := make(map[string]struct{}, len(records))
 	relIds := make([]string, 0, len(records))
 	for _, record := range records {
-		relIds = append(relIds, record.GetStringSlice(relField.Name)...)
+		ids := record.GetStringSlice(relField.Name)
+		for _, id := range ids {
+			if _, ok := existsSet[id]; !ok {
+				existsSet[id] = struct{}{}
+				relIds = append(relIds, id)
+			}
+		}
 	}
+	existsSet = nil
 
 	// fetch rels
 	rels, relsErr := fetchFunc(relCollection, relIds)
