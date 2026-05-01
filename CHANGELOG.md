@@ -6,7 +6,7 @@
 
 - Reload trusted proxy info UI after settings save.
 
-- Minor expand query optimization that skips the duplicated record ids from the `IN` list.
+- Other minor improvements (skips the duplicated record ids from the `IN` expand list, reordered confirm-email-change error checks to minimize enumeration attacks, etc.).
 
 
 ## v0.37.4
