@@ -1,4 +1,4 @@
-## v0.37.5 (WIP)
+## v0.37.5
 
 - Fixed password fields not being detected as changed ([#7670](https://github.com/pocketbase/pocketbase/issues/7670)).
 
