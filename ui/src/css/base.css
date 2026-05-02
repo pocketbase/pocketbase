@@ -135,7 +135,7 @@ body {
     height: 100%;
 
     /* normalizes IBM Plex Sans font rendering between Chrome and Firefox */
-    letter-spacing: 0.1px;
+    letter-spacing: 0.004em;
 }
 
 h1,
