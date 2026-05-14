@@ -327,6 +327,39 @@ func TestRealtimeAuthRecordUpdateEvent(t *testing.T) {
 	}
 }
 
+func TestRealtimeAuthRecordUnsetOnTokenKeyRefresh(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	apis.InitApi(testApp)
+
+	authRecord1, err := testApp.Dao().FindFirstRecordByData("users", "email", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := subscriptions.NewDefaultClient()
+	client.Set(apis.ContextAuthRecordKey, authRecord1)
+	testApp.SubscriptionsBroker().Register(client)
+
+	// refetch the authRecord and refresh its tokenKey
+	authRecord2, err := testApp.Dao().FindFirstRecordByData("users", "email", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	authRecord2.RefreshTokenKey()
+
+	e := new(core.ModelEvent)
+	e.Dao = testApp.Dao()
+	e.Model = authRecord2
+	testApp.OnModelAfterUpdate().Trigger(e)
+
+	clientAuthRecord, _ := client.Get(apis.ContextAuthRecordKey).(*models.Record)
+	if clientAuthRecord != nil {
+		t.Fatalf("Expected authRecord to be unset, got %q", clientAuthRecord.Email())
+	}
+}
+
 func TestRealtimeAdminDeleteEvent(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()

@@ -231,7 +231,12 @@ func (api *realtimeApi) updateClientsAuthModel(contextKey string, newModel model
 		if clientModel != nil &&
 			clientModel.TableName() == newModel.TableName() &&
 			clientModel.GetId() == newModel.GetId() {
-			client.Set(contextKey, newModel)
+			record, ok := newModel.(*models.Record)
+			if ok && record.OriginalCopy().TokenKey() != record.TokenKey() {
+				client.Unset(contextKey)
+			} else {
+				client.Set(contextKey, newModel)
+			}
 		}
 	}
 

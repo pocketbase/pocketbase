@@ -1,3 +1,8 @@
+## v0.22.44
+
+- (Backported from v0.38.1) Force unset the auth state of existing realtime connections on user tokenKey change.
+
+
 ## v0.22.43
 
 - (_Backported from v0.38.0_) Bumped min Go GitHub action version to 1.26.3 because it comes with some [minor bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.3).
