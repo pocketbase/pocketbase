@@ -1,3 +1,11 @@
+## v0.38.2 (WIP)
+
+- Added `RealtimeConnectRequestEvent.MaxTimeout` field to specify the absolute max duration a realtime connection can remain open (default to 30mins).
+    _This is in addition to the `IdeTimeout` of 5mins in order to prevent misuse and to allow the GC to run more regularly._
+
+- (@todo) Updated all `golang.org/x/` packages containing the [recent security fixes](https://groups.google.com/g/golang-announce/c/PdiGK3xulk4).
+
+
 ## v0.38.1
 
 - Silenced the superuser IPs confirmation if there is no change.

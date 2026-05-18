@@ -448,8 +448,24 @@ type RealtimeConnectRequestEvent struct {
 
 	Client subscriptions.Client
 
-	// note: modifying it after the connect has no effect
+	// IdleTimeout specifies the max duration to wait for a new message
+	// before closing the connection.
+	//
+	// Modifying the value after the connection has been established has no effect.
+	//
+	// Defaults to 5 minutes.
 	IdleTimeout time.Duration
+
+	// MaxTimeout specifies the maximum duration a realtime connection
+	// can remain open (including even if there are ongoing messages).
+	//
+	// Once the specified duration expires, the current connection will
+	// be terminated, until a client reconnect is issued (if the client is still active).
+	//
+	// Modifying the value after the connection has been established has no effect.
+	//
+	// Defaults to 30 minutes.
+	MaxTimeout time.Duration
 }
 
 type RealtimeMessageEvent struct {

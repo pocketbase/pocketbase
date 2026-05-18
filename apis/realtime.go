@@ -65,6 +65,7 @@ func realtimeConnect(e *core.RequestEvent) error {
 	connectEvent.RequestEvent = e
 	connectEvent.Client = subscriptions.NewDefaultClient()
 	connectEvent.IdleTimeout = 5 * time.Minute
+	connectEvent.MaxTimeout = 30 * time.Minute
 
 	return e.App.OnRealtimeConnectRequest().Trigger(connectEvent, func(ce *core.RealtimeConnectRequestEvent) error {
 		// register new subscription client
@@ -99,12 +100,19 @@ func realtimeConnect(e *core.RequestEvent) error {
 			return nil
 		}
 
+		// start a max lifetime timer to prevent accumulating too much
+		// connection resources and to allow the GC to run more regularly
+		maxTimer := time.NewTimer(ce.MaxTimeout)
+		defer maxTimer.Stop()
+
 		// start an idle timer to keep track of inactive/forgotten connections
 		idleTimer := time.NewTimer(ce.IdleTimeout)
 		defer idleTimer.Stop()
 
 		for {
 			select {
+			case <-maxTimer.C:
+				cancelRequest()
 			case <-idleTimer.C:
 				cancelRequest()
 			case msg, ok := <-ce.Client.Channel():
