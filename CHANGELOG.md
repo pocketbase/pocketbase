@@ -3,7 +3,9 @@
 - Added `RealtimeConnectRequestEvent.MaxTimeout` field to specify the absolute max duration a realtime connection can remain open (default to 30mins).
     _This is in addition to the `IdeTimeout` of 5mins in order to prevent misuse and to allow the GC to run more regularly._
 
-- (@todo) Updated all `golang.org/x/` packages containing the [recent security fixes](https://groups.google.com/g/golang-announce/c/PdiGK3xulk4).
+- Added extra checks for the connected user IP in the realtime APIs to prevent bruteforce guest subscription update attempts and to serve as an extra XSRF protection for the "all-in-one" OAuth2 realtime handler.
+
+- (@todo) Updated all `golang.org/x/` packages containing several [security fixes](https://groups.google.com/g/golang-announce/c/PdiGK3xulk4).
 
 
 ## v0.38.1

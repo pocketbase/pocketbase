@@ -26,6 +26,7 @@ func TestRealtimeConnect(t *testing.T) {
 			Method:         http.MethodGet,
 			URL:            "/api/realtime",
 			Timeout:        100 * time.Millisecond,
+			Headers:        map[string]string{"x-test-ip": "127.0.0.2"},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`id:`,
@@ -36,6 +37,17 @@ func TestRealtimeConnect(t *testing.T) {
 				"*":                        0,
 				"OnRealtimeConnectRequest": 1,
 				"OnRealtimeMessageSend":    1,
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().TrustedProxy.Headers = []string{"x-test-ip"}
+
+				app.OnRealtimeConnectRequest().BindFunc(func(e *core.RealtimeConnectRequestEvent) error {
+					if ip, _ := e.Client.Get(apis.RealtimeClientIPKey).(string); ip != "127.0.0.2" {
+						t.Fatalf("Expected IP %q, got %q", "127.0.0.2", ip)
+					}
+
+					return e.Next()
+				})
 			},
 			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
 				if len(app.SubscriptionsBroker().Clients()) != 0 {
@@ -102,7 +114,8 @@ func TestRealtimeSubscribe(t *testing.T) {
 
 	resetClient := func() {
 		client.Unsubscribe()
-		client.Set(apis.RealtimeClientAuthKey, nil)
+		client.Unset(apis.RealtimeClientAuthKey)
+		client.Unset(apis.RealtimeClientIPKey)
 	}
 
 	validSubscriptionsLimit := make([]string, 1000)
@@ -207,6 +220,26 @@ func TestRealtimeSubscribe(t *testing.T) {
 				`"subscriptions":{"1":{"code":"validation_length_too_long"`,
 			},
 			ExpectedEvents: map[string]int{"*": 0},
+		},
+		{
+			Name:            "existing client with different IP",
+			Method:          http.MethodPost,
+			URL:             "/api/realtime",
+			Body:            strings.NewReader(`{"clientId":"` + client.Id() + `","subscriptions":["test"]}`),
+			Headers:         map[string]string{"x-test-ip": "127.0.0.2"},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().TrustedProxy.Headers = []string{"x-test-ip"}
+
+				client.Set(apis.RealtimeClientIPKey, "127.0.0.1")
+
+				app.SubscriptionsBroker().Register(client)
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				resetClient()
+			},
 		},
 		{
 			Name:   "existing client with valid topic length",

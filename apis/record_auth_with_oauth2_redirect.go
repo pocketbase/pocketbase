@@ -55,6 +55,16 @@ func oauth2SubscriptionRedirect(e *core.RequestEvent) error {
 	}
 	defer client.Unsubscribe(oauth2SubscriptionTopic)
 
+	// additional check to minimize the risk of XSRF attack vectors
+	//
+	// note: custom registered clients (aka. those without IP in the store)
+	// are excluded from the check for backward compatibility
+	clientIP, _ := client.Get(RealtimeClientIPKey).(string)
+	if clientIP != "" && clientIP != e.RealIP() {
+		e.App.Logger().Debug("The client IP that completed the authentication is different from the one that initialized the OAuth2 realtime connection")
+		return failureRedirect(e)
+	}
+
 	// temporary store the Apple user's name so that it can be later retrieved with the authWithOAuth2 call
 	// (see https://github.com/pocketbase/pocketbase/issues/7090)
 	if data.AppleUser != "" && data.Error == "" && data.Code != "" {

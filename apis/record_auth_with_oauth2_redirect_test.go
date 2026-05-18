@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
@@ -16,9 +17,9 @@ import (
 func TestRecordAuthWithOAuth2Redirect(t *testing.T) {
 	t.Parallel()
 
-	clientStubs := make([]map[string]subscriptions.Client, 0, 10)
+	clientStubs := make([]map[string]subscriptions.Client, 0, 11)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 11; i++ {
 		c1 := subscriptions.NewDefaultClient()
 
 		c2 := subscriptions.NewDefaultClient()
@@ -333,6 +334,28 @@ func TestRecordAuthWithOAuth2Redirect(t *testing.T) {
 				if storedName != expectedName {
 					t.Fatalf("Expected stored name\n%q\ngot\n%q", expectedName, storedName)
 				}
+			},
+		},
+		{
+			Name:    "client with different IP",
+			Method:  http.MethodGet,
+			URL:     "/api/oauth2-redirect?code=123&state=" + clientStubs[10]["c3"].Id(),
+			Headers: map[string]string{"x-test-ip": "127.0.0.2"},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().TrustedProxy.Headers = []string{"x-test-ip"}
+
+				clientStubs[10]["c3"].Set(apis.RealtimeClientIPKey, "127.0.0.1")
+
+				beforeTestFunc(clientStubs[10], map[string][]string{
+					"c3": {`"state":"` + clientStubs[10]["c3"].Id(), `"code":"123"`},
+				})(t, app, e)
+			},
+			ExpectedStatus: http.StatusTemporaryRedirect,
+			ExpectedEvents: map[string]int{"*": 0},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				app.Store().Get("cancelFunc").(context.CancelFunc)()
+
+				checkFailureRedirect(t, app, res)
 			},
 		},
 	}
