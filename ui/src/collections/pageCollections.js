@@ -14,6 +14,7 @@ export function pageCollections(route) {
 
     const pageData = store({
         reset: null,
+        suggestReset: false,
         activeRecordIdOrModel: route.query[RECORD_QUERY_KEY]?.[0] || "",
         sort: route.query[SORT_QUERY_KEY]?.[0] || "",
         filter: route.query[FILTER_QUERY_KEY]?.[0] || "",
@@ -148,7 +149,7 @@ export function pageCollections(route) {
     ];
 
     const documentEvents = {
-        "record:save": (e) => {
+        "record:create": (e) => {
             if (e.detail.collectionId != app.store.activeCollection?.id) {
                 return;
             }
@@ -238,6 +239,9 @@ export function pageCollections(route) {
                     ),
                     app.components.refreshButton({
                         onclick: () => refreshRecordsList(),
+                        className: () =>
+                            `btn transparent circle rotate-btn ${pageData.suggestReset ? "warning" : "secondary"}`,
+                        tooltip: () => `Refresh${pageData.suggestReset ? "\n(detected change)" : ""}`,
                     }),
                 ),
                 t.div(
@@ -316,6 +320,10 @@ export function pageCollections(route) {
                 onchange: (newFilter, newSort) => {
                     pageData.filter = newFilter;
                     pageData.sort = newSort;
+                },
+                suggestReset: () => pageData.suggestReset,
+                onSuggestResetChange: (suggestReset) => {
+                    pageData.suggestReset = !!suggestReset;
                 },
             }),
             t.footer(

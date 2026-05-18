@@ -5,6 +5,8 @@
 
 - Added extra checks for the connected user IP in the realtime APIs to prevent bruteforce guest subscription update attempts and to serve as an extra XSRF protection for the "all-in-one" OAuth2 realtime handler.
 
+- Don't reset the records list pagination on record update ([#7694](https://github.com/pocketbase/pocketbase/issues/7694)).
+
 - (@todo) Updated all `golang.org/x/` packages containing several [security fixes](https://groups.google.com/g/golang-announce/c/PdiGK3xulk4).
 
 

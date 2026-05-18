@@ -161,7 +161,6 @@ button {
         &.danger {
             color: var(--dangerColor);
         }
-        &.accent,
         &.secondary,
         &.info,
         &.success,
@@ -283,12 +282,14 @@ button {
         }
     }
 
+    &[data-rotate="true"],
     &.rotate {
         i {
             animation: halfRotate 300ms;
         }
     }
 
+    &[data-loading="true"],
     &.loading {
         cursor: default;
         &::after {

@@ -31,6 +31,7 @@ window.app.components.recordsList = function(propsArg = {}) {
         filter: "",
         sort: "",
         reset: undefined,
+        suggestReset: false,
         // ---
         rid: undefined,
         id: undefined,
@@ -38,6 +39,7 @@ window.app.components.recordsList = function(propsArg = {}) {
         className: "",
         onchange: (newFilter, newSort) => {},
         onselect: (record) => {},
+        onSuggestResetChange: (suggestReset) => {},
     });
 
     const watchers = app.utils.extendStore(props, propsArg);
@@ -83,6 +85,10 @@ window.app.components.recordsList = function(propsArg = {}) {
         }
 
         data.isLoading = true;
+
+        if (reset) {
+            props.suggestReset = false;
+        }
 
         try {
             // (note if changed update the related counter query too!)
@@ -240,6 +246,19 @@ window.app.components.recordsList = function(propsArg = {}) {
         return field.hidden;
     }
 
+    // note: for now always assuming single field sort
+    function getActiveSortKey() {
+        if (!props.sort) {
+            return "";
+        }
+
+        if (props.sort.startsWith("-") || props.sort.startsWith("+")) {
+            return props.sort.substring(1);
+        }
+
+        return props.sort;
+    }
+
     let deleteRefreshTimeoutId;
 
     const documentEvents = {
@@ -248,13 +267,25 @@ window.app.components.recordsList = function(propsArg = {}) {
                 return;
             }
 
-            // optimistically merge with existing to minimize flickering
             const found = data.records.find((r) => r.id == e.detail.id);
-            if (found) {
-                Object.assign(found, JSON.parse(JSON.stringify(e.detail)));
+            if (!found) {
+                return loadRecords(true);
             }
 
-            loadRecords(true);
+            const sortKey = getActiveSortKey();
+
+            // loosely check if reload is needed
+            if (
+                // active server-side filter
+                props.filter?.length
+                // sorted value has changed
+                || (sortKey && found[sortKey] != e.detail[sortKey])
+            ) {
+                props.suggestReset = true;
+            }
+
+            // merge with existing
+            Object.assign(found, JSON.parse(JSON.stringify(e.detail)));
         },
         "record:delete": (e) => {
             if (
@@ -331,6 +362,7 @@ window.app.components.recordsList = function(propsArg = {}) {
                     ),
                 );
 
+                // persist columns prefereces
                 watchers.push(
                     watch(
                         () => JSON.stringify(data.columnsPreferences),
@@ -340,6 +372,18 @@ window.app.components.recordsList = function(propsArg = {}) {
                                     app.consts.COLUMNS_STORAGE_PREFIX + props.collection.id,
                                     data.columnsPreferences,
                                 );
+                            }
+                        },
+                    ),
+                );
+
+                // sync suggestReset
+                watchers.push(
+                    watch(
+                        () => props.suggestReset,
+                        (newVal, oldVal) => {
+                            if (typeof oldVal != "undefined") {
+                                props.onSuggestResetChange?.(newVal);
                             }
                         },
                     ),

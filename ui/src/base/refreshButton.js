@@ -51,16 +51,16 @@ window.app.components.refreshButton = function(propsArg = {}) {
                     props.onclick(e);
                 }
 
-                btn.classList.add("rotate");
+                btn.dataset.rotate = true;
                 btn.addEventListener("animationend", () => {
-                    btn.classList.remove("rotate");
+                    btn.dataset.rotate = false;
                 });
 
                 // fallback
                 clearTimeout(refreshTimeoutId);
                 refreshTimeoutId = setTimeout(() => {
                     clearTimeout(refreshTimeoutId);
-                    btn.classList.remove("rotate");
+                    btn.dataset.rotate = false;
                 }, 500);
             },
         },
