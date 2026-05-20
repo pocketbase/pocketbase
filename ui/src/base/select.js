@@ -152,7 +152,15 @@ window.app.components.select = function(propsArg = {}) {
         }
     }
 
-    const noItemsFoundElem = t.div({ className: "txt-hint txt-center m-0 p-5", hidden: true }, props.noItemsFoundText);
+    const noItemsFoundElem = t.div(
+        { className: "txt-hint txt-center m-0 p-5", hidden: true },
+        (el) => {
+            if (typeof props.noItemsFoundText == "function") {
+                return props.noItemsFoundText(el);
+            }
+            return props.noItemsFoundText;
+        },
+    );
 
     async function toggleNoItemsFoundElem() {
         if (!dropdown) {
@@ -236,7 +244,15 @@ window.app.components.select = function(propsArg = {}) {
         },
         () => {
             if (!internalData.selected.length) {
-                return t.span({ rid: "selected-placeholder", className: "placeholder" }, () => props.placeholder);
+                return t.span(
+                    { rid: "selected-placeholder", className: "placeholder" },
+                    (el) => {
+                        if (typeof props.placeholder == "function") {
+                            return props.placeholder(el);
+                        }
+                        return props.placeholder;
+                    },
+                );
             }
 
             return internalData.selected.map((opt) => {
