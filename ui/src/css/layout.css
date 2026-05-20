@@ -174,15 +174,13 @@
     column-gap: var(--smSpacing);
     row-gap: calc(var(--smSpacing) - 5px);
     width: 100%;
+    flex-shrink: 0;
     align-items: center;
-    margin: -5px 0 calc(var(--spacing) - 5px);
+    min-height: var(--btnHeight);
+    margin: -10px 0 calc(var(--spacing) - 10px);
     .searchbar {
         width: auto;
         flex-grow: 1;
-    }
-    &.compact {
-        margin-top: -10px;
-        margin-bottom: calc(var(--spacing) - 10px);
     }
     .page-header-secondary-btns,
     .page-header-primary-btns {
@@ -206,10 +204,6 @@
     }
     @media (max-width: 950px) {
         gap: 5px;
-        flex-grow: 1;
-        .flex-nowrap & {
-            flex-grow: 0;
-        }
         .btn {
             flex-grow: 1;
             flex-basis: 0;
@@ -219,7 +213,6 @@
     }
     @media (max-width: 550px) {
         gap: 5px;
-        flex-grow: 0;
         .api-preview-btn {
             display: none;
         }
@@ -228,6 +221,7 @@
             width: auto;
             aspect-ratio: 1 / 1;
             border-radius: 50%;
+            min-width: 0;
             i + .txt {
                 display: none;
             }
@@ -241,6 +235,7 @@
     align-items: center;
     width: auto;
     z-index: 10;
+    gap: var(--smSpacing);
     color: var(--surfaceTxtHintColor);
     font-size: var(--smFontSize);
     line-height: var(--smLineHeight);

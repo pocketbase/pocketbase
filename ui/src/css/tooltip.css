@@ -15,7 +15,6 @@
     line-height: var(--smLineHeight);
     font-family: var(--baseFontFamily);
     scrollbar-width: thin;
-    margin: 3px;
     padding: 3px 5px;
     pointer-events: none;
     opacity: 0;

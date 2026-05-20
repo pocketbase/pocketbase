@@ -1,0 +1,32 @@
+.field.sql-console-field {
+    .input {
+        resize: vertical;
+        height: 250px;
+        min-height: 150px;
+        max-height: 400px;
+
+        @media (max-height: 650px) {
+            height: 150px;
+        }
+    }
+}
+
+.sql-console-history-dropdown {
+    width: 450px;
+    &.no-items {
+        width: 300px;
+    }
+    .dropdown-item {
+        gap: 5px;
+        padding: 5px;
+        font-size: 0.9em;
+        line-height: 1.2;
+        font-family: var(--monospaceFontFamily);
+        .query {
+            display: -webkit-box;
+            overflow: hidden;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+        }
+    }
+}

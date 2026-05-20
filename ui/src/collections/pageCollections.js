@@ -197,7 +197,7 @@ export function pageCollections(route) {
         t.div(
             { className: "page-content full-height" },
             t.header(
-                { className: "page-header compact flex-nowrap" },
+                { className: "page-header flex-nowrap" },
                 t.nav(
                     { className: "breadcrumbs" },
                     t.div(null, "Collections"),

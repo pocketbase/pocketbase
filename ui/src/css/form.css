@@ -1131,6 +1131,7 @@ button {
         &:empty::before {
             content: attr(data-placeholder);
             color: var(--surfaceTxtDisabledColor);
+            white-space: normal;
         }
     }
 

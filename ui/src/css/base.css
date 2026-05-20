@@ -919,6 +919,7 @@ hr {
 .alert {
     display: block;
     width: 100%;
+    flex-shrink: 0;
     align-content: center;
     min-height: var(--lgBtnHeight);
     padding: max(5px, calc(var(--inputPadding) - 5px)) max(10px, var(--inputPadding));

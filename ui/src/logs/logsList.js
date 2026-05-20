@@ -165,6 +165,8 @@ export function logsList(logsSettings) {
             return; // nothing to download
         }
 
+        console.log(data.bulkSelected);
+
         if (selected.length == 1) {
             return app.utils.downloadJSON(
                 selected[0],

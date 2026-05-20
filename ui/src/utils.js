@@ -845,6 +845,29 @@ const utils = {
     },
 
     /**
+     * Downloads a CSV file created from the provide array data.
+     *
+     * @param {Array}  arr  The JS array to serialize as CSV
+     * @param {string} name The result file name.
+     */
+    downloadCSV(arr, name) {
+        name = name.endsWith(".csv") ? name : name + ".csv";
+
+        // seriaze data
+        let content = arr.map((row) => {
+            return row.map((v) => "\"" + ("" + v).replaceAll("\"", "\"\"") + "\"").join(",");
+        }).join("\n");
+
+        const blob = new Blob([content], {
+            type: "text/csv;charset=utf-8;",
+        });
+
+        const url = window.URL.createObjectURL(blob);
+
+        utils.download(url, name);
+    },
+
+    /**
      * Returns a normalized API URL address that is used in the API example docs.
      *
      * @return {string}
