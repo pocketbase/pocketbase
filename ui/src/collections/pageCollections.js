@@ -241,7 +241,7 @@ export function pageCollections(route) {
                         onclick: () => refreshRecordsList(),
                         className: () =>
                             `btn transparent circle rotate-btn ${pageData.suggestReset ? "warning" : "secondary"}`,
-                        tooltip: () => `Refresh${pageData.suggestReset ? "\n(detected change)" : ""}`,
+                        tooltip: () => `Refresh${pageData.suggestReset ? "\n(list changed)" : ""}`,
                     }),
                 ),
                 t.div(
