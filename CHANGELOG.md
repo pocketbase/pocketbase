@@ -1,4 +1,4 @@
-## v0.38.2 (WIP)
+## v0.38.2
 
 - Added `RealtimeConnectRequestEvent.MaxTimeout` field to specify the absolute max duration a realtime connection can remain open (default to 30mins).
     _This is in addition to the `IdeTimeout` of 5mins in order to prevent misuse and to allow the GC to run more regularly._
