@@ -404,9 +404,6 @@ table {
         .col-copy {
             display: none;
         }
-        .label {
-            word-break: break-word;
-        }
         td,
         th {
             display: block;

@@ -2,6 +2,8 @@
 
 - Fixed logs bulk selection export.
 
+- Other minor UI improvements (allow word breaking in labels, etc.).
+
 
 ## v0.38.2
 

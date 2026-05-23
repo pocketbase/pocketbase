@@ -262,6 +262,9 @@
 .field-type-editor {
     &.record-field-view {
         width: 100%;
+        .record-summary & {
+            width: auto;
+        }
     }
     &.record-field-input {
         /* fixed size to minimize flickering */
