@@ -349,7 +349,7 @@ export function logsList(logsSettings) {
                                                         JSON.stringify(data.bulkSelected),
                                                     );
                                                     if (e.target.checked) {
-                                                        bulkSelected[log.id] = true;
+                                                        bulkSelected[log.id] = log;
                                                     } else {
                                                         delete bulkSelected[log.id];
                                                     }

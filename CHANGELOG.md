@@ -1,3 +1,8 @@
+## v0.38.3 (WIP)
+
+- Fixed logs bulk selection export.
+
+
 ## v0.38.2
 
 - Added `RealtimeConnectRequestEvent.MaxTimeout` field to specify the absolute max duration a realtime connection can remain open (default to 30mins).
