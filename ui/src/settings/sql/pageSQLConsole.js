@@ -30,32 +30,25 @@ export function pageSQLConsole(route) {
             const isAsc = !!pageData.sort?.asc;
 
             const sorted = pageData.result?.rows?.toSorted((rowA, rowB) => {
-                const valA = rowA[pageData.sort.index];
-                const valB = rowB[pageData.sort.index];
+                let valA = rowA[pageData.sort.index];
+                let valB = rowB[pageData.sort.index];
 
-                if (isAsc) {
-                    if (valA == valB) {
-                        return 0;
-                    }
-                    if (valA == null) {
-                        return -1;
-                    }
-                    if (valB == null) {
-                        return 1;
-                    }
-                    return valA.localeCompare(valB);
+                // swap
+                if (!isAsc) {
+                    valA = rowB[pageData.sort.index];
+                    valB = rowA[pageData.sort.index];
                 }
 
                 if (valA == valB) {
                     return 0;
                 }
                 if (valA == null) {
-                    return 1;
-                }
-                if (valB == null) {
                     return -1;
                 }
-                return valB.localeCompare(valA);
+                if (valB == null) {
+                    return 1;
+                }
+                return valA.localeCompare(valB);
             }) || [];
 
             return pageData.maxRows >= sorted.length ? sorted : sorted.slice(0, pageData.maxRows);

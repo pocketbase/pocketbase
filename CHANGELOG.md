@@ -1,8 +1,11 @@
-## v0.38.3 (WIP)
+## v0.39.0 (WIP)
 
-- Fixed logs bulk selection export.
+- Added new "SQL console" section under _Settings > Debug_ allowing executing any raw SQL query from the UI ([#2236](https://github.com/pocketbase/pocketbase/issues/2236); [#7638](https://github.com/pocketbase/pocketbase/discussions/7638)).
+    _Note that this is intended for one-off analytic queries, the occasional `VACUUM`/`PRAGMA optimize` or debug purposes and not as the primary interface for interacting with your PocketBase data because it can break your application if not used with proper care!_
 
-- Other minor UI improvements (allow word breaking in labels, etc.).
+- Fixed logs bulk selection export error.
+
+- Other Minor UI improvements (optimized logs and records list rendering, word breaking in labels, text contrast improvements, etc.).
 
 
 ## v0.38.2

@@ -333,9 +333,6 @@ table {
             border-bottom-right-radius: 0;
         }
     }
-    tr {
-        animation: fadeIn var(--animationSpeed);
-    }
     td,
     th {
         border: 0;

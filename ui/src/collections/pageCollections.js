@@ -307,25 +307,32 @@ export function pageCollections(route) {
                 value: () => pageData.filter,
                 onsubmit: (newFilter) => (pageData.filter = newFilter),
             }),
-            app.components.recordsList({
-                className: "m-t-sm",
-                reset: () => pageData.reset,
-                hidden: () => !app.store.activeCollection?.id,
-                collection: () => app.store.activeCollection,
-                filter: () => pageData.filter,
-                sort: () => pageData.sort,
-                onselect: (record) => {
-                    pageData.activeRecordIdOrModel = record;
-                },
-                onchange: (newFilter, newSort) => {
-                    pageData.filter = newFilter;
-                    pageData.sort = newSort;
-                },
-                suggestReset: () => pageData.suggestReset,
-                onSuggestResetChange: (suggestReset) => {
-                    pageData.suggestReset = !!suggestReset;
-                },
-            }),
+            () => {
+                // not using "hidden" attr to force clear the records list and to
+                // minimize the flickering when navigating between collections
+                if (!app.store.activeCollection?.id) {
+                    return;
+                }
+
+                return app.components.recordsList({
+                    className: "m-t-sm",
+                    reset: () => pageData.reset,
+                    collection: () => app.store.activeCollection,
+                    filter: () => pageData.filter,
+                    sort: () => pageData.sort,
+                    onselect: (record) => {
+                        pageData.activeRecordIdOrModel = record;
+                    },
+                    onchange: (newFilter, newSort) => {
+                        pageData.filter = newFilter;
+                        pageData.sort = newSort;
+                    },
+                    suggestReset: () => pageData.suggestReset,
+                    onSuggestResetChange: (suggestReset) => {
+                        pageData.suggestReset = !!suggestReset;
+                    },
+                });
+            },
             t.footer(
                 { className: "page-footer" },
                 t.span(

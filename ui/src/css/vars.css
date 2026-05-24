@@ -138,7 +138,7 @@
 /* dark */
 [data-color-scheme="dark"],
 [data-color-scheme="dark"] .dropdown {
-    --surfaceColor: #1f1f1f;
+    --surfaceColor: #1c1c1c;
     --surfaceAlt1Color: color-mix(in srgb, var(--surfaceColor), white 2%);
     --surfaceAlt2Color: color-mix(in srgb, var(--surfaceColor), white 7%);
     --surfaceAlt3Color: color-mix(in srgb, var(--surfaceColor), white 12%);
@@ -155,10 +155,10 @@
     --secondaryAlt1Color: var(--surfaceAlt3Color);
     --secondaryAlt2Color: var(--surfaceAlt4Color);
 
-    --primaryColor: #161616;
+    --primaryColor: #121212;
     --primaryTxtColor: var(--surfaceTxtColor);
-    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), white 1%);
-    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), white 1.5%);
+    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), black 12%);
+    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), black 25%);
     --primaryTxtHintColor: color-mix(in srgb, var(--primaryTxtColor), transparent 35%);
     --primaryTxtDisabledColor: color-mix(in srgb, var(--primaryTxtColor), transparent 50%);
 
@@ -192,7 +192,7 @@
     --inputBorderColor: var(--surfaceAlt4Color);
     scrollbar-color: var(--surfaceAlt5Color) transparent;
 
-    --modalOverlayColor: rgb(0,0,0, 0.45);
+    --modalOverlayColor: rgb(18,18,18, 0.5);
     --tooltipSurfaceColor: rgb(22,22,22, 0.9);
 
     --boxShadow: 0px 8px 5px -5px rgba(0,0,0, 0.3);

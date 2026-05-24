@@ -75,9 +75,9 @@ export function logsList(logsSettings) {
             for (let i = 0; i < result.items.length; i++) {
                 app.utils.pushOrReplaceObject(data.logs, result.items[i]);
 
-                // yield to main (with room to "breathe")
+                // yield to main
                 if (i > 1 && i % 20 == 0) {
-                    await new Promise((r) => setTimeout(r, 20));
+                    await new Promise((r) => setTimeout(r, 0));
                 }
             }
 
@@ -164,8 +164,6 @@ export function logsList(logsSettings) {
         if (!selected.length) {
             return; // nothing to download
         }
-
-        console.log(data.bulkSelected);
 
         if (selected.length == 1) {
             return app.utils.downloadJSON(
