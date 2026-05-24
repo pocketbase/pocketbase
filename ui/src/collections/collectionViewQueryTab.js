@@ -35,10 +35,7 @@ export function collectionViewQueryTab(upsertData) {
         }
 
         try {
-            // @todo replace with SDK method
-            const result = await app.pb.send("/api/collections/meta/dry-run-view", {
-                method: "POST",
-                body: { "query": query },
+            const result = await app.pb.collections.dryRunViewQuery(query, {
                 requestKey: TEST_REQUEST_KEY,
             });
 

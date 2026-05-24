@@ -1,4 +1,4 @@
-import{t as e}from"./expandInfo-DGS0CLSa.js";import{t as n}from"./fieldsInfo-Bz62125-.js";function r(r){let i=app.utils.getApiExampleURL(),a=r.viewRule===null,o={collectionId:r.id,collectionName:r.name},s=[{title:200,value:JSON.stringify(Object.assign(o,app.utils.getDummyFieldsData(r)),null,2)}];return a&&s.push({title:403,value:`
+import{t as e}from"./expandInfo-CJ9aeAaN.js";import{t as n}from"./fieldsInfo-CiLcXgNq.js";function r(r){let i=app.utils.getApiExampleURL(),a=r.viewRule===null,o={collectionId:r.id,collectionName:r.name},s=[{title:200,value:JSON.stringify(Object.assign(o,app.utils.getDummyFieldsData(r)),null,2)}];return a&&s.push({title:403,value:`
                 {
                   "status": 403,
                   "message": "Only superusers can access this action.",

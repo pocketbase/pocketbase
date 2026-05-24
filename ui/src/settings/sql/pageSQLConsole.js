@@ -121,10 +121,7 @@ export function pageSQLConsole(route) {
         }
 
         try {
-            // @todo add method to JS SDK
-            pageData.result = await app.pb.send("/api/sql", {
-                method: "POST",
-                body: { query },
+            pageData.result = await app.pb.sql.run(query, {
                 requestKey: requestKey,
             });
 

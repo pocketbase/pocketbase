@@ -230,8 +230,7 @@ window.app.store = store({
         app.store.isLoadingOAuth2Providers = true;
 
         try {
-            // @todo replace with SDK call
-            app.store.oauth2Providers = await app.pb.send("/api/collections/meta/oauth2-providers");
+            app.store.oauth2Providers = await app.pb.collections.getAllOAuth2Providers();
             app.store.isLoadingOAuth2Providers = false;
         } catch (err) {
             if (!err.isAbort) {

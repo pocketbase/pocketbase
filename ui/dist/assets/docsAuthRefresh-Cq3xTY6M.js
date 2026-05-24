@@ -1,4 +1,4 @@
-import{t as e}from"./expandInfo-DGS0CLSa.js";import{t as n}from"./fieldsInfo-Bz62125-.js";function r(r){let i=app.utils.getApiExampleURL(),a={collectionId:r.id,collectionName:r.name},o=[{title:200,value:JSON.stringify({token:`...JWT...`,record:Object.assign(a,app.utils.getDummyFieldsData(r))},null,2)},{title:401,value:`
+import{t as e}from"./expandInfo-CJ9aeAaN.js";import{t as n}from"./fieldsInfo-CiLcXgNq.js";function r(r){let i=app.utils.getApiExampleURL(),a={collectionId:r.id,collectionName:r.name},o=[{title:200,value:JSON.stringify({token:`...JWT...`,record:Object.assign(a,app.utils.getDummyFieldsData(r))},null,2)},{title:401,value:`
                 {
                   "status": 401,
                   "message": "The request requires valid record authorization token to be set.",

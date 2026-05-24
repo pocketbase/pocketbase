@@ -8,7 +8,7 @@
     },
     "dependencies": {
         "leaflet": "^1.9.4",
-        "pocketbase": "^0.26.8"
+        "pocketbase": "^0.27.0"
     },
     "devDependencies": {
         "dprint": "^0.52.0",

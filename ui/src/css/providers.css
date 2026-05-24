@@ -11,8 +11,9 @@
     line-height: 1;
     font-size: var(--fontSize);
     color: var(--surfaceTxtDisabledColor);
-    background: var(--surfaceAlt1Color);
+    background: var(--surfaceAlt2Color);
     border-radius: var(--borderRadius);
+    transition: background var(--animationSpeed);
     &:empty {
         &::before {
             content: "\f452";
@@ -22,6 +23,15 @@
     img {
         width: 100%;
         height: auto;
+    }
+    .handle:hover &,
+    .handle:focus-visible & {
+        background: var(--surfaceAlt3Color);
+    }
+    .handle.active &,
+    .handle:active & {
+        transition-duration: var(--activeAnimationSpeed);
+        background: var(--surfaceAlt4Color);
     }
 }
 
@@ -66,22 +76,9 @@
         user-select: none;
         text-decoration: none;
         transition: background var(--animationSpeed);
-        .provider-logo {
-            transition: background var(--animationSpeed);
-        }
         &:hover,
         &:focus-visible {
             background: var(--surfaceAlt1Color);
-            .provider-logo {
-                background: var(--surfaceAlt2Color);
-            }
-        }
-        &.active,
-        &:active {
-            .provider-logo {
-                transition-duration: var(--activeAnimationSpeed);
-                background: var(--surfaceAlt3Color);
-            }
         }
     }
 

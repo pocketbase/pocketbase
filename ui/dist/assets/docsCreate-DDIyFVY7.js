@@ -1,4 +1,4 @@
-import{t as e}from"./expandInfo-DGS0CLSa.js";import{t as n}from"./fieldsInfo-Bz62125-.js";function r(r){let s=app.utils.getApiExampleURL(),c=r.createRule===null,l=r.type===`auth`,u=l?[`password`,`verified`,`email`,`emailVisibility`]:[],d=r.fields?.filter(e=>!e.hidden&&e.type!=`autodate`&&!u.includes(e.name))||[],f={collectionId:r.id,collectionName:r.name},p=[{title:200,value:JSON.stringify(Object.assign(f,app.utils.getDummyFieldsData(r)),null,2)},{title:400,value:`
+import{t as e}from"./expandInfo-CJ9aeAaN.js";import{t as n}from"./fieldsInfo-CiLcXgNq.js";function r(r){let s=app.utils.getApiExampleURL(),c=r.createRule===null,l=r.type===`auth`,u=l?[`password`,`verified`,`email`,`emailVisibility`]:[],d=r.fields?.filter(e=>!e.hidden&&e.type!=`autodate`&&!u.includes(e.name))||[],f={collectionId:r.id,collectionName:r.name},p=[{title:200,value:JSON.stringify(Object.assign(f,app.utils.getDummyFieldsData(r)),null,2)},{title:400,value:`
                 {
                   "status": 400,
                   "message": "Failed to create record.",
