@@ -69,22 +69,6 @@ func TestSQLRun(t *testing.T) {
 			ExpectedEvents: map[string]int{"*": 0},
 		},
 		{
-			Name:   "long query",
-			Method: http.MethodPost,
-			URL:    "/api/sql",
-			Body:   strings.NewReader(`{"query":"` + strings.Repeat("a", 3001) + `"}`),
-			Headers: map[string]string{
-				// superusers, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
-			},
-			ExpectedStatus: 400,
-			ExpectedContent: []string{
-				`"data":{`,
-				`"query":{`,
-			},
-			ExpectedEvents: map[string]int{"*": 0},
-		},
-		{
 			Name:   "invalid query",
 			Method: http.MethodPost,
 			URL:    "/api/sql",
@@ -98,6 +82,40 @@ func TestSQLRun(t *testing.T) {
 				`"data":{}`,
 				`Raw error:`,
 				`SQL logic error`,
+			},
+			ExpectedEvents: map[string]int{"*": 0},
+		},
+		{
+			Name:   "query with length above the limit",
+			Method: http.MethodPost,
+			URL:    "/api/sql",
+			Body:   strings.NewReader(`{"query":"` + strings.Repeat("a", 5001) + `"}`),
+			Headers: map[string]string{
+				// superusers, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"query":{`,
+			},
+			ExpectedEvents: map[string]int{"*": 0},
+		},
+		{
+			Name:   "query with length equal to the limit",
+			Method: http.MethodPost,
+			URL:    "/api/sql",
+			Body:   strings.NewReader(`{"query":"select '` + strings.Repeat("a", 4985) + `' as id"}`),
+			Headers: map[string]string{
+				// superusers, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"execTime":`,
+				`"affectedRows":0`,
+				`"columns":[{"name":"id","type":"","nullable":true}]`,
+				`"rows":[["aaa`,
 			},
 			ExpectedEvents: map[string]int{"*": 0},
 		},

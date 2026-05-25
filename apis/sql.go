@@ -56,7 +56,7 @@ type runSQLForm struct {
 
 func (form *runSQLForm) validate() error {
 	return validation.ValidateStruct(form,
-		validation.Field(&form.Query, validation.Required, validation.Length(0, 3000)),
+		validation.Field(&form.Query, validation.Required, validation.Length(0, 5000)),
 	)
 }
 
