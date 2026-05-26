@@ -99,7 +99,7 @@ async function authWithPassword(data) {
         await app.pb.collection("_superusers").authWithPassword(data.identity, data.password);
         app.toasts.removeAll();
         app.store.errors = null;
-        app.utils.toRememberedPath();
+        window.location.hash = "#/";
     } catch (err) {
         if (err.status == 401) {
             data.mfaId = err.response.mfaId;
@@ -304,7 +304,7 @@ async function authWithOTP(data) {
         });
         app.toasts.removeAll();
         app.store.errors = null;
-        app.utils.toRememberedPath();
+        window.location.hash = "#/";
     } catch (err) {
         app.checkApiError(err);
     }

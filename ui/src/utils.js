@@ -1,7 +1,5 @@
 const DEFAULT_RANDOM_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
-const REMEMBER_PATH_KEY = "pb_redirect";
-
 const navigationStore = store({
     hash: window.location.hash,
 });
@@ -1006,27 +1004,6 @@ const utils = {
         }
 
         return newHref;
-    },
-
-    /**
-     * Locally stores the current path for later redirect.
-     */
-    rememberPath() {
-        window.localStorage.setItem(REMEMBER_PATH_KEY, window.location.hash);
-    },
-
-    /**
-     * Redirect to a remembered local path.
-     *
-     * @param {string} [fallback] Fallback path if there is nothing stored.
-     */
-    toRememberedPath(fallback = "#/collections") {
-        let path = window.localStorage.getItem(REMEMBER_PATH_KEY);
-        if (path) {
-            window.localStorage.removeItem(REMEMBER_PATH_KEY);
-        }
-
-        window.location.hash = path || fallback;
     },
 
     /**

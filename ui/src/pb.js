@@ -39,7 +39,6 @@ if (app.pb.authStore.isValid) {
             // clear the store only on invalidated/expired token
             const status = err?.status << 0;
             if (status == 401 || status == 403) {
-                app.utils.rememberPath();
                 app.pb.cancelAllRequests();
                 app.pb.authStore.clear();
             }
@@ -231,7 +230,6 @@ window.app.checkApiError = function(err, showToast = true) {
 
     // unauthorized
     if (statusCode === 401 && window.location.hash != LOGIN_PATH) {
-        app.utils.rememberPath();
         app.pb.cancelAllRequests();
         return app.pb.authStore.clear();
     }
