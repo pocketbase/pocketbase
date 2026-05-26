@@ -322,6 +322,19 @@ func (app *BaseApp) registerAutobackupHooks() {
 					slog.String("name", name),
 					slog.String("error", err.Error()),
 				)
+
+				alertError := sendSystemAlertToAllSuperusers(
+					app,
+					"Autobackup failure",
+					"Failed to create/upload automated backup. Raw error:\n"+err.Error(),
+				)
+				if alertError != nil {
+					app.Logger().Warn(
+						"[Backup cron] Failed to send backup error alerts",
+						slog.String("name", name),
+						slog.String("error", alertError.Error()),
+					)
+				}
 			}
 
 			maxKeep := app.Settings().Backups.CronMaxKeep
