@@ -70,7 +70,7 @@ func (m *Collection) setDefaultAuthOptions() {
 		},
 		AuthToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 604800, // 7 days
+			Duration: 604800, // 7days
 		},
 		PasswordResetToken: TokenConfig{
 			Secret:   security.RandomString(50),
@@ -82,7 +82,7 @@ func (m *Collection) setDefaultAuthOptions() {
 		},
 		VerificationToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 259200, // 3days
+			Duration: 86400, // 1day
 		},
 		FileToken: TokenConfig{
 			Secret:   security.RandomString(50),

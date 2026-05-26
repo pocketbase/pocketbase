@@ -5,7 +5,7 @@
 
 - Fixed logs bulk selection export error.
 
-- Other Minor UI improvements (optimized logs and records list rendering, word breaking in labels, text contrast improvements, registered missing `oidc2` and `oidc3` option fields, etc.).
+- Other minor improvements (optimized logs and records list rendering, word breaking in labels, text contrast improvements, registered missing `oidc2` and `oidc3` option fields, updated default email template texts for consistency, etc.).
 
 
 ## v0.38.2
