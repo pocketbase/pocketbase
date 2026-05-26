@@ -87,7 +87,7 @@ If you think that there is a place where we can improve the handling without hur
 <details>
 <summary><strong>Attack-vectors relying on social engineering</strong></summary>
 
-Reports for attacks relying on various social engineering tactics _(e.g. tricking someone to click on a link)_ are valid concerns but usually out of the security scope of the project as there are a lot of cases where this behavior is deliberate for better UX.
+Reports for attacks relying on various social engineering tactics _(e.g. tricking someone to click on a link)_ are valid concerns but usually out of the security scope of the project as there are a lot of cases where the APIs are deliberately designed for minimal friction.
 
 If you have concerns for such attack, feel free to open a regular public issue and we can eventually try to reconsider adding extra guards when feasible _(or at least properly document the existing behavior)_.
 </details>
