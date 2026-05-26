@@ -169,7 +169,7 @@ export function pageSQLConsole(route) {
 
         const data = [pageData.result.columns.map((c) => c.name)].concat(pageData.sortedResultRows);
 
-        const name = "export_" + app.utils.toLocalDatetime(new Date()).replace(/[\-\:\. ]/g, "_") + ".csv";
+        const name = "export_" + new Date().toISOString().replace(/[\-\:\.]/g, "") + ".csv";
 
         app.utils.downloadCSV(data, name);
     }

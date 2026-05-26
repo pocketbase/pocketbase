@@ -54,6 +54,7 @@
     left: 0;
     bottom: var(--smSpacing);
     right: 0;
+    pointer-events: none;
 
     .bulkbar {
         position: relative;
@@ -62,6 +63,7 @@
         right: auto;
         margin: var(--smSpacing) auto;
         transform: translateY(0);
+        pointer-events: auto;
         @starting-style {
             transform: translateY(10px);
         }

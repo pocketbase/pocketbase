@@ -17,6 +17,13 @@ export function logsList(logsSettings) {
         get areAllSelected() {
             return data.logs.length && data.logs.length == data.totalSelected;
         },
+        get paddedDefaultLogLevels() {
+            const result = [];
+            for (let level in app.utils.logLevels) {
+                result.push(("" + level).padStart(2, " ") + ": " + app.utils.logLevels[level].label);
+            }
+            return result;
+        },
     });
 
     // used as loose guard to prevent new logs to constantly push the old ones to later pages
@@ -168,12 +175,12 @@ export function logsList(logsSettings) {
         if (selected.length == 1) {
             return app.utils.downloadJSON(
                 selected[0],
-                "log_" + selected[0].created.replaceAll(dateFilenameRegex, "") + ".json",
+                "log_" + selected[0].created.replace(" ", "T").replaceAll(dateFilenameRegex, "") + ".json",
             );
         }
 
-        const to = selected[0].created.replaceAll(dateFilenameRegex, "");
-        const from = selected[selected.length - 1].created.replaceAll(dateFilenameRegex, "");
+        const to = selected[0].created.replace(" ", "T").replaceAll(dateFilenameRegex, "");
+        const from = selected[selected.length - 1].created.replace(" ", "T").replaceAll(dateFilenameRegex, "");
 
         return app.utils.downloadJSON(selected, `${selected.length}_logs_${from}_to_${to}.json`);
     }
@@ -247,6 +254,14 @@ export function logsList(logsSettings) {
                             { className: "inline-flex gap-5" },
                             t.i({ className: "ri-bookmark-line", ariaHidden: true }),
                             t.span({ textContent: "Level" }),
+                            t.i({
+                                className: "ri-information-line txt-sm link-hint",
+                                ariaDescription: app.attrs.tooltip(
+                                    () => "Default levels\n" + data.paddedDefaultLogLevels.join("\n"),
+                                    "bottom",
+                                    "code",
+                                ),
+                            }),
                         ),
                     ),
                     t.th(
