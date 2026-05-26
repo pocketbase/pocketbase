@@ -36,7 +36,7 @@ migrate((app) => {
     },
     "authRule": "",
     "authToken": {
-      "duration": 604800
+      "duration": 432000
     },
     "confirmEmailChangeTemplate": {
       "body": "<p>Hello,</p>\n<p>Click on the button below to confirm your new email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Confirm new email</a>\n</p>\n<p><i>If you didn't ask to change your email address, please ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
@@ -181,7 +181,7 @@ migrate((app) => {
       "subject": "Verify your {APP_NAME} email"
     },
     "verificationToken": {
-      "duration": 259200
+      "duration": 86400
     },
     "viewRule": "id = \"1\""
   });
@@ -218,7 +218,7 @@ func init() {
 			},
 			"authRule": "",
 			"authToken": {
-				"duration": 604800
+				"duration": 432000
 			},
 			"confirmEmailChangeTemplate": {
 				"body": "<p>Hello,</p>\n<p>Click on the button below to confirm your new email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Confirm new email</a>\n</p>\n<p><i>If you didn't ask to change your email address, please ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
@@ -363,7 +363,7 @@ func init() {
 				"subject": "Verify your {APP_NAME} email"
 			},
 			"verificationToken": {
-				"duration": 259200
+				"duration": 86400
 			},
 			"viewRule": "id = \"1\""
 		}` + "`" + `
@@ -489,7 +489,7 @@ migrate((app) => {
     },
     "authRule": "",
     "authToken": {
-      "duration": 604800
+      "duration": 432000
     },
     "confirmEmailChangeTemplate": {
       "body": "<p>Hello,</p>\n<p>Click on the button below to confirm your new email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Confirm new email</a>\n</p>\n<p><i>If you didn't ask to change your email address, please ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
@@ -634,7 +634,7 @@ migrate((app) => {
       "subject": "Verify your {APP_NAME} email"
     },
     "verificationToken": {
-      "duration": 259200
+      "duration": 86400
     },
     "viewRule": "id = \"1\""
   });
@@ -674,7 +674,7 @@ func init() {
 			},
 			"authRule": "",
 			"authToken": {
-				"duration": 604800
+				"duration": 432000
 			},
 			"confirmEmailChangeTemplate": {
 				"body": "<p>Hello,</p>\n<p>Click on the button below to confirm your new email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Confirm new email</a>\n</p>\n<p><i>If you didn't ask to change your email address, please ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
@@ -819,7 +819,7 @@ func init() {
 				"subject": "Verify your {APP_NAME} email"
 			},
 			"verificationToken": {
-				"duration": 259200
+				"duration": 86400
 			},
 			"viewRule": "id = \"1\""
 		}` + "`" + `
