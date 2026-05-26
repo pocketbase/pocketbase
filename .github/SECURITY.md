@@ -85,6 +85,14 @@ If you think that there is a place where we can improve the handling without hur
 </details>
 
 <details>
+<summary><strong>Attack-vectors relying on social engineering</strong></summary>
+
+Reports for attacks relying on various social engineering tactics _(e.g. tricking someone to click on a link)_ are valid concerns but usually out of the security scope of the project as there are a lot of cases where this behavior is deliberate for better UX.
+
+If you have concerns for such attack, feel free to open a regular public issue and we can eventually try to reconsider adding extra guards when feasible _(or at least properly document the existing behavior)_.
+</details>
+
+<details>
 <summary><strong><code>disintegration/imaging</code> CVE-2023-36308</strong></summary>
 
 Just for the past month, due to some corporate security scanners 5 different people raised concerns over [CVE-2023-36308](https://nvd.nist.gov/vuln/detail/CVE-2023-36308) but this is not really a vulnerability, especially not in PocketBase.
