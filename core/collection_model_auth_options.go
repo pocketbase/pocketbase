@@ -70,7 +70,7 @@ func (m *Collection) setDefaultAuthOptions() {
 		},
 		AuthToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 604800, // 7days
+			Duration: 432000, // 5days
 		},
 		PasswordResetToken: TokenConfig{
 			Secret:   security.RandomString(50),
