@@ -313,16 +313,11 @@ button {
             font-family: var(--iconFontFamily);
             will-change: transform;
             animation:
-                scaleIn var(--animationSpeed),
-                rotate 1.1s infinite linear;
+                fadeIn var(--animationSpeed),
+                rotate var(--loaderAnimationSpeed) infinite linear;
         }
         & > * {
             opacity: 0;
-            transform: scale(0.95);
-            transition:
-                color var(--animationSpeed),
-                opacity var(--animationSpeed),
-                transform var(--animationSpeed);
         }
     }
 
