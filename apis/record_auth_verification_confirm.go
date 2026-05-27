@@ -45,6 +45,13 @@ func recordConfirmVerification(e *core.RequestEvent) error {
 		if !wasVerified {
 			e.Record.SetVerified(true)
 
+			// similar to the OTP auth, we enforce an extra password reset
+			// guard as this way is less prone to pre-hijacking attacks
+			// in case the password auth is eventually enabled later
+			if !e.Record.Collection().PasswordAuth.Enabled {
+				e.Record.SetRandomPassword()
+			}
+
 			if err := e.App.Save(e.Record); err != nil {
 				return firstApiError(err, e.BadRequestError("An error occurred while saving the verified state.", err))
 			}

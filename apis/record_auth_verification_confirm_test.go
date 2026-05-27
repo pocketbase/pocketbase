@@ -120,7 +120,7 @@ func TestRecordConfirmVerification(t *testing.T) {
 				}
 
 				if user.Verified() {
-					t.Fatalf("Expected the user to be unverified before the confirmation")
+					t.Fatal("Expected the user to be unverified before the confirmation")
 				}
 
 				// ensure that there is at least one pre-existing OAuth2 link
@@ -140,6 +140,85 @@ func TestRecordConfirmVerification(t *testing.T) {
 
 				if !user.Verified() {
 					t.Fatalf("Expected the user to be verified after the confirmation")
+				}
+
+				// ensure that all pre-existing OAuth2 links are cleared
+				externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(externalAuths) > 0 {
+					t.Fatalf("Expected all external auths to be cleared, found %d", len(externalAuths))
+				}
+			},
+		},
+		{
+			Name:   "valid token (disabled password auth)",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/confirm-verification",
+			Body: strings.NewReader(`{
+				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImV4cCI6MjUyNDYwNDQ2MSwidHlwZSI6InZlcmlmaWNhdGlvbiIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSJ9.SetHpu2H-x-q4TIUz-xiQjwi7MNwLCLvSs4O0hUSp0E"
+			}`),
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"*":                                  0,
+				"OnRecordConfirmVerificationRequest": 1,
+				"OnModelUpdate":                      1,
+				"OnModelValidate":                    1,
+				"OnModelUpdateExecute":               1,
+				"OnModelAfterUpdateSuccess":          1,
+				"OnRecordUpdate":                     1,
+				"OnRecordValidate":                   1,
+				"OnRecordUpdateExecute":              1,
+				"OnRecordAfterUpdateSuccess":         1,
+				// unverified->verified external auths removal
+				"OnModelDelete":              2,
+				"OnModelDeleteExecute":       2,
+				"OnModelAfterDeleteSuccess":  2,
+				"OnRecordDelete":             2,
+				"OnRecordDeleteExecute":      2,
+				"OnRecordAfterDeleteSuccess": 2,
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				user.Collection().PasswordAuth.Enabled = false
+				if err = app.Save(user.Collection()); err != nil {
+					t.Fatal(err)
+				}
+
+				if user.Verified() {
+					t.Fatal("Expected the user to be unverified before the confirmation")
+				}
+
+				if !user.ValidatePassword("1234567890") {
+					t.Fatal("Expected password to be valid")
+				}
+
+				// ensure that there is at least one pre-existing OAuth2 link
+				externalAuths, err := app.FindAllExternalAuthsByRecord(user)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(externalAuths) == 0 {
+					t.Fatal("Expected at least one external auths")
+				}
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if !user.Verified() {
+					t.Fatalf("Expected the user to be verified after the confirmation")
+				}
+
+				if user.ValidatePassword("1234567890") {
+					t.Fatal("Expected the user password to be reset")
 				}
 
 				// ensure that all pre-existing OAuth2 links are cleared
