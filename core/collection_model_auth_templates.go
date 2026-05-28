@@ -18,7 +18,7 @@ var defaultVerificationTemplate = EmailTemplate{
 <p>
   <a class="btn" href="` + EmailPlaceholderAppURL + "/_/#/auth/confirm-verification/" + EmailPlaceholderToken + `" target="_blank" rel="noopener">Verify</a>
 </p>
-<p><i>If you didn't recently registered, please ignore this email.</i></p>
+<p><i>If you didn't recently register, please ignore this email.</i></p>
 <p>
   Thanks,<br/>
   ` + EmailPlaceholderAppName + ` team
