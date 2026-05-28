@@ -11,7 +11,7 @@ This means:
 - no inflated severity (we can discuss the CVSS score after confirming the issue)
 - no LLMs usage as part of your report description or followup communication
 
-Reports that don't follow the above will NOT be reviewed no matter of their validity _(you are of course free to publish whatever you want; see also [#7717](https://github.com/pocketbase/pocketbase/discussions/7717))_.
+Reports that don't follow the above will NOT be reviewed no matter of their validity _(you are of course free to publish whatever you want; see also [#7718](https://github.com/pocketbase/pocketbase/discussions/7718))_.
 
 **Or in other words - a simple _"Hey I think I found a security issue when I do X"_ is enough.**
 
