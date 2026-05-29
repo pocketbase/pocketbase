@@ -304,6 +304,10 @@ table {
     margin-right: calc(-1 * var(--spacing));
     container-type: inline-size scroll-state;
 
+    .label {
+        word-break: normal; /* container has overflow so there is no need to unnecessery break characters */
+    }
+
     .load-more-btn,
     .sticky-content {
         position: sticky;

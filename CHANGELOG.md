@@ -1,3 +1,8 @@
+## v0.39.1 (WIP)
+
+- Fixed multiple select options wrapping ([#7720](https://github.com/pocketbase/pocketbase/issues/7720)).
+
+
 ## v0.39.0
 
 - Added new "SQL console" section under _Settings > Debug_ allowing executing any raw SQL query from the UI ([#2236](https://github.com/pocketbase/pocketbase/issues/2236); [#7638](https://github.com/pocketbase/pocketbase/discussions/7638)).

@@ -6,7 +6,7 @@
 export function view(props) {
     return t.div(
         { className: "record-field-view field-type-select" },
-        t.div({ className: "inline-flex gap-5" }, () => {
+        () => {
             const opts = app.utils.toArray(props.record[props.field.name], false);
 
             if (!opts.length) {
@@ -20,6 +20,6 @@ export function view(props) {
                     textContent: app.utils.truncate(opt, 100),
                 });
             });
-        }),
+        },
     );
 }
