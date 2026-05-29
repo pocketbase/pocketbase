@@ -2,7 +2,7 @@
 
 **Keep in mind that PocketBase is a non-commercial open source project, maintained entirely on volunteer basis (there is no company or dedicated team behind it), and there are no bounties!**
 
-If you want to responsible report a security issue you'll have to reach out as a human to **support at pocketbase.io**.
+If you want to responsibly report a security issue you'll have to reach out as a human to **support at pocketbase.io**.
 
 This means:
 - no overconfident and arrogant tone
