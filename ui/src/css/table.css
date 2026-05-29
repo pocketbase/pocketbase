@@ -508,6 +508,9 @@ table {
                 margin-left: auto;
             }
         }
+        .label {
+            word-break: break-word;
+        }
     }
     .page-table-wrapper .responsive-table {
         border: 0;
