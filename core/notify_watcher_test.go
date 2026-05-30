@@ -38,11 +38,8 @@ func TestNotifyWatcher_SettingsUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx, cancelCtx := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancelCtx()
-
-	sem := semaphore.NewWeighted(1)
-	sem.Acquire(ctx, 1)
+	timeout := time.After(3 * time.Second)
+	done := make(chan struct{})
 
 	app1.OnSettingsReload().BindFunc(func(e *core.SettingsReloadEvent) error {
 		testEvents.SetFunc(app1, func(old int) int {
@@ -53,7 +50,9 @@ func TestNotifyWatcher_SettingsUpdate(t *testing.T) {
 
 	app2.OnSettingsReload().BindFunc(func(e *core.SettingsReloadEvent) error {
 		testEvents.SetFunc(app2, func(old int) int {
-			sem.Release(1)
+			defer func() {
+				done <- struct{}{}
+			}()
 
 			return old + 1
 		})
@@ -66,8 +65,13 @@ func TestNotifyWatcher_SettingsUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// block until released or timeouted
-	sem.Acquire(ctx, 1)
+	// wait for the event
+	select {
+	case <-timeout:
+		t.Fatal("app2 reload event timeout")
+	case <-done:
+		// ready
+	}
 
 	if app1Total := testEvents.Get(app1); app1Total != 1 {
 		t.Fatalf("Expected 1 app1 event, got %d", app1Total)
