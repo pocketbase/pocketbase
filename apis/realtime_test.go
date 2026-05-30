@@ -462,7 +462,10 @@ func TestRealtimeAuthRecordDeleteEvent(t *testing.T) {
 	defer testApp.Cleanup()
 
 	// init realtime handlers
-	apis.NewRouter(testApp)
+	_, err := apis.NewRouter(testApp)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	authRecord1, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
 	if err != nil {
@@ -520,7 +523,10 @@ func TestRealtimeAuthRecordUpdateEvent(t *testing.T) {
 	defer testApp.Cleanup()
 
 	// init realtime handlers
-	apis.NewRouter(testApp)
+	_, err := apis.NewRouter(testApp)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	authRecord1, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
 	if err != nil {
@@ -551,12 +557,130 @@ func TestRealtimeAuthRecordUpdateEvent(t *testing.T) {
 	}
 }
 
+func TestRealtimeRecordHiddenFields(t *testing.T) {
+	t.Parallel()
+
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	// init realtime handlers
+	_, err := apis.NewRouter(testApp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// create temp collection with hidden fields
+	testCollection := core.NewBaseCollection("test_realtime")
+	testCollection.ListRule = types.Pointer("@request.auth.id != ''")
+	testCollection.Fields.Add(
+		&core.TextField{Name: "public"},
+		&core.TextField{Name: "hidden", Hidden: true},
+	)
+	if err := testApp.Save(testCollection); err != nil {
+		t.Fatal(err)
+	}
+
+	testSubscription := testCollection.Name + "/*"
+
+	// register guest subscriber
+	guestClient := subscriptions.NewDefaultClient()
+	guestClient.Subscribe(testSubscription)
+	testApp.SubscriptionsBroker().Register(guestClient)
+
+	// register regular user subscriber
+	regular, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	regularClient := subscriptions.NewDefaultClient()
+	regularClient.Set(apis.RealtimeClientAuthKey, regular)
+	regularClient.Subscribe(testSubscription)
+	testApp.SubscriptionsBroker().Register(regularClient)
+
+	// register superuser subscriber
+	superuser, err := testApp.FindAuthRecordByEmail(core.CollectionNameSuperusers, "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	superuserClient := subscriptions.NewDefaultClient()
+	superuserClient.Set(apis.RealtimeClientAuthKey, superuser)
+	superuserClient.Subscribe(testSubscription)
+	testApp.SubscriptionsBroker().Register(superuserClient)
+
+	enrichCalls := map[string]int{}
+	testApp.OnRecordEnrich(testCollection.Name).BindFunc(func(e *core.RecordEnrichEvent) error {
+		var id string
+		if e.RequestInfo.Auth != nil {
+			id = e.RequestInfo.Auth.Id
+		}
+		enrichCalls[id]++
+		return e.Next()
+	})
+
+	timeout := time.After(3 * time.Second)
+	done := make(chan struct{})
+
+	// collect first received messages
+	var regularMessageData, superuserMessageData string
+	go func() {
+		regularMessageData = string((<-regularClient.Channel()).Data)
+		superuserMessageData = string((<-superuserClient.Channel()).Data)
+		done <- struct{}{}
+	}()
+
+	// broadcast create message
+	testRecord := core.NewRecord(testCollection)
+	testRecord.Set("public", "test1")
+	testRecord.Set("hidden", "test2")
+	if err := testApp.Save(testRecord); err != nil {
+		t.Fatal(err)
+	}
+
+	// wait for the events
+	select {
+	case <-timeout:
+		t.Fatal("realtime test messages timeout")
+	case <-done:
+		// ready
+	}
+
+	if total := len(enrichCalls); total != 2 {
+		t.Fatalf("Expected %d enrich hook calls, got %d", 2, total)
+	}
+
+	if total := enrichCalls[regular.Id]; total != 1 {
+		t.Fatalf("Expected exactly 1 regular user enrich hook call, got %d", total)
+	}
+
+	if total := enrichCalls[superuser.Id]; total != 1 {
+		t.Fatalf("Expected exactly 1 superuser enrich hook call, got %d", total)
+	}
+
+	// validate messages content
+	scenarios := map[string]bool{
+		"regular message public field should exist":     strings.Contains(regularMessageData, `"public":`),
+		"regular message hidden field should NOT exist": !strings.Contains(regularMessageData, `"hidden":`),
+		"superuser message public field should exist":   strings.Contains(superuserMessageData, `"public":`),
+		"superuser message hidden field should exist":   strings.Contains(superuserMessageData, `"hidden":`),
+	}
+	for name, valid := range scenarios {
+		t.Run(name, func(t *testing.T) {
+			if !valid {
+				t.Fatal("Invalid realtime message expectation")
+			}
+		})
+	}
+}
+
 func TestRealtimeAuthRecordUnsetOnTokenKeyRefresh(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
 	// init realtime handlers
-	apis.NewRouter(testApp)
+	_, err := apis.NewRouter(testApp)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	authRecord1, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
 	if err != nil {
@@ -590,7 +714,10 @@ func TestRealtimeAuthRecordUnsetOnCollectionSecretChange(t *testing.T) {
 	defer testApp.Cleanup()
 
 	// init realtime handlers
-	apis.NewRouter(testApp)
+	_, err := apis.NewRouter(testApp)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	usersCollection, err := testApp.FindCollectionByNameOrId("users")
 	if err != nil {
@@ -666,7 +793,10 @@ func TestRealtimeAuthRecordUnsetOnCollectionDelete(t *testing.T) {
 	defer testApp.Cleanup()
 
 	// init realtime handlers
-	apis.NewRouter(testApp)
+	_, err := apis.NewRouter(testApp)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	usersCollection, err := testApp.FindCollectionByNameOrId("users")
 	if err != nil {
@@ -769,7 +899,10 @@ func TestRealtimeCustomAuthModelDeleteEvent(t *testing.T) {
 	defer testApp.Cleanup()
 
 	// init realtime handlers
-	apis.NewRouter(testApp)
+	_, err := apis.NewRouter(testApp)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	authRecord1, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
 	if err != nil {
@@ -826,7 +959,10 @@ func TestRealtimeCustomAuthModelUpdateEvent(t *testing.T) {
 	defer testApp.Cleanup()
 
 	// init realtime handlers
-	apis.NewRouter(testApp)
+	_, err := apis.NewRouter(testApp)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	authRecord, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
 	if err != nil {

@@ -655,6 +655,20 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 						// which exact fields the client subscription requested or has permissions to access
 						cleanRecord := record.Fresh()
 
+						// -------------------------------------------
+						// @todo consider with the refactoring whether
+						// the default enriching used by the regular APIs
+						// can be reused here too to avoid eventual future
+						// discrepencies in the record event data
+						//
+						// https://github.com/pocketbase/pocketbase/issues/7721
+						// -------------------------------------------
+
+						// enable hidden fields for superuser subscribers
+						if requestInfo.HasSuperuserAuth() {
+							cleanRecord.Unhide(collection.Fields.FieldNames()...)
+						}
+
 						// trigger the enrich hooks
 						enrichErr := triggerRecordEnrichHooks(app, requestInfo, []*core.Record{cleanRecord}, func() error {
 							// apply expand
