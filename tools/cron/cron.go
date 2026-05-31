@@ -14,6 +14,8 @@ import (
 	"slices"
 	"sync"
 	"time"
+
+	"github.com/pocketbase/pocketbase/tools/routine"
 )
 
 // Cron is a crontab-like struct for tasks/jobs scheduling.
@@ -222,7 +224,7 @@ func (c *Cron) runDue(t time.Time) {
 
 	for _, j := range c.jobs {
 		if j.schedule.IsDue(moment) {
-			go j.Run()
+			routine.FireAndForget(j.Run)
 		}
 	}
 }

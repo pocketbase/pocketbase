@@ -22,7 +22,7 @@ func FireAndForget(f func(), wg ...*sync.WaitGroup) {
 
 		defer func() {
 			if err := recover(); err != nil {
-				log.Println("RECOVERED FROM PANIC (safe to ignore):", err)
+				log.Println("[FireAndForget] RECOVERED FROM PANIC:", err)
 
 				stack := make([]byte, 2<<10) // 2 KB
 				length := runtime.Stack(stack, false)

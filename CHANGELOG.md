@@ -4,6 +4,8 @@
 
 - Return the hidden record data fields for superusers realtime subscribers ([#7721](https://github.com/pocketbase/pocketbase/issues/7721)).
 
+- Added default panic-recover handling for the cron jobs to avoid terminating the application on panic.
+
 
 ## v0.39.0
 
