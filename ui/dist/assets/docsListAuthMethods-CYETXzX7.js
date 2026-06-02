@@ -4,7 +4,7 @@ import{t as e}from"./fieldsInfo-CiLcXgNq.js";function n(n){let r=app.utils.getAp
                           "message": "Missing collection context.",
                           "data": {}
                         }
-                    `}]}});async function a(){i.isLoading=!0;try{i.authMethods=await app.pb.collection(n.name).listAuthMethods()}catch(e){e.isAbort&&app.pb.checkApiError(e)}i.isLoading=!1}return t.div({pbEvent:`apiPreviewListAuthMethods`,className:`content`,onmount:()=>{a()}},t.p(null,`Returns a public list with all allowed ${n.name} authentication methods.`),app.components.codeBlockTabs({className:`sdk-examples m-t-sm`,historyKey:`pbLastSDK`,tabs:[{title:`JS SDK`,language:`js`,value:`
+                    `}]}});async function a(){i.isLoading=!0;try{i.authMethods=await app.pb.collection(n.name).listAuthMethods(),i.isLoading=!1}catch(e){e?.isAbort||(app.checkApiError(e),i.isLoading=!1)}}return t.div({pbEvent:`apiPreviewListAuthMethods`,className:`content`,onmount:()=>{a()}},t.p(null,`Returns a public list with all allowed ${n.name} authentication methods.`),app.components.codeBlockTabs({className:`sdk-examples m-t-sm`,historyKey:`pbLastSDK`,tabs:[{title:`JS SDK`,language:`js`,value:`
                         import PocketBase from 'pocketbase';
 
                         const pb = new PocketBase('${r}');

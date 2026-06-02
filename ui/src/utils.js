@@ -717,6 +717,12 @@ const utils = {
         return date.toISOString().replace("T", " ");
     },
 
+    /**
+     * Returns datetime formatted string (YYYY-MM-DD HH:mm:ss.nnn) in the local timezone.
+     *
+     * @param  {string|number|Date} strOrDate
+     * @return {string}
+     */
     toLocalDatetime(strOrDate) {
         if (!strOrDate) {
             return "";

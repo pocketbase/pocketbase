@@ -180,13 +180,9 @@ async function fetchFileToken() {
     });
 }
 
-// Generic API error handler
-// -------------------------------------------------------------------
-
 /**
- * Helper to parse a response error and to show an optional toast message.
- * In case of 401 it clears the auth store and redirects to the home page.
- * In case of 403 it redirects to the home or login page.
+ * Generic API error handler that loads the response error into the app store
+ * with the option to show a generic toast message.
  *
  * Example:
  *
@@ -200,8 +196,8 @@ async function fetchFileToken() {
  * }
  * ```
  *
- * @param {Error}  err
- * @param {boolean} showToast
+ * @param {Error}   err
+ * @param {boolean} [showToast]
  */
 window.app.checkApiError = function(err, showToast = true) {
     if (!err || !(err instanceof Error) || err.isAbort) {

@@ -31,13 +31,13 @@ export function docsListAuthMethods(collection) {
 
         try {
             data.authMethods = await app.pb.collection(collection.name).listAuthMethods();
+            data.isLoading = false;
         } catch (err) {
-            if (err.isAbort) {
-                app.pb.checkApiError(err);
+            if (!err?.isAbort) {
+                app.checkApiError(err);
+                data.isLoading = false;
             }
         }
-
-        data.isLoading = false;
     }
 
     return t.div(

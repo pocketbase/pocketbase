@@ -1355,8 +1355,8 @@ function authProvidersTab(collection, data) {
 
             local.isLoading = false;
         } catch (err) {
-            if (err?.isAbort) {
-                app.pb.checkApiError(err);
+            if (!err?.isAbort) {
+                app.checkApiError(err);
                 local.isLoading = false;
             }
         }
