@@ -139,7 +139,7 @@ func (app *BaseApp) registerOTPHooks() {
 				err := e.App.DeleteAllOTPsByRecord(e.Record)
 				if err != nil {
 					return fmt.Errorf(
-						"[%s] failed to delete all previos OTPs for record %q: %w",
+						"[%s] failed to delete all previous OTPs for record %q: %w",
 						e.Record.Collection().Name,
 						e.Record.Id,
 						err,

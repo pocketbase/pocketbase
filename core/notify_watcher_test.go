@@ -165,6 +165,7 @@ func TestNotifyWatcher_CollectionsUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := app1.Delete(dummyCollection); err != nil {
+		t.Fatal(err)
 	}
 
 	// block until released or timeouted

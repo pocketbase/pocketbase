@@ -143,7 +143,7 @@ func (app *BaseApp) registerMFAHooks() {
 				err = e.App.DeleteAllMFAsByRecord(e.Record)
 				if err != nil {
 					return fmt.Errorf(
-						"[%s] failed to delete all previos MFAs for record %q: %w",
+						"[%s] failed to delete all previous MFAs for record %q: %w",
 						e.Record.Collection().Name,
 						e.Record.Id,
 						err,

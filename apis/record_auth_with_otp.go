@@ -68,7 +68,7 @@ func recordAuthWithOTP(e *core.RequestEvent) error {
 		otpId := e.OTP.Id
 		otpSentTo := e.OTP.SentTo()
 
-		// eagerly delete the OTP to avoid unnecessery double delete model hook calls
+		// eagerly delete the OTP to avoid unnecessary double delete model hook calls
 		// triggered by the password change below
 		err := e.App.Delete(e.OTP)
 		if err != nil {
