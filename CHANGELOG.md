@@ -1,3 +1,8 @@
+## v0.22.46
+
+- (_Backported from v0.39.1_) Bumped the min Go GitHub action version to 1.26.4 as it includes some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.4).
+
+
 ## v0.22.45
 
 - (_Backported from v0.38.2_) Updated all `golang.org/x/` packages to cover the recent [security fixes](https://groups.google.com/g/golang-announce/c/PdiGK3xulk4) _(none of them should be a critical issue in PocketBase but nonetheless it is advised to update)_.
