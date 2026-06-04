@@ -7,8 +7,9 @@ window.app.components = window.app.components || {};
  * @example
  * ```js
  * app.components.colorPicker({
- *     value: () => data.color,
  *     predefinedColors: ["#ff0000", "#123456"],
+ *     value: () => data.color,
+ *     onchange: (newColor) => data.color = newColor,
  * })
  * ```
  *
