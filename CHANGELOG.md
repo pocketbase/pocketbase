@@ -1,3 +1,8 @@
+## v0.39.2 (WIP)
+
+- Fixed records list UI sorting ([#7724](https://github.com/pocketbase/pocketbase/issues/7724)).
+
+
 ## v0.39.1
 
 - Fixed multiple select options wrapping ([#7720](https://github.com/pocketbase/pocketbase/issues/7720)).
