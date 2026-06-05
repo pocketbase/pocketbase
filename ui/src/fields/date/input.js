@@ -26,6 +26,15 @@ export function input(props) {
                 required: () => props.field.required,
                 value: () => app.utils.toDatetimeLocalInputValue(props.record[props.field.name]),
                 onchange: (e) => {
+                    // don't clear until blur
+                    // https://github.com/pocketbase/pocketbase/issues/7726
+                    if (!e.target.value) {
+                        return;
+                    }
+                    props.record[props.field.name] = app.utils.toRFC3339Datetime(e.target.value);
+                },
+                onblur: (e) => {
+                    props.record[props.field.name] = null; // change to an invalid value to force reactive update
                     props.record[props.field.name] = app.utils.toRFC3339Datetime(e.target.value);
                 },
             }),

@@ -2,6 +2,8 @@
 
 - Fixed records list UI sorting ([#7724](https://github.com/pocketbase/pocketbase/issues/7724)).
 
+- Don't clear the date input on invalid value while still typing ([#7726](https://github.com/pocketbase/pocketbase/issues/7726)).
+
 
 ## v0.39.1
 
