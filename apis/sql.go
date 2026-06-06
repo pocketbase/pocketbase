@@ -73,7 +73,10 @@ type runSQLResult struct {
 	Rows         [][]any              `json:"rows"`
 }
 
-var knownWriteQueryPrefixes = []string{"INSERT", "CREATE", "UPDATE", "DELETE", "DROP", "DETACH"}
+var knownWriteQueryPrefixes = []string{
+	"INSERT", "CREATE", "UPDATE", "DELETE",
+	"DROP", "DETACH", "ALTER", "REPLACE",
+}
 
 func executeQuery(app core.App, query string, maxRows int) (*runSQLResult, error) {
 	query = strings.TrimSpace(query)

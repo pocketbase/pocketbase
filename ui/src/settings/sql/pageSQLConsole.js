@@ -75,6 +75,8 @@ export function pageSQLConsole(route) {
         query = query?.replace(/[\s\;]/gm, " ").toUpperCase() + " ";
 
         return !![
+            "ALTER ",
+            "REPLACE ",
             "INSERT ",
             "CREATE ",
             "UPDATE ",
@@ -349,7 +351,13 @@ export function pageSQLConsole(route) {
                     className: "alert success m-b-sm",
                 },
                 t.p({ className: "txt-bold" }, "Query executed successfully!"),
-                t.p(null, "Affected rows: ", () => pageData.result?.affectedRows || 0),
+                () => {
+                    // show the affected rows only when a non empty value is returned
+                    // to avoid ambiguity with drivers that don't support it
+                    if (pageData.result?.affectedRows) {
+                        return t.p(null, "Affected rows: ", pageData.result?.affectedRows);
+                    }
+                },
             ),
             // rows
             t.div(
