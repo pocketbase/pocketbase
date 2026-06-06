@@ -4,6 +4,8 @@
 
 - Don't clear the date input on invalid value while still typing ([#7726](https://github.com/pocketbase/pocketbase/issues/7726)).
 
+- Updated `modernc.org/sqlite` to v1.52.0 ([SQLite 3.53.2](https://sqlite.org/releaselog/3_53_2.html)).
+
 
 ## v0.39.1
 
