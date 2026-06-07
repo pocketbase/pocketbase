@@ -443,9 +443,14 @@ func (p *plugin) watchHooks() error {
 	//
 	// @todo replace once recursive watcher is added (https://github.com/fsnotify/fsnotify/issues/18)
 	dirsErr := filepath.WalkDir(watchDir, func(path string, entry fs.DirEntry, err error) error {
-		// skip access failures, hidden directories, node_modules, etc.
-		if err != nil || !entry.IsDir() || entry.Name() == "node_modules" || strings.HasPrefix(entry.Name(), ".") {
+		// ignore access failures and non-dir entries
+		if err != nil || !entry.IsDir() {
 			return nil
+		}
+
+		// skip traversing hidden directories and node_modules
+		if strings.HasPrefix(entry.Name(), ".") || entry.Name() == "node_modules" {
+			return filepath.SkipDir
 		}
 
 		return watcher.Add(path)
