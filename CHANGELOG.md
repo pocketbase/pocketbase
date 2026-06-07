@@ -4,7 +4,7 @@
 
 - Don't clear the date input on invalid value while still typing ([#7726](https://github.com/pocketbase/pocketbase/issues/7726)).
 
-- Return `filepath.SkipDir` in the `pb_hooks` dirs watcher to avoid unnecessery iterating over `node_modules` and `.*` prefixed hidden dirs (`.DS_Store`, `.git`, etc.).
+- Return `filepath.SkipDir` in the `pb_hooks` dirs watcher to avoid unnecessary iterating over `node_modules` and `.*` prefixed hidden dirs (`.DS_Store`, `.git`, etc.).
 
 - Show the "Affected rows" SQL console message only if non-empty to avoid ambiguity with drivers that don't support returning the affected rows count.
 
