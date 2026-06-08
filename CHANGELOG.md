@@ -1,3 +1,8 @@
+## v0.39.3 (WIP)
+
+- Fixed JS error on `file` settings `maxSelect` change.
+
+
 ## v0.39.2
 
 - Fixed records list UI sorting ([#7724](https://github.com/pocketbase/pocketbase/issues/7724)).

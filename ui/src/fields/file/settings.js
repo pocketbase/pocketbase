@@ -277,9 +277,9 @@ export function settings(data) {
                                     onchange: (e) => {
                                         const maxSelect = parseInt(e.target.value, 10);
                                         if (maxSelect > 1) {
-                                            props.field.maxSelect = maxSelect;
+                                            data.field.maxSelect = maxSelect;
                                         } else {
-                                            props.field.maxSelect = 1;
+                                            data.field.maxSelect = 1;
                                         }
                                     },
                                 }),
