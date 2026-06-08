@@ -5,14 +5,14 @@
 //     get fieldIndex: int/-1,
 //     get originalField: undefined
 // }
-export function settings(data) {
+export function settings(props) {
     const uniqueId = "f_" + app.utils.randomString();
 
     const local = store({
         showInfo: false,
     });
 
-    return app.components.fieldSettings(data, {
+    return app.components.fieldSettings(props, {
         content: () =>
             t.div(
                 { className: "grid sm" },
@@ -28,14 +28,14 @@ export function settings(data) {
                         t.input({
                             type: "number",
                             id: uniqueId + ".maxSize",
-                            name: () => `fields.${data.fieldIndex}.maxSize`,
+                            name: () => `fields.${props.fieldIndex}.maxSize`,
                             min: 0,
                             step: 1,
                             max: Number.MAX_SAFE_INTEGER,
                             placeholder: "Default to max ~1MB",
-                            value: () => data.field.maxSize || "",
+                            value: () => props.field.maxSize || "",
                             oninput: (e) => {
-                                data.field.maxSize = parseInt(e.target.value, 10);
+                                props.field.maxSize = parseInt(e.target.value, 10);
                             },
                         }),
                     ),
@@ -48,9 +48,9 @@ export function settings(data) {
                         t.input({
                             type: "text",
                             id: uniqueId + ".help",
-                            name: () => `fields.${data.fieldIndex}.help`,
-                            value: () => data.field.help || "",
-                            oninput: (e) => (data.field.help = e.target.value),
+                            name: () => `fields.${props.fieldIndex}.help`,
+                            value: () => props.field.help || "",
+                            oninput: (e) => (props.field.help = e.target.value),
                         }),
                     ),
                 ),
@@ -114,9 +114,9 @@ export function settings(data) {
                     className: "sm",
                     type: "checkbox",
                     id: uniqueId + ".required",
-                    name: () => `fields.${data.fieldIndex}.required`,
-                    checked: () => !!data.field.required,
-                    onchange: (e) => (data.field.required = e.target.checked),
+                    name: () => `fields.${props.fieldIndex}.required`,
+                    checked: () => !!props.field.required,
+                    onchange: (e) => (props.field.required = e.target.checked),
                 }),
                 t.label(
                     { htmlFor: uniqueId + ".required" },

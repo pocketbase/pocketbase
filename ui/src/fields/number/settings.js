@@ -5,10 +5,10 @@
 //     get fieldIndex: int/-1,
 //     get originalField: undefined
 // }
-export function settings(data) {
+export function settings(props) {
     const uniqueId = "f_" + app.utils.randomString();
 
-    return app.components.fieldSettings(data, {
+    return app.components.fieldSettings(props, {
         content: () =>
             t.div(
                 { className: "grid sm" },
@@ -20,13 +20,13 @@ export function settings(data) {
                         t.input({
                             type: "text",
                             id: uniqueId + ".min",
-                            name: () => `fields.${data.fieldIndex}.min`,
-                            value: () => typeof data.field.min == "number" ? data.field.min : "",
+                            name: () => `fields.${props.fieldIndex}.min`,
+                            value: () => typeof props.field.min == "number" ? props.field.min : "",
                             oninput: (e) => {
                                 if (!e.target.value) {
-                                    data.field.min = null;
+                                    props.field.min = null;
                                 } else {
-                                    data.field.min = Number(e.target.value);
+                                    props.field.min = Number(e.target.value);
                                 }
                             },
                         }),
@@ -40,14 +40,14 @@ export function settings(data) {
                         t.input({
                             type: "text",
                             id: uniqueId + ".max",
-                            min: () => data.field.min,
-                            name: () => `fields.${data.fieldIndex}.max`,
-                            value: () => typeof data.field.max == "number" ? data.field.max : "",
+                            min: () => props.field.min,
+                            name: () => `fields.${props.fieldIndex}.max`,
+                            value: () => typeof props.field.max == "number" ? props.field.max : "",
                             oninput: (e) => {
                                 if (!e.target.value) {
-                                    data.field.max = null;
+                                    props.field.max = null;
                                 } else {
-                                    data.field.max = Number(e.target.value);
+                                    props.field.max = Number(e.target.value);
                                 }
                             },
                         }),
@@ -61,9 +61,9 @@ export function settings(data) {
                         t.input({
                             type: "text",
                             id: uniqueId + ".help",
-                            name: () => `fields.${data.fieldIndex}.help`,
-                            value: () => data.field.help || "",
-                            oninput: (e) => (data.field.help = e.target.value),
+                            name: () => `fields.${props.fieldIndex}.help`,
+                            value: () => props.field.help || "",
+                            oninput: (e) => (props.field.help = e.target.value),
                         }),
                     ),
                 ),
@@ -75,9 +75,9 @@ export function settings(data) {
                     className: "sm",
                     type: "checkbox",
                     id: uniqueId + ".required",
-                    name: () => `fields.${data.fieldIndex}.required`,
-                    checked: () => !!data.field.required,
-                    onchange: (e) => (data.field.required = e.target.checked),
+                    name: () => `fields.${props.fieldIndex}.required`,
+                    checked: () => !!props.field.required,
+                    onchange: (e) => (props.field.required = e.target.checked),
                 }),
                 t.label(
                     { htmlFor: uniqueId + ".required" },
@@ -95,9 +95,9 @@ export function settings(data) {
                     className: "sm",
                     type: "checkbox",
                     id: uniqueId + ".onlyInt",
-                    name: () => `fields.${data.fieldIndex}.onlyInt`,
-                    checked: () => !!data.field.onlyInt,
-                    onchange: (e) => (data.field.onlyInt = e.target.checked),
+                    name: () => `fields.${props.fieldIndex}.onlyInt`,
+                    checked: () => !!props.field.onlyInt,
+                    onchange: (e) => (props.field.onlyInt = e.target.checked),
                 }),
                 t.label(
                     { htmlFor: uniqueId + ".onlyInt" },

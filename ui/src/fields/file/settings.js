@@ -5,7 +5,7 @@
 //     get fieldIndex: int/-1,
 //     get originalField: undefined
 // }
-export function settings(data) {
+export function settings(props) {
     const uniqueId = "f_" + app.utils.randomString();
 
     const isMultipleOptions = [
@@ -13,7 +13,7 @@ export function settings(data) {
         { label: "Multiple", value: true },
     ];
 
-    return app.components.fieldSettings(data, {
+    return app.components.fieldSettings(props, {
         header: [
             t.div(
                 {
@@ -23,15 +23,15 @@ export function settings(data) {
                     required: true,
                     options: isMultipleOptions,
                     value: () => {
-                        return data.field.maxSelect > 1;
+                        return props.field.maxSelect > 1;
                     },
                     onchange: (opts) => {
                         if (opts?.[0]?.value) {
-                            if (!data.field.maxSelect || data.field.maxSelect < 2) {
-                                data.field.maxSelect = 10;
+                            if (!props.field.maxSelect || props.field.maxSelect < 2) {
+                                props.field.maxSelect = 10;
                             }
                         } else {
-                            data.field.maxSelect = 1;
+                            props.field.maxSelect = 1;
                         }
                     },
                 }),
@@ -68,9 +68,9 @@ export function settings(data) {
                                         ),
                                 };
                             }),
-                            name: () => `fields.${data.fieldIndex}.mimeTypes`,
-                            value: () => app.utils.toArray(data.field.mimeTypes),
-                            onchange: (opts) => (data.field.mimeTypes = opts.map((opt) => opt.value)),
+                            name: () => `fields.${props.fieldIndex}.mimeTypes`,
+                            value: () => app.utils.toArray(props.field.mimeTypes),
+                            onchange: (opts) => (props.field.mimeTypes = opts.map((opt) => opt.value)),
                         }),
                     ),
                     t.div(
@@ -95,7 +95,7 @@ export function settings(data) {
                                 className: "dropdown-item",
                                 role: "menuitem",
                                 onclick: (e) => {
-                                    data.field.mimeTypes = [
+                                    props.field.mimeTypes = [
                                         "image/jpeg",
                                         "image/png",
                                         "image/svg+xml",
@@ -112,7 +112,7 @@ export function settings(data) {
                                 className: "dropdown-item",
                                 role: "menuitem",
                                 onclick: (e) => {
-                                    data.field.mimeTypes = [
+                                    props.field.mimeTypes = [
                                         "application/pdf",
                                         "application/msword",
                                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -129,7 +129,7 @@ export function settings(data) {
                                 className: "dropdown-item",
                                 role: "menuitem",
                                 onclick: (e) => {
-                                    data.field.mimeTypes = [
+                                    props.field.mimeTypes = [
                                         "video/mp4",
                                         "video/mpeg",
                                         "video/x-msvideo",
@@ -146,7 +146,7 @@ export function settings(data) {
                                 className: "dropdown-item",
                                 role: "menuitem",
                                 onclick: (e) => {
-                                    data.field.mimeTypes = [
+                                    props.field.mimeTypes = [
                                         "application/zip",
                                         "application/x-7z-compressed",
                                         "application/x-rar-compressed",
@@ -160,7 +160,7 @@ export function settings(data) {
                     ),
                 ),
                 t.div(
-                    { className: () => (data.field.maxSelect > 1 ? "col-sm-6" : "col-sm-9") },
+                    { className: () => (props.field.maxSelect > 1 ? "col-sm-6" : "col-sm-9") },
                     t.div(
                         { className: "field" },
                         t.label(
@@ -179,9 +179,9 @@ export function settings(data) {
                             type: "text",
                             id: uniqueId + ".thumbs",
                             placeholder: "e.g. 50x50, 480x720",
-                            name: () => `fields.${data.fieldIndex}.thumbs`,
-                            value: () => app.utils.joinNonEmpty(data.field.thumbs),
-                            onchange: (e) => (data.field.thumbs = app.utils.splitNonEmpty(e.target.value, ",")),
+                            name: () => `fields.${props.fieldIndex}.thumbs`,
+                            value: () => app.utils.joinNonEmpty(props.field.thumbs),
+                            onchange: (e) => (props.field.thumbs = app.utils.splitNonEmpty(e.target.value, ",")),
                         }),
                     ),
                     t.div(
@@ -250,15 +250,15 @@ export function settings(data) {
                             min: 0,
                             max: Number.MAX_SAFE_INTEGER,
                             placeholder: "~5MB default",
-                            name: () => `fields.${data.fieldIndex}.maxSize`,
-                            value: () => data.field.maxSize || "",
-                            oninput: (e) => (data.field.maxSize = parseInt(e.target.value, 10)),
+                            name: () => `fields.${props.fieldIndex}.maxSize`,
+                            value: () => props.field.maxSize || "",
+                            oninput: (e) => (props.field.maxSize = parseInt(e.target.value, 10)),
                         }),
                     ),
                     t.div({ className: "field-help" }, "In bytes."),
                 ),
                 () => {
-                    if (data.field.maxSelect > 1) {
+                    if (props.field.maxSelect > 1) {
                         return t.div(
                             { className: "col-sm-3" },
                             t.div(
@@ -272,14 +272,14 @@ export function settings(data) {
                                     min: 2,
                                     required: true,
                                     max: Number.MAX_SAFE_INTEGER,
-                                    name: () => `fields.${data.fieldIndex}.maxSelect`,
-                                    value: () => data.field.maxSelect || "",
+                                    name: () => `fields.${props.fieldIndex}.maxSelect`,
+                                    value: () => props.field.maxSelect || "",
                                     onchange: (e) => {
                                         const maxSelect = parseInt(e.target.value, 10);
                                         if (maxSelect > 1) {
-                                            data.field.maxSelect = maxSelect;
+                                            props.field.maxSelect = maxSelect;
                                         } else {
-                                            data.field.maxSelect = 1;
+                                            props.field.maxSelect = 1;
                                         }
                                     },
                                 }),
@@ -295,9 +295,9 @@ export function settings(data) {
                             className: "switch",
                             type: "checkbox",
                             id: uniqueId + ".protected",
-                            name: () => `fields.${data.fieldIndex}.protected`,
-                            checked: () => !!data.field.protected,
-                            onchange: (e) => (data.field.protected = e.target.checked),
+                            name: () => `fields.${props.fieldIndex}.protected`,
+                            checked: () => !!props.field.protected,
+                            onchange: (e) => (props.field.protected = e.target.checked),
                         }),
                         t.label(
                             { htmlFor: uniqueId + ".protected" },
@@ -324,9 +324,9 @@ export function settings(data) {
                         t.input({
                             type: "text",
                             id: uniqueId + ".help",
-                            name: () => `fields.${data.fieldIndex}.help`,
-                            value: () => data.field.help || "",
-                            oninput: (e) => (data.field.help = e.target.value),
+                            name: () => `fields.${props.fieldIndex}.help`,
+                            value: () => props.field.help || "",
+                            oninput: (e) => (props.field.help = e.target.value),
                         }),
                     ),
                 ),
@@ -338,17 +338,19 @@ export function settings(data) {
                     className: "sm",
                     type: "checkbox",
                     id: uniqueId + ".required",
-                    name: () => `fields.${data.fieldIndex}.required`,
-                    checked: () => !!data.field.required,
-                    onchange: (e) => (data.field.required = e.target.checked),
+                    name: () => `fields.${props.fieldIndex}.required`,
+                    checked: () => !!props.field.required,
+                    onchange: (e) => (props.field.required = e.target.checked),
                 }),
                 t.label(
                     { htmlFor: uniqueId + ".required" },
                     t.span({ className: "txt" }, "Required"),
-                    t.small({ className: "txt-hint" }, "(!='')"),
+                    t.small({ className: "txt-hint" }, () => props.field.maxSelect > 1 ? "(!=[])" : "(!='')"),
                     t.i({
                         className: "ri-information-line link-hint",
-                        ariaDescription: app.attrs.tooltip("Requires the field value to be nonempty string"),
+                        ariaDescription: app.attrs.tooltip(() =>
+                            `Requires the field value to be nonempty ${props.field.maxSelect > 1 ? "array" : "string"}`
+                        ),
                     }),
                 ),
             ),

@@ -7,7 +7,7 @@
 export function input(props) {
     const uniqueId = "text_" + app.utils.randomString();
 
-    const data = store({
+    const local = store({
         get hasAutogenerate() {
             return !app.utils.isEmpty(props.field.autogeneratePattern) && app.utils.isEmpty(props.originalRecord?.id);
         },
@@ -15,7 +15,7 @@ export function input(props) {
             return !app.utils.isEmpty(props.originalRecord?.id) && props.field.primaryKey;
         },
         get isRequired() {
-            return props.field.required && !data.hasAutogenerate && !data.isDisabled;
+            return props.field.required && !local.hasAutogenerate && !local.isDisabled;
         },
     });
 
@@ -46,9 +46,9 @@ export function input(props) {
                         // className: "autoexpand",
                         rows: 1,
                         name: () => props.field.name,
-                        required: () => data.isRequired,
-                        disabled: () => data.isDisabled,
-                        placeholder: () => (data.hasAutogenerate ? "Leave empty to autogenerate..." : ""),
+                        required: () => local.isRequired,
+                        disabled: () => local.isDisabled,
+                        placeholder: () => (local.hasAutogenerate ? "Leave empty to autogenerate..." : ""),
                         value: () => props.record[props.field.name] || "",
                         oninput: (e) => (props.record[props.field.name] = e.target.value || ""),
                     }),

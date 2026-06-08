@@ -170,17 +170,12 @@ export function settings(props) {
                 t.label(
                     { htmlFor: uniqueId + ".required" },
                     t.span({ className: "txt" }, "Required"),
-                    t.small({
-                        className: "txt-hint",
-                        textContent: () => (props.field.maxSelect > 1 ? "(!=[])" : "(!='')"),
-                    }),
+                    t.small({ className: "txt-hint" }, () => props.field.maxSelect > 1 ? "(!=[])" : "(!='')"),
                     t.i({
                         className: "ri-information-line link-hint",
-                        ariaDescription: app.attrs.tooltip(() => {
-                            return `Requires the field value to be nonempty ${
-                                props.field.maxSelect > 1 ? "array" : "string"
-                            }.`;
-                        }),
+                        ariaDescription: app.attrs.tooltip(() =>
+                            `Requires the field value to be nonempty ${props.field.maxSelect > 1 ? "array" : "string"}`
+                        ),
                     }),
                 ),
             ),

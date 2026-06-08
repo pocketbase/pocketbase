@@ -5,10 +5,10 @@
 //     get fieldIndex: int/-1,
 //     get originalField: undefined
 // }
-export function settings(data) {
+export function settings(props) {
     const uniqueId = "f_" + app.utils.randomString();
 
-    return app.components.fieldSettings(data, {
+    return app.components.fieldSettings(props, {
         content: () =>
             t.div(
                 { className: "grid sm" },
@@ -27,14 +27,14 @@ export function settings(data) {
                         t.input({
                             type: "number",
                             id: uniqueId + ".min",
-                            name: () => `fields.${data.fieldIndex}.min`,
+                            name: () => `fields.${props.fieldIndex}.min`,
                             step: 1,
                             min: 0,
                             max: Number.MAX_SAFE_INTEGER,
                             placeholder: "No min limit",
-                            value: () => data.field.min || "",
+                            value: () => props.field.min || "",
                             oninput: (e) => {
-                                data.field.min = parseInt(e.target.value, 10);
+                                props.field.min = parseInt(e.target.value, 10);
                             },
                         }),
                     ),
@@ -56,14 +56,14 @@ export function settings(data) {
                         t.input({
                             type: "number",
                             id: uniqueId + ".max",
-                            name: () => `fields.${data.fieldIndex}.max`,
+                            name: () => `fields.${props.fieldIndex}.max`,
                             step: 1,
-                            min: () => data.field.min || 0,
+                            min: () => props.field.min || 0,
                             max: Number.MAX_SAFE_INTEGER,
                             placeholder: "Default to max 5000 characters",
-                            value: () => data.field.max || "",
+                            value: () => props.field.max || "",
                             oninput: (e) => {
-                                data.field.max = parseInt(e.target.value, 10);
+                                props.field.max = parseInt(e.target.value, 10);
                             },
                         }),
                     ),
@@ -76,7 +76,7 @@ export function settings(data) {
                             { htmlFor: uniqueId + ".pattern" },
                             t.span({ className: "txt" }, "Validation pattern"),
                             () => {
-                                if (data.field.primaryKey) {
+                                if (props.field.primaryKey) {
                                     return t.i({
                                         className: "ri-information-line link-hint",
                                         ariaDescription: app.attrs.tooltip(
@@ -89,9 +89,9 @@ export function settings(data) {
                         t.input({
                             type: "text",
                             id: uniqueId + ".pattern",
-                            name: () => `fields.${data.fieldIndex}.pattern`,
-                            value: () => data.field.pattern || "",
-                            oninput: (e) => (data.field.pattern = e.target.value),
+                            name: () => `fields.${props.fieldIndex}.pattern`,
+                            value: () => props.field.pattern || "",
+                            oninput: (e) => (props.field.pattern = e.target.value),
                         }),
                     ),
                     t.div({ className: "field-help" }, "Ex. ", t.code(null, "^[a-z0-9]+$")),
@@ -113,9 +113,9 @@ export function settings(data) {
                         t.input({
                             type: "text",
                             id: uniqueId + ".autogeneratePattern",
-                            name: () => `fields.${data.fieldIndex}.autogeneratePattern`,
-                            value: () => data.field.autogeneratePattern || "",
-                            oninput: (e) => (data.field.autogeneratePattern = e.target.value),
+                            name: () => `fields.${props.fieldIndex}.autogeneratePattern`,
+                            value: () => props.field.autogeneratePattern || "",
+                            oninput: (e) => (props.field.autogeneratePattern = e.target.value),
                         }),
                     ),
                     t.div({ className: "field-help" }, "Ex. ", t.code(null, "[a-z0-9]{30}")),
@@ -128,9 +128,9 @@ export function settings(data) {
                         t.input({
                             type: "text",
                             id: uniqueId + ".help",
-                            name: () => `fields.${data.fieldIndex}.help`,
-                            value: () => data.field.help || "",
-                            oninput: (e) => (data.field.help = e.target.value),
+                            name: () => `fields.${props.fieldIndex}.help`,
+                            value: () => props.field.help || "",
+                            oninput: (e) => (props.field.help = e.target.value),
                         }),
                     ),
                 ),
@@ -142,9 +142,9 @@ export function settings(data) {
                     className: "sm",
                     type: "checkbox",
                     id: uniqueId + ".required",
-                    name: () => `fields.${data.fieldIndex}.required`,
-                    checked: () => !!data.field.required,
-                    onchange: (e) => (data.field.required = e.target.checked),
+                    name: () => `fields.${props.fieldIndex}.required`,
+                    checked: () => !!props.field.required,
+                    onchange: (e) => (props.field.required = e.target.checked),
                 }),
                 t.label(
                     { htmlFor: uniqueId + ".required" },

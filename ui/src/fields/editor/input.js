@@ -7,7 +7,7 @@
 export function input(props) {
     const uniqueId = "editor_" + app.utils.randomString();
 
-    const data = store({
+    const local = store({
         lazyEditor: "",
     });
 
@@ -18,7 +18,7 @@ export function input(props) {
             className: "record-field-input field-type-editor large-modal",
             onmount: () => {
                 lazyEditorTimeoutId = setTimeout(() => {
-                    data.lazyEditor = app.components.tinymce({
+                    local.lazyEditor = app.components.tinymce({
                         id: uniqueId,
                         name: () => props.field.name,
                         required: () => props.field.required,
@@ -41,7 +41,7 @@ export function input(props) {
                 t.i({ className: app.fieldTypes.editor.icon, ariaHidden: true }),
                 t.span({ className: "txt" }, () => props.field.name),
             ),
-            () => data.lazyEditor,
+            () => local.lazyEditor,
         ),
         () => {
             if (props.field.help) {

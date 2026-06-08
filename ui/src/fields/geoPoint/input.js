@@ -4,7 +4,7 @@
 //     get record: undefined,
 //     get field: undefined,
 // }
-export function input(data) {
+export function input(props) {
     const uniqueId = "geo_" + app.utils.randomString();
 
     const local = store({
@@ -14,11 +14,11 @@ export function input(data) {
     return t.div(
         { className: "record-field-input field-type-geoPoint" },
         t.div(
-            { className: () => `field-list ${data.field.required ? "required" : ""}` },
+            { className: () => `field-list ${props.field.required ? "required" : ""}` },
             t.label(
                 { htmlFor: uniqueId },
                 t.i({ className: app.fieldTypes.geoPoint.icon, ariaHidden: true }),
-                t.span({ className: "txt" }, () => data.field.name),
+                t.span({ className: "txt" }, () => props.field.name),
             ),
             t.div(
                 { className: "field-list-content" },
@@ -36,12 +36,12 @@ export function input(data) {
                                 min: -180,
                                 max: 180,
                                 placeholder: 0,
-                                name: () => data.field.name,
-                                required: () => data.field.required,
-                                value: () => data.record[data.field.name]?.lon || "",
+                                name: () => props.field.name,
+                                required: () => props.field.required,
+                                value: () => props.record[props.field.name]?.lon || "",
                                 onchange: (e) => {
-                                    data.record[data.field.name] = data.record[data.field.name] || {};
-                                    data.record[data.field.name].lon = Number(e.target.value);
+                                    props.record[props.field.name] = props.record[props.field.name] || {};
+                                    props.record[props.field.name].lon = Number(e.target.value);
                                 },
                             }),
                         ),
@@ -56,12 +56,12 @@ export function input(data) {
                                 min: -90,
                                 max: 90,
                                 placeholder: 0,
-                                name: () => data.field.name,
-                                required: () => data.field.required,
-                                value: () => data.record[data.field.name]?.lat || "",
+                                name: () => props.field.name,
+                                required: () => props.field.required,
+                                value: () => props.record[props.field.name]?.lat || "",
                                 onchange: (e) => {
-                                    data.record[data.field.name] = data.record[data.field.name] || {};
-                                    data.record[data.field.name].lat = Number(e.target.value);
+                                    props.record[props.field.name] = props.record[props.field.name] || {};
+                                    props.record[props.field.name].lat = Number(e.target.value);
                                 },
                             }),
                         ),
@@ -87,9 +87,9 @@ export function input(data) {
                     return t.div(
                         { className: "field-list-item p-0", style: "height: 250px" },
                         app.components.leaflet({
-                            point: () => data.record[data.field.name] || { lat: 0, lon: 0 },
+                            point: () => props.record[props.field.name] || { lat: 0, lon: 0 },
                             onchange: (newPoint) => {
-                                data.record[data.field.name] = structuredClone(newPoint);
+                                props.record[props.field.name] = structuredClone(newPoint);
                             },
                         }),
                     );
@@ -97,8 +97,8 @@ export function input(data) {
             ),
         ),
         () => {
-            if (data.field.help) {
-                return t.div({ className: "field-help" }, data.field.help);
+            if (props.field.help) {
+                return t.div({ className: "field-help" }, props.field.help);
             }
         },
     );

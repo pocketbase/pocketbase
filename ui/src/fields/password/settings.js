@@ -5,10 +5,10 @@
 //     get fieldIndex: int/-1,
 //     get originalField: undefined
 // }
-export function settings(data) {
+export function settings(props) {
     const uniqueId = "f_" + app.utils.randomString();
 
-    return app.components.fieldSettings(data, {
+    return app.components.fieldSettings(props, {
         showHidden: false,
         showPresentable: false,
         showDuplicate: false,
@@ -29,14 +29,14 @@ export function settings(data) {
                     t.input({
                         type: "number",
                         id: uniqueId + ".min",
-                        name: () => `fields.${data.fieldIndex}.min`,
+                        name: () => `fields.${props.fieldIndex}.min`,
                         step: 1,
                         min: 0,
                         max: 71,
                         placeholder: "No min limit",
-                        value: () => data.field.min || "",
+                        value: () => props.field.min || "",
                         oninput: (e) => {
-                            data.field.min = parseInt(e.target.value, 10);
+                            props.field.min = parseInt(e.target.value, 10);
                         },
                     }),
                 ),
@@ -58,14 +58,14 @@ export function settings(data) {
                     t.input({
                         type: "number",
                         id: uniqueId + ".max",
-                        name: () => `fields.${data.fieldIndex}.max`,
+                        name: () => `fields.${props.fieldIndex}.max`,
                         step: 1,
-                        min: () => data.field.min || 0,
+                        min: () => props.field.min || 0,
                         max: 71,
                         placeholder: "Up to 71 chars",
-                        value: () => data.field.max || "",
+                        value: () => props.field.max || "",
                         oninput: (e) => {
-                            data.field.max = parseInt(e.target.value, 10);
+                            props.field.max = parseInt(e.target.value, 10);
                         },
                     }),
                 ),
@@ -87,15 +87,15 @@ export function settings(data) {
                     t.input({
                         type: "number",
                         id: uniqueId + ".cost",
-                        name: () => `fields.${data.fieldIndex}.cost`,
+                        name: () => `fields.${props.fieldIndex}.cost`,
                         step: 1,
                         // https://pkg.go.dev/golang.org/x/crypto/bcrypt#pkg-constants
                         min: 4,
                         max: 31,
                         placeholder: "Default to 10",
-                        value: () => data.field.cost || "",
+                        value: () => props.field.cost || "",
                         oninput: (e) => {
-                            data.field.cost = parseInt(e.target.value, 10);
+                            props.field.cost = parseInt(e.target.value, 10);
                         },
                     }),
                 ),
@@ -112,9 +112,9 @@ export function settings(data) {
                         type: "text",
                         id: uniqueId + ".pattern",
                         placeholder: "ex. ^\\w+$",
-                        name: () => `fields.${data.fieldIndex}.pattern`,
-                        value: () => data.field.pattern || "",
-                        oninput: (e) => (data.field.pattern = e.target.value),
+                        name: () => `fields.${props.fieldIndex}.pattern`,
+                        value: () => props.field.pattern || "",
+                        oninput: (e) => (props.field.pattern = e.target.value),
                     }),
                 ),
             ),
@@ -126,16 +126,16 @@ export function settings(data) {
                     t.input({
                         type: "text",
                         id: uniqueId + ".help",
-                        name: () => `fields.${data.fieldIndex}.help`,
-                        value: () => data.field.help || "",
-                        oninput: (e) => (data.field.help = e.target.value),
+                        name: () => `fields.${props.fieldIndex}.help`,
+                        value: () => props.field.help || "",
+                        oninput: (e) => (props.field.help = e.target.value),
                     }),
                 ),
             ),
         ),
         footer: () => {
             // the system password auth field is always required
-            if (data.collection?.type == "auth" && data.field.name == "password") {
+            if (props.collection?.type == "auth" && props.field.name == "password") {
                 return;
             }
 
@@ -146,9 +146,9 @@ export function settings(data) {
                         className: "sm",
                         type: "checkbox",
                         id: uniqueId + ".required",
-                        name: () => `fields.${data.fieldIndex}.required`,
-                        checked: () => !!data.field.required,
-                        onchange: (e) => (data.field.required = e.target.checked),
+                        name: () => `fields.${props.fieldIndex}.required`,
+                        checked: () => !!props.field.required,
+                        onchange: (e) => (props.field.required = e.target.checked),
                     }),
                     t.label(
                         { htmlFor: uniqueId + ".required" },

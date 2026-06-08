@@ -5,10 +5,10 @@
 //     get fieldIndex: int/-1,
 //     get originalField: undefined
 // }
-export function settings(data) {
+export function settings(props) {
     const uniqueId = "f_" + app.utils.randomString();
 
-    return app.components.fieldSettings(data, {
+    return app.components.fieldSettings(props, {
         content: () =>
             t.div(
                 { className: "grid sm" },
@@ -21,10 +21,10 @@ export function settings(data) {
                             type: "datetime-local",
                             id: uniqueId + ".min",
                             step: 1,
-                            name: () => `fields.${data.fieldIndex}.min`,
-                            value: () => app.utils.toDatetimeLocalInputValue(data.field.min),
+                            name: () => `fields.${props.fieldIndex}.min`,
+                            value: () => app.utils.toDatetimeLocalInputValue(props.field.min),
                             onchange: (e) => {
-                                data.field.min = app.utils.toRFC3339Datetime(e.target.value);
+                                props.field.min = app.utils.toRFC3339Datetime(e.target.value);
                             },
                         }),
                     ),
@@ -38,10 +38,10 @@ export function settings(data) {
                             type: "datetime-local",
                             id: uniqueId + ".max",
                             step: 1,
-                            name: () => `fields.${data.fieldIndex}.max`,
-                            value: () => app.utils.toDatetimeLocalInputValue(data.field.max),
+                            name: () => `fields.${props.fieldIndex}.max`,
+                            value: () => app.utils.toDatetimeLocalInputValue(props.field.max),
                             onchange: (e) => {
-                                data.field.max = app.utils.toRFC3339Datetime(e.target.value);
+                                props.field.max = app.utils.toRFC3339Datetime(e.target.value);
                             },
                         }),
                     ),
@@ -54,9 +54,9 @@ export function settings(data) {
                         t.input({
                             type: "text",
                             id: uniqueId + ".help",
-                            name: () => `fields.${data.fieldIndex}.help`,
-                            value: () => data.field.help || "",
-                            oninput: (e) => (data.field.help = e.target.value),
+                            name: () => `fields.${props.fieldIndex}.help`,
+                            value: () => props.field.help || "",
+                            oninput: (e) => (props.field.help = e.target.value),
                         }),
                     ),
                 ),
@@ -68,9 +68,9 @@ export function settings(data) {
                     className: "sm",
                     type: "checkbox",
                     id: uniqueId + ".required",
-                    name: () => `fields.${data.fieldIndex}.required`,
-                    checked: () => !!data.field.required,
-                    onchange: (e) => (data.field.required = e.target.checked),
+                    name: () => `fields.${props.fieldIndex}.required`,
+                    checked: () => !!props.field.required,
+                    onchange: (e) => (props.field.required = e.target.checked),
                 }),
                 t.label(
                     { htmlFor: uniqueId + ".required" },
