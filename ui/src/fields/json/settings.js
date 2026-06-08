@@ -123,7 +123,7 @@ export function settings(props) {
                     t.span({ className: "txt" }, "Required"),
                     t.i({
                         className: "ri-information-line link-hint",
-                        ariaDescription: app.attrs.tooltip("Requires the field value NOT to be null, '', [], {}"),
+                        ariaDescription: app.attrs.tooltip("Requires the field value NOT to be null, '', [], {}."),
                     }),
                 ),
             ),

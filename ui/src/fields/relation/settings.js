@@ -196,7 +196,7 @@ export function settings(props) {
                     t.i({
                         className: "ri-information-line link-hint",
                         ariaDescription: app.attrs.tooltip(() =>
-                            `Requires the field value to be nonempty ${props.field.maxSelect > 1 ? "array" : "string"}`
+                            `Requires the field value to be nonempty ${props.field.maxSelect > 1 ? "array" : "string"}.`
                         ),
                     }),
                 ),
