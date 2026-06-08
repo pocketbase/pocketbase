@@ -18,7 +18,7 @@ export function settings(props) {
                         { className: "field" },
                         t.label({ htmlFor: uniqueId + ".min" }, "Min"),
                         t.input({
-                            type: "text",
+                            type: "number",
                             id: uniqueId + ".min",
                             name: () => `fields.${props.fieldIndex}.min`,
                             value: () => typeof props.field.min == "number" ? props.field.min : "",
@@ -38,7 +38,7 @@ export function settings(props) {
                         { className: "field" },
                         t.label({ htmlFor: uniqueId + ".max" }, "Max"),
                         t.input({
-                            type: "text",
+                            type: "number",
                             id: uniqueId + ".max",
                             min: () => props.field.min,
                             name: () => `fields.${props.fieldIndex}.max`,
