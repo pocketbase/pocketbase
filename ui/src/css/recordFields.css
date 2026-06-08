@@ -197,8 +197,11 @@
 }
 
 .field-type-bool {
-    &.record-field-view .label {
-        min-width: 48px;
+    &.record-field-view {
+        min-width: auto;
+        .label {
+            min-width: 48px;
+        }
     }
 }
 

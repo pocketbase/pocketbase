@@ -259,3 +259,11 @@ function findLargestZIndexModal(excludeEl) {
 
     return largest;
 }
+
+/**
+ * Returns the current top-most open modal element.
+ * @return {Element|undefined}
+ */
+window.app.modals.getTop = function() {
+    return findLargestZIndexModal();
+};

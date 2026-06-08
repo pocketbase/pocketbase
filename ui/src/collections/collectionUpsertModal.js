@@ -265,8 +265,13 @@ function collectionUpsertModal(rawCollection, modalSettings) {
             className: "modal collection-upsert-modal",
             inert: () => data.isSaving,
             onkeydown: (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.code == "KeyS") {
+                if (
+                    (e.ctrlKey || e.metaKey)
+                    && e.code == "KeyS"
+                    && app.modals.getTop() === modal
+                ) {
                     e.preventDefault();
+
                     // temp blur any active input to make sure that onchange/blur events are fired
                     const input = document.activeElement;
                     input?.blur();
