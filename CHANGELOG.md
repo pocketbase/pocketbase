@@ -2,7 +2,9 @@
 
 - Fixed JS error on `file` settings `maxSelect` change ([#7731](https://github.com/pocketbase/pocketbase/issues/7731)).
 
-- Other minor fixes (fixed `number` settings validator to not ignore 0 `max` values, normalized field settings tooltip format, etc.).
+- Fixed `number` settings validator to not ignore 0 `max` values.
+
+- Normalized field settings validation error messages and tooltips.
 
 
 ## v0.39.2

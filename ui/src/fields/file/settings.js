@@ -257,36 +257,32 @@ export function settings(props) {
                     ),
                     t.div({ className: "field-help" }, "In bytes."),
                 ),
-                () => {
-                    if (props.field.maxSelect > 1) {
-                        return t.div(
-                            { className: "col-sm-3" },
-                            t.div(
-                                { className: "field" },
-                                t.label({ htmlFor: uniqueId + ".maxSelect" }, "Max select"),
-                                t.input({
-                                    type: "number",
-                                    id: uniqueId + ".maxSelect",
-                                    placeholder: "Default to single",
-                                    step: 1,
-                                    min: 2,
-                                    required: true,
-                                    max: Number.MAX_SAFE_INTEGER,
-                                    name: () => `fields.${props.fieldIndex}.maxSelect`,
-                                    value: () => props.field.maxSelect || "",
-                                    onchange: (e) => {
-                                        const maxSelect = parseInt(e.target.value, 10);
-                                        if (maxSelect > 1) {
-                                            props.field.maxSelect = maxSelect;
-                                        } else {
-                                            props.field.maxSelect = 1;
-                                        }
-                                    },
-                                }),
-                            ),
-                        );
-                    }
-                },
+                t.div(
+                    { className: "col-sm-3", hidden: () => props.field.maxSelect << 0 < 2 },
+                    t.div(
+                        { className: "field" },
+                        t.label({ htmlFor: uniqueId + ".maxSelect" }, "Max select"),
+                        t.input({
+                            type: "number",
+                            id: uniqueId + ".maxSelect",
+                            placeholder: "Default to single",
+                            step: 1,
+                            min: 2,
+                            required: true,
+                            max: Number.MAX_SAFE_INTEGER,
+                            name: () => `fields.${props.fieldIndex}.maxSelect`,
+                            value: () => props.field.maxSelect || "",
+                            onchange: (e) => {
+                                const maxSelect = parseInt(e.target.value, 10);
+                                if (maxSelect > 1) {
+                                    props.field.maxSelect = maxSelect;
+                                } else {
+                                    props.field.maxSelect = 1;
+                                }
+                            },
+                        }),
+                    ),
+                ),
                 t.div(
                     { className: "col-sm-12" },
                     t.div(
