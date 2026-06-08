@@ -1,6 +1,8 @@
 ## v0.39.3 (WIP)
 
-- Fixed JS error on `file` settings `maxSelect` change.
+- Fixed JS error on `file` settings `maxSelect` change ([#7731](https://github.com/pocketbase/pocketbase/issues/7731)).
+
+- Other minor fixes (fixed `number` settings validator to not ignore 0 `max` values, normalized field settings tooltip format, etc.).
 
 
 ## v0.39.2
