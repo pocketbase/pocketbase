@@ -147,7 +147,7 @@ window.app.modals.openCollectionChangesConfirmation = async function(
 
             data.isLoadingConflictingOIDCProviders = false;
         } catch (err) {
-            if (err.isAbort) {
+            if (!err?.isAbort) {
                 data.isLoadingConflictingOIDCProviders = false;
                 app.checkApiError(err);
             }
