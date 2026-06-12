@@ -8,6 +8,8 @@ const tooltip = t.div({
 document.body.appendChild(tooltip);
 
 function updateTooltipPosition(node, position, styleClass) {
+    tooltip._relatedNode = node;
+
     let nodeRect = node.getBoundingClientRect();
 
     tooltip.setAttribute("data-style", styleClass || "");
@@ -74,6 +76,7 @@ function updateTooltipPosition(node, position, styleClass) {
 }
 
 function hideTooltip() {
+    tooltip._relatedNode = null;
     tooltip.hidePopover();
 }
 
@@ -126,8 +129,11 @@ function tooltipAction(textOrFunc, position = "top", styleClass = "") {
 
             const originalOnunmount = el.onunmount;
             el.onunmount = (el) => {
-                tooltipTextWatcher?.unwatch();
+                if (tooltip._relatedNode == el) {
+                    hideTooltip();
+                }
 
+                tooltipTextWatcher?.unwatch();
                 el._tooltipText = null;
 
                 el?.removeEventListener("mouseenter", showEventHandler);
