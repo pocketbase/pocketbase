@@ -1,7 +1,9 @@
-## v0.39.4
+## v0.39.4 (WIP)
 
 - Removed `redirectURL` required validator from the code->token exchange endpoint (aka. `authWithOAuth2Code()`) ([#7734](https://github.com/pocketbase/pocketbase/issues/7734)).
     _Note that the OAuth2 provider has their own validations and whether it is allowed to be empty or not could depend on the configured OAuth2 app (in most cases it is required and the redirect address must match with the initial value submitted with the authorization request)._
+
+- Enabled sorting by the first _implicit_ presentable relation field ([#7735](https://github.com/pocketbase/pocketbase/discussions/7735)).
 
 
 ## v0.39.3

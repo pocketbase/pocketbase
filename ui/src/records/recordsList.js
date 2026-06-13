@@ -119,11 +119,23 @@ window.app.components.recordsList = function(propsArg = {}) {
                 // default fallback to -@rowid when available
                 normalizedSort = props.collection.type != "view" ? "-@rowid" : undefined;
             } else if (sortField?.type == "relation") {
-                normalizedSort = app.store.collections
-                    ?.find((c) => c.id == sortField.collectionId)
-                    ?.fields?.filter((f) => f.presentable)
+                const sortCollection = app.store.collections?.find((c) => c.id == sortField.collectionId);
+
+                normalizedSort = sortCollection?.fields?.filter((f) => f.presentable)
+                    ?.sort((f1, f2) => f1.type == "file" ? 1 : 0) // deprioritize file fields because filenames are not shown in the table
                     ?.map((f) => (sortMatch[1] || "") + sortMatch[2] + "." + f.name)
                     ?.join(",");
+
+                // no explicit presentable -> try to utilize the first found implicit presentable field
+                // (https://github.com/pocketbase/pocketbase/discussions/7735)
+                if (normalizedSort == "") {
+                    for (let name of app.utils.fallbackPresentableProps) {
+                        if (sortCollection?.fields?.find((f) => f.name == name)) {
+                            normalizedSort = (sortMatch[1] || "") + sortMatch[2] + "." + name;
+                            break;
+                        }
+                    }
+                }
             }
 
             const page = reset ? 1 : data.lastPage + 1;
