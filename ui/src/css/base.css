@@ -383,13 +383,13 @@ hr {
         overflow var(--slideAnimationSpeed) step-end;
     transition-behavior: allow-discrete;
     @starting-style {
-        overflow: hidden;
-        height: 0;
-        opacity: 0;
-        padding-top: 0;
-        padding-bottom: 0;
-        margin-bottom: 0;
-        margin-top: 0;
+        overflow: hidden !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+        margin-top: 0 !important;
     }
     &.hidden {
         overflow: hidden !important;
