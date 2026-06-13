@@ -243,11 +243,13 @@ window.app.components.recordsList = function(propsArg = {}) {
             // - the collection update is added in case the collection fields have changed
             // - the record keys are added in case of a record field rename
             //   (the collection update and the refreshed records load doesn't happen at the same time)
+            // - the non-reactive list reset prop is to force a rerender on Refresh btn click
+            //   (e.g. in case a lazy expanded relation has changed and its presentable needs to be updated)
             return record.id + record[data.firstAutoUpdatedField.name] + props.collection?.updated
-                + Object.keys(record);
+                + Object.keys(record) + props.__raw?.reset;
         }
 
-        return JSON.stringify(record) + props.collection?.updated;
+        return JSON.stringify(record) + props.collection?.updated + props.__raw?.reset;
     }
 
     function isFieldColumnHidden(field) {
