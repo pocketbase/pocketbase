@@ -203,7 +203,6 @@ func (form *recordOAuth2LoginForm) validate() error {
 	return validation.ValidateStruct(form,
 		validation.Field(&form.Provider, validation.Required, validation.Length(0, 100), validation.By(form.checkProviderName)),
 		validation.Field(&form.Code, validation.Required),
-		validation.Field(&form.RedirectURL, validation.Required),
 	)
 }
 
