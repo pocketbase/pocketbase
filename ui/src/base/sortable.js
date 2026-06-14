@@ -9,6 +9,9 @@ window.app.components = window.app.components || {};
  * app.components.sortable({
  *     data: () => data.list,
  *     dataItem: (item) => t.strong(null, "ID:", () => item.id),
+ *     onchange: function(sortedList, fromIndex, toIndex) {
+ *         data.list = sortedList;
+ *     },
  * })
  * ```
  *
@@ -98,8 +101,13 @@ window.app.components.sortable = function(propsArg = {}) {
                 return;
             }
 
-            const fromIndex = childIndex(from);
-            const toIndex = childIndex(to);
+            const sortableChildren = listEl.querySelectorAll(":scope > [data-sortable-child]");
+            const fromIndex = childIndex(sortableChildren, from);
+            const toIndex = childIndex(sortableChildren, to);
+
+            if (fromIndex == -1 || toIndex == -1) {
+                return;
+            }
 
             const clone = props.data.slice();
             const deleted = clone.splice(fromIndex, 1);
@@ -109,13 +117,9 @@ window.app.components.sortable = function(propsArg = {}) {
         });
     }
 
-    function childIndex(node) {
-        if (!node?.parentNode) {
-            return -1;
-        }
-
-        for (let i = 0; i < node.parentNode.children.length; i++) {
-            if (node.parentNode.children[i] == node) {
+    function childIndex(children, child) {
+        for (let i = 0; i < children.length; i++) {
+            if (children[i] == child) {
                 return i;
             }
         }
@@ -163,6 +167,8 @@ window.app.components.sortable = function(propsArg = {}) {
                 if (!child) {
                     continue;
                 }
+
+                child.setAttribute("data-sortable-child", 1);
 
                 if (props.handle) {
                     const handle = child.querySelector(props.handle);
