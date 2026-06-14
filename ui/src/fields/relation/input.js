@@ -138,8 +138,8 @@ export function input(props) {
             hidden: () => local.isLoading,
             data: () => local.selected,
             onchange: (sortedList) => {
-                local.selected = sortedList;
                 updateRecordValue(sortedList.map((r) => r.id));
+                local.selected = sortedList;
             },
             dataItem: (record, relIndex) => {
                 return t.div(
@@ -179,8 +179,8 @@ export function input(props) {
                         selectedIds: app.utils.toArray(props.record[props.field.name]),
                         maxSelect: props.field.maxSelect,
                         onselect: (records) => {
-                            local.selected = records;
                             updateRecordValue(records.map((r) => r.id));
+                            local.selected = records;
                         },
                     });
                 },
