@@ -7,6 +7,8 @@
 
 - Other minor UI fixes (tooltip clear on hovered element removal, sortable optional before element fix, etc.).
 
+- Updated goja and the related `golang.org/x/*` dependencies (regex support improvements).
+
 
 ## v0.39.3
 
