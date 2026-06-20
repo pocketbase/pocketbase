@@ -1,3 +1,8 @@
+## v0.39.5 (WIP)
+
+- Limit with ellipsis long `url` field values.
+
+
 ## v0.39.4
 
 - Removed `redirectURL` required validator from the code->token exchange endpoint (aka. `authWithOAuth2Code()`) ([#7734](https://github.com/pocketbase/pocketbase/issues/7734)).

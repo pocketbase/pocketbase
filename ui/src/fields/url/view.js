@@ -15,7 +15,7 @@ export function view(props) {
 
             return t.a({
                 href: () => value,
-                className: "txt txt-ellipsis",
+                className: () => `txt ${props.short ? "txt-ellipsis" : ""}`,
                 rel: "noopener noreferrer",
                 target: "_blank",
                 textContent: app.utils.truncate(value),

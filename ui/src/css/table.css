@@ -190,6 +190,9 @@ table {
         &.col-field-type-select {
             min-width: 180px;
         }
+        &.col-field-type-url {
+            max-width: 300px;
+        }
         &.col-field-type-email {
             min-width: 120px;
             white-space: nowrap;
