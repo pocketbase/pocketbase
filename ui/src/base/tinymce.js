@@ -543,8 +543,6 @@ async function loadTinyMCE() {
     });
 }
 
-// preload TinyMCE with all of its plugins in the background to speed up
-// initial rendering of the component
 let preloadedElem;
 function preloadTinyMCE() {
     if (typeof window.tinymce != "undefined" || preloadedElem || document.getElementById(scriptId)) {
@@ -561,4 +559,11 @@ function preloadTinyMCE() {
     }, 500);
 }
 
-preloadTinyMCE();
+// preload TinyMCE with all of its plugins in the background for the first
+// collection known to have an editor field in order to speed up initial rendering
+const watcher = watch(() => app.store.activeCollection?.id, () => {
+    if (!!app.store.activeCollection?.fields?.find((f) => f.type == "editor")) {
+        preloadTinyMCE();
+        watcher?.unwatch?.();
+    }
+});
