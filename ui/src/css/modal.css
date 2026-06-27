@@ -217,6 +217,12 @@
     }
 }
 
+/* tinymce fullscreen preview */
+.tox-fullscreen .modal {
+    width: 100% !important;
+    transition: none;
+}
+
 /* content scroll shadows */
 .modal-content {
     --topShadowOffset: calc(var(--spacing) + 1px);
