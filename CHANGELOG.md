@@ -1,4 +1,4 @@
-## v0.39.5 (WIP)
+## v0.39.5
 
 - Limit with ellipsis long `url` field values.
 
