@@ -552,11 +552,11 @@ function preloadTinyMCE() {
     preloadedElem = t.div({ hidden: true }, app.components.tinymce());
     document.body.appendChild(preloadedElem);
 
-    // small enough time for the plugins to initialize
+    // small enough delay for the plugins to initialize
     setTimeout(() => {
         preloadedElem?.remove();
         preloadedElem = null;
-    }, 500);
+    }, 1500);
 }
 
 // preload TinyMCE with all of its plugins in the background for the first
