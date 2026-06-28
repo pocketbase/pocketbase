@@ -976,7 +976,7 @@ function deleteDropdownItem(data, modalSettings) {
                             return false;
                         }
 
-                        app.modals.close(collectionModal);
+                        app.modals.close(collectionModal, true);
                     },
                     () => {
                         local.nameConfirm = "";

@@ -1076,7 +1076,7 @@ function deleteDropdownItem(collection, data, modalSettings) {
                     `Do you really want to delete the selected record?`,
                     async () => {
                         await deleteRecord();
-                        app.modals.close(e.target.closest(".modal"));
+                        app.modals.close(e.target.closest(".modal"), true);
                     },
                     null,
                     { yesButton: "Delete record" },
