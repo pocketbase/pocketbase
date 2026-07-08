@@ -1,3 +1,8 @@
+## v0.22.47
+
+- (_Backported from v0.39.6_) Bumped the min Go GitHub action version to 1.26.5 as it includes some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.5).
+
+
 ## v0.22.46
 
 - (_Backported from v0.39.1_) Bumped the min Go GitHub action version to 1.26.4 as it includes some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.4).
