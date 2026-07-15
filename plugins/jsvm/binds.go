@@ -16,10 +16,10 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/pocketbase/dbx"
+	validation "github.com/pocketbase/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"

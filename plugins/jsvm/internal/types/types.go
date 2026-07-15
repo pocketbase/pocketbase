@@ -1090,7 +1090,7 @@ func main() {
 	gen := tygoja.New(tygoja.Config{
 		Packages: map[string][]string{
 			"github.com/labstack/echo/v5/middleware":            {"Gzip", "BodyLimit"},
-			"github.com/go-ozzo/ozzo-validation/v4":             {"Error"},
+			"github.com/pocketbase/ozzo-validation/v4":          {"Error"},
 			"github.com/pocketbase/dbx":                         {"*"},
 			"github.com/pocketbase/pocketbase/tools/security":   {"*"},
 			"github.com/pocketbase/pocketbase/tools/filesystem": {"*"},

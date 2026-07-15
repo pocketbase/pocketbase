@@ -1,7 +1,7 @@
 package validators
 
 import (
-	validation "github.com/go-ozzo/ozzo-validation/v4"
+	validation "github.com/pocketbase/ozzo-validation/v4"
 )
 
 // Compare checks whether the validated value matches another string.

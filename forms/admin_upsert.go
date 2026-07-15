@@ -1,8 +1,8 @@
 package forms
 
 import (
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
+	validation "github.com/pocketbase/ozzo-validation/v4"
+	"github.com/pocketbase/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms/validators"

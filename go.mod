@@ -18,12 +18,12 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gabriel-vasile/mimetype v1.4.7
 	github.com/ganigeorgiev/fexpr v0.4.1
-	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/goccy/go-json v0.10.4
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/labstack/echo/v5 v5.0.0-20230722203903-ec5b858dab61
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/pocketbase/dbx v1.11.0
+	github.com/pocketbase/ozzo-validation/v4 v4.3.0
 	github.com/pocketbase/tygoja v0.0.0-20241015175937-d6ff411a0f75
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1
