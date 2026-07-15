@@ -244,6 +244,12 @@ func TestCreateViewSchema(t *testing.T) {
 			nil,
 		},
 		{
+			"wrapped query with wildcard column",
+			"select * from (select 1 as id)",
+			true,
+			nil,
+		},
+		{
 			"query with comments",
 			`
 				select

@@ -32,6 +32,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/plugins/jsvm/internal/types/generated"
+	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/template"
 )
 
@@ -400,7 +401,7 @@ func (p *plugin) watchHooks() error {
 	})
 
 	// start listening for events.
-	go func() {
+	routine.FireAndForget(func() {
 		defer stopDebounceTimer()
 
 		for {
@@ -430,7 +431,7 @@ func (p *plugin) watchHooks() error {
 				color.Red("Watch error:", err)
 			}
 		}
-	}()
+	})
 
 	// add directories to watch
 	//

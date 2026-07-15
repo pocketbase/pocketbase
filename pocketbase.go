@@ -12,6 +12,7 @@ import (
 	"github.com/pocketbase/pocketbase/cmd"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/spf13/cobra"
 )
 
@@ -156,21 +157,21 @@ func (pb *PocketBase) Execute() error {
 	done := make(chan bool, 1)
 
 	// listen for interrupt signal to gracefully shutdown the application
-	go func() {
+	routine.FireAndForget(func() {
 		sigch := make(chan os.Signal, 1)
 		signal.Notify(sigch, os.Interrupt, syscall.SIGTERM)
 		<-sigch
 
 		done <- true
-	}()
+	})
 
 	// execute the root command
-	go func() {
+	routine.FireAndForget(func() {
 		// note: leave to the commands to decide whether to print their error
 		pb.RootCmd.Execute()
 
 		done <- true
-	}()
+	})
 
 	<-done
 

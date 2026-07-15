@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/tools/routine"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -268,8 +269,8 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		// execute the 2 queries concurrently
 		errg := new(errgroup.Group)
 		errg.SetLimit(2)
-		errg.Go(countExec)
-		errg.Go(modelsExec)
+		errg.Go(routine.SafeWrap(countExec))
+		errg.Go(routine.SafeWrap(modelsExec))
 		if err := errg.Wait(); err != nil {
 			return nil, err
 		}

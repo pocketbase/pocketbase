@@ -12,6 +12,7 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/rest"
+	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
@@ -172,7 +173,7 @@ func (api *backupApi) restore(c echo.Context) error {
 		return NewBadRequestError("Missing or invalid backup file.", err)
 	}
 
-	go func() {
+	routine.FireAndForget(func() {
 		// wait max 15 minutes to fetch the backup
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 		defer cancel()
@@ -183,7 +184,7 @@ func (api *backupApi) restore(c echo.Context) error {
 		if err := api.app.RestoreBackup(ctx, key); err != nil {
 			api.app.Logger().Error("Failed to restore backup", "key", key, "error", err.Error())
 		}
-	}()
+	})
 
 	return c.NoContent(http.StatusNoContent)
 }

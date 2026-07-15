@@ -85,6 +85,7 @@ import (
 	s3managerv2 "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	typesv2 "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/pocketbase/pocketbase/tools/routine"
 
 	"github.com/aws/smithy-go"
 	"gocloud.dev/blob"
@@ -362,7 +363,7 @@ func (w *writer) Upload(r io.Reader) error {
 // error uploading to S3.
 func (w *writer) open(r io.Reader, closePipeOnError bool) {
 	// This goroutine will keep running until Close, unless there's an error.
-	go func() {
+	routine.FireAndForget(func() {
 		defer close(w.donec)
 
 		if r == nil {
@@ -379,7 +380,7 @@ func (w *writer) open(r io.Reader, closePipeOnError bool) {
 			}
 			w.err = err
 		}
-	}()
+	})
 }
 
 // Close completes the writer and closes it. Any error occurring during write

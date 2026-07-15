@@ -260,6 +260,12 @@ func (dao *Dao) parseQueryToFields(selectQuery string) (map[string]*queryField, 
 	}
 
 	for _, col := range p.columns {
+		// note: it should be safe to use the already parsed alias as there
+		// is no valid SQL where * column can be aliased to something else
+		if col.alias == "*" {
+			return nil, errors.New("wildcard columns (*) are not supported - manually type the collection field names you want the view query to have")
+		}
+
 		colLower := strings.ToLower(col.original)
 
 		// numeric aggregations
@@ -324,10 +330,6 @@ func (dao *Dao) parseQueryToFields(selectQuery string) (map[string]*queryField, 
 				field: defaultViewField(col.alias),
 			}
 			continue
-		}
-
-		if fieldName == "*" {
-			return nil, errors.New("dynamic column names are not supported")
 		}
 
 		// find the first field by name (case insensitive)

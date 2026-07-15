@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/pocketbase/pocketbase/tools/routine"
 )
 
 type job struct {
@@ -170,7 +172,7 @@ func (c *Cron) Start() {
 		c.runDue(time.Now())
 
 		// run after each tick
-		go func() {
+		routine.FireAndForget(func() {
 			for {
 				select {
 				case <-c.tickerDone:
@@ -179,7 +181,7 @@ func (c *Cron) Start() {
 					c.runDue(t)
 				}
 			}
-		}()
+		})
 	})
 	c.Unlock()
 }
