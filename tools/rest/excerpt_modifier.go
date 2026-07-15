@@ -47,7 +47,7 @@ func newExcerptModifier(args ...string) (*excerptModifier, error) {
 	}
 
 	max := cast.ToInt(args[0])
-	if max == 0 {
+	if max <= 0 {
 		return nil, errors.New("max argument must be > 0")
 	}
 

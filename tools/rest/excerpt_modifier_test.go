@@ -29,6 +29,16 @@ func TestNewExcerptModifier(t *testing.T) {
 			true,
 		},
 		{
+			"negative numeric max argument",
+			[]string{"-1"},
+			true,
+		},
+		{
+			"zero numeric max argument",
+			[]string{"0"},
+			true,
+		},
+		{
 			"numeric max argument",
 			[]string{"12"},
 			false,
