@@ -1,8 +1,10 @@
 ## v0.22.48
 
-- (_Backported from v0.39.6_) Replaced `github.com/go-ozzo/ozzo-validation` with the fork `github.com/pocketbase/ozzo-validation` since the original library has recently changed ownership and the new maintainer cannot be trusted.
+- (_Backported from v0.39.7_) Replaced `github.com/go-ozzo/ozzo-validation` with the fork `github.com/pocketbase/ozzo-validation` since the original library has recently changed ownership and the new maintainer cannot be trusted.
 
-- (_Backported from v0.39.6_) Fixed View collection `*` validator and added more friendly error messages ([#7761](https://github.com/pocketbase/pocketbase/issues/7761)).
+- (_Backported from v0.39.7_) Fixed View collection `*` validator and added more friendly error messages ([#7761](https://github.com/pocketbase/pocketbase/issues/7761)).
+
+- (_Backported from v0.39.7_) ⚠️ Security fix for unhandled panic in internal worker goroutines ([#7762](https://github.com/pocketbase/pocketbase/discussions/7762)).
 
 
 ## v0.22.47
