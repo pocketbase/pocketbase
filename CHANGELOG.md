@@ -1,3 +1,10 @@
+## v0.22.49
+
+- (_Backported from v0.39.8_) Bumped `golang.org/x/*` indirect dependencies as there are some minor security fixes.
+
+- (_Backported from v0.39.8_) Updated `modernc.org/sqlite` to v1.54.0 ([SQLite 3.53.3](https://sqlite.org/src/timeline?from=version-3.53.2&to=version-3.53.3&to2=branch-3.53)).
+
+
 ## v0.22.48
 
 - (_Backported from v0.39.7_) Replaced `github.com/go-ozzo/ozzo-validation` with the fork `github.com/pocketbase/ozzo-validation` since the original library has recently changed ownership and the new maintainer cannot be trusted.

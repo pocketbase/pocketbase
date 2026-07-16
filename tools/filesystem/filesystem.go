@@ -22,6 +22,7 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3lite"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/routine"
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/fileblob"
 )
@@ -449,6 +450,14 @@ var ThumbSizeRegex = regexp.MustCompile(`^(\d+)x(\d+)(t|b|f)?$`)
 // - WxHb (eg. 300x100b) - resize and crop to WxH viewbox (from bottom)
 // - WxHf (eg. 300x100f) - fit inside a WxH viewbox (without cropping)
 func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) error {
+	// note: the wrapping is an extra precaution since there were several
+	// golang.org/x/image panic related issues over the years
+	return routine.SafeWrap(func() error {
+		return s.createThumb(originalKey, thumbKey, thumbSize)
+	})()
+}
+
+func (s *System) createThumb(originalKey string, thumbKey, thumbSize string) error {
 	sizeParts := ThumbSizeRegex.FindStringSubmatch(thumbSize)
 	if len(sizeParts) != 4 {
 		return errors.New("thumb size must be in WxH, WxHt, WxHb or WxHf format")
