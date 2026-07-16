@@ -203,7 +203,7 @@ func (c *Cron) runDue(t time.Time) {
 
 	for _, j := range c.jobs {
 		if j.schedule.IsDue(moment) {
-			go j.run()
+			routine.FireAndForget(j.run)
 		}
 	}
 }
