@@ -1,3 +1,8 @@
+## v0.22.50
+
+- (_Backported from v0.39.9_) Bumped goja, fexpr and their related deps.
+
+
 ## v0.22.49
 
 - (_Backported from v0.39.8_) Bumped `golang.org/x/*` indirect dependencies as there are some minor security fixes.
