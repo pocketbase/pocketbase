@@ -103,6 +103,8 @@ func TestFileFieldPrepareValue(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	var nilFile *filesystem.File
+
 	scenarios := []struct {
 		raw      any
 		field    *core.FileField
@@ -114,8 +116,9 @@ func TestFileFieldPrepareValue(t *testing.T) {
 		{123, &core.FileField{MaxSelect: 1}, `"123"`},
 		{"a", &core.FileField{MaxSelect: 1}, `"a"`},
 		{`["a"]`, &core.FileField{MaxSelect: 1}, `"a"`},
-		{*f1, &core.FileField{MaxSelect: 1}, string(f1Raw)},
 		{f1, &core.FileField{MaxSelect: 1}, string(f1Raw)},
+		{*f1, &core.FileField{MaxSelect: 1}, string(f1Raw)},
+		{nilFile, &core.FileField{MaxSelect: 1}, `""`},
 		{[]string{}, &core.FileField{MaxSelect: 1}, `""`},
 		{[]string{"a", "b"}, &core.FileField{MaxSelect: 1}, `"b"`},
 
@@ -126,8 +129,9 @@ func TestFileFieldPrepareValue(t *testing.T) {
 		{"a", &core.FileField{MaxSelect: 2}, `["a"]`},
 		{`["a"]`, &core.FileField{MaxSelect: 2}, `["a"]`},
 		{[]any{f1}, &core.FileField{MaxSelect: 2}, `[` + string(f1Raw) + `]`},
-		{[]*filesystem.File{f1}, &core.FileField{MaxSelect: 2}, `[` + string(f1Raw) + `]`},
 		{[]filesystem.File{*f1}, &core.FileField{MaxSelect: 2}, `[` + string(f1Raw) + `]`},
+		{[]*filesystem.File{f1}, &core.FileField{MaxSelect: 2}, `[` + string(f1Raw) + `]`},
+		{[]any{nilFile, f1}, &core.FileField{MaxSelect: 2}, `[` + string(f1Raw) + `]`},
 		{[]string{}, &core.FileField{MaxSelect: 2}, `[]`},
 		{[]string{"a", "b", "c"}, &core.FileField{MaxSelect: 2}, `["a","b","c"]`},
 	}
