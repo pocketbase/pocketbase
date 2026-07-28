@@ -7,6 +7,8 @@ export function logsChart(logsSettings) {
         stats: [],
     });
 
+    let placeloderChartTimeoutId;
+
     async function loadAndInit(el) {
         if (!el) {
             return;
@@ -19,6 +21,14 @@ export function logsChart(logsSettings) {
                 app.utils.normalizeSearchFilter(logsSettings.filter, ["level", "message", "data"]),
             );
 
+            // show an empty placeholder chart while loading the stats
+            clearTimeout(placeloderChartTimeoutId);
+            placeloderChartTimeoutId = setTimeout(() => {
+                if (!data.stats?.length) {
+                    initChart(el, [[], []], logsSettings);
+                }
+            }, 250);
+
             const stats = await app.pb.logs.getStats({
                 filter: normalizedFilter
                     .filter(Boolean)
@@ -26,8 +36,9 @@ export function logsChart(logsSettings) {
                     .join("&&"),
             });
 
-            const totalStats = stats.length;
+            clearTimeout(placeloderChartTimeoutId);
 
+            const totalStats = stats.length;
             const timestamps = [];
             const totals = [];
 
@@ -73,13 +84,18 @@ export function logsChart(logsSettings) {
     return t.div(
         {
             pbEvent: "logsChart",
-            className: () =>
-                [
+            inert: () => logsSettings.isChartLoading,
+            className: () => {
+                return [
                     "logs-chart",
                     logsSettings.isChartLoading ? "loading" : null,
-                    logsSettings.zoom?.min && logsSettings.zoom?.max ? "zoomed" : "",
-                    !data.stats.length || !logsSettings.isFirstLoadReady ? "nodata" : null,
-                ].filter(Boolean).join(" "),
+                    logsSettings.zoom?.min && logsSettings.zoom?.max ? "zoomed" : null,
+                    (!logsSettings.isListLoading && !logsSettings.hasListItems) ? "empty-list" : "",
+                    (!logsSettings.isListLoading && logsSettings.hasListItems) ? "nonempty-list" : "",
+                    logsSettings.isFirstLoadReady ? "ready" : "pending",
+                    !data.stats.length ? "nodata" : null,
+                ].filter(Boolean).join(" ");
+            },
             onmount: (el) => {
                 // init and refresh chart
                 watchers.push(
@@ -105,6 +121,8 @@ export function logsChart(logsSettings) {
                 window.addEventListener("resize", el._resizeChartFunc);
             },
             onunmount: (el) => {
+                clearTimeout(placeloderChartTimeoutId);
+
                 watchers.forEach((w) => w?.unwatch());
 
                 el._uplot?.destroy();
@@ -129,10 +147,14 @@ export function logsChart(logsSettings) {
             t.div({ className: "content-primary" }, "Reset zoom"),
             t.div({ className: "content-secondary" }, "(drag the timeline to pan)"),
         ),
-        t.span({
-            hidden: () => !logsSettings.isChartLoading,
-            className: () => "loader logs-chart-loader",
-        }),
+        t.div(
+            {
+                hidden: () => !logsSettings.isChartLoading,
+                className: "logs-chart-loader",
+                ariaHidden: true,
+            },
+            t.span({ className: "loader" }),
+        ),
     );
 }
 

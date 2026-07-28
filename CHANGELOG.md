@@ -1,3 +1,8 @@
+## v0.39.10 (WIP)
+
+- Minor UI improvements (added placeholder loader for the logs chart).
+
+
 ## v0.39.9
 
 - Fixed `Shift + Click` range bulk selection not working in Firefox ([#7771](https://github.com/pocketbase/pocketbase/issues/7771))

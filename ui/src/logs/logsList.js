@@ -89,6 +89,7 @@ export function logsList(logsSettings) {
             }
 
             logsSettings.isListLoading = false;
+            logsSettings.hasListItems = data.logs.length > 0;
 
             if (!logsSettings.isFirstLoadReady) {
                 logsSettings.isFirstLoadReady = true;

@@ -22,7 +22,8 @@ export function pageLogs(route) {
         reset: null,
         isChartLoading: false,
         isListLoading: false,
-        isFirstLoadReady: false, // used by the chart to show itself after the first list load to minimize flickering
+        isFirstLoadReady: false, // used by the chart to reveal itself while the stats are still loading to minimize layout jumps
+        hasListItems: false,
         zoom: {}, // only unidirectional from within the chart
         presets: querySuperuserRequests ? [] : [withoutSuperusersPresets],
         filter: queryFilter,

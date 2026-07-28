@@ -52,7 +52,9 @@
     &.loading {
         opacity: 0.7;
     }
-    &.nodata {
+    &.pending,
+    &.empty-list:not(.zoomed),
+    &.nodata:not(.nonempty-list) {
         height: 0;
         max-height: 0;
     }
