@@ -1,5 +1,7 @@
 ## v0.39.10 (WIP)
 
+- Reverted the auto panic recover handling for the cli commands to allow a panic to force exit with non-zero code ([#7781](https://github.com/pocketbase/pocketbase/issues/7781)).
+
 - Minor UI improvements (added placeholder loader for the logs chart).
 
 
