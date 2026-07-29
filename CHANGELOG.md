@@ -1,3 +1,8 @@
+## v0.22.51
+
+- (_Backported from v0.39.10_) Reverted the auto panic recover handling for the cli commands to preserve the old behavior and allow panic to force exit with non-zero code ([#7781](https://github.com/pocketbase/pocketbase/issues/7781)).
+
+
 ## v0.22.50
 
 - (_Backported from v0.39.9_) Bumped goja, fexpr and their related deps.
