@@ -7,7 +7,7 @@ export function logsChart(logsSettings) {
         stats: [],
     });
 
-    let placeloderChartTimeoutId;
+    let placeholderChartTimeoutId;
 
     async function loadAndInit(el) {
         if (!el) {
@@ -22,8 +22,8 @@ export function logsChart(logsSettings) {
             );
 
             // show an empty placeholder chart while loading the stats
-            clearTimeout(placeloderChartTimeoutId);
-            placeloderChartTimeoutId = setTimeout(() => {
+            clearTimeout(placeholderChartTimeoutId);
+            placeholderChartTimeoutId = setTimeout(() => {
                 if (!data.stats?.length) {
                     initChart(el, [[], []], logsSettings);
                 }
@@ -36,7 +36,7 @@ export function logsChart(logsSettings) {
                     .join("&&"),
             });
 
-            clearTimeout(placeloderChartTimeoutId);
+            clearTimeout(placeholderChartTimeoutId);
 
             const totalStats = stats.length;
             const timestamps = [];
@@ -71,7 +71,7 @@ export function logsChart(logsSettings) {
             initChart(el, [timestamps, totals], logsSettings);
         } catch (err) {
             if (!err?.isAbort) {
-                clearTimeout(placeloderChartTimeoutId);
+                clearTimeout(placeholderChartTimeoutId);
                 logsSettings.isChartLoading = false;
                 // only log to avoid showing multiple errors with the logs listing
                 // app.checkApiError(err)
@@ -122,7 +122,7 @@ export function logsChart(logsSettings) {
                 window.addEventListener("resize", el._resizeChartFunc);
             },
             onunmount: (el) => {
-                clearTimeout(placeloderChartTimeoutId);
+                clearTimeout(placeholderChartTimeoutId);
 
                 watchers.forEach((w) => w?.unwatch());
 
