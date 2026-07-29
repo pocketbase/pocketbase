@@ -5,6 +5,8 @@
 
 - Minor UI improvements (added placeholder loader for the logs chart, npm dev deps update, etc.).
 
+- Updated `modernc.org/sqlite` to v1.55.0 (doc changes).
+
 
 ## v0.39.9
 
