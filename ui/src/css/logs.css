@@ -42,7 +42,7 @@
     /* chart inited */
     &:has(.uplot) {
         height: auto;
-        max-height: 200px; /* fallback for interpolate-size */
+        max-height: 180px; /* fallback for interpolate-size */
     }
     .uplot {
         padding-bottom: var(--smSpacing);

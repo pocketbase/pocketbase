@@ -71,6 +71,7 @@ export function logsChart(logsSettings) {
             initChart(el, [timestamps, totals], logsSettings);
         } catch (err) {
             if (!err?.isAbort) {
+                clearTimeout(placeloderChartTimeoutId);
                 logsSettings.isChartLoading = false;
                 // only log to avoid showing multiple errors with the logs listing
                 // app.checkApiError(err)
