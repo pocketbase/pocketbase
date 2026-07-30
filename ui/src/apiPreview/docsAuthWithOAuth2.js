@@ -167,7 +167,7 @@ export function docsAuthWithOAuth2(collection) {
         t.div(
             { className: "alert success api-preview-alert" },
             t.span({ className: "label method" }, "POST"),
-            t.span({ className: "path" }, `/api/collections/${collection.name}/auth-with-password`),
+            t.span({ className: "path" }, `/api/collections/${collection.name}/auth-with-oauth2`),
         ),
         t.table(
             { className: "api-preview-table body-params" },

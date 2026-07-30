@@ -1,3 +1,8 @@
+## v0.39.11 (WIP)
+
+- Fixed "API preview" examples ([#7782](https://github.com/pocketbase/pocketbase/issues/7782)).
+
+
 ## v0.39.10
 
 - Reverted the auto panic recover handling for the cli commands to preserve the old behavior and allow panic to force exit with non-zero code ([#7781](https://github.com/pocketbase/pocketbase/issues/7781)).

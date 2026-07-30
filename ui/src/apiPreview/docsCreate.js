@@ -153,7 +153,7 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
                           -H 'Authorization:TOKEN' \\
                           -H 'Content-Type:application/json' \\
                           -d '{ ... }' \\
-                          '${baseURL}/api/collections/${collection.name}/records/RECORD_ID'
+                          '${baseURL}/api/collections/${collection.name}/records'
                     `,
                 },
             ],
