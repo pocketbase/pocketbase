@@ -104,7 +104,7 @@ const body = ${replaceDummyPayloadPlaceholder(JSON.stringify(fullDummyPayload(co
 const record = await pb.collection('${collection.name}').create(body);
 `+ (isAuth ? `
 // (optional) send an email verification request
-await pb.collection('${collection?.name}').requestVerification('test@example.com');
+await pb.collection('${collection?.name}').requestVerification(record.email);
 ` : ""),
                     footnote: t.div(
                         { className: "txt-right" },
@@ -133,7 +133,9 @@ final body = <String, dynamic>${JSON.stringify(primitivesDummyPayload(collection
 final record = await pb.collection('${collection.name}').create(body: body, files: []);
 ` + (isAuth ? `
 // (optional) send an email verification request
-await pb.collection('${collection?.name}').requestVerification('test@example.com');
+await pb.collection('${collection?.name}').requestVerification(
+    record.get<String>('email'),
+);
 ` : ""),
                     footnote: t.div(
                         { className: "txt-right" },

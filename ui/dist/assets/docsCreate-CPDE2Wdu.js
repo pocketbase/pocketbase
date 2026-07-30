@@ -28,7 +28,7 @@ const body = ${i(JSON.stringify(a(r),null,2))};
 const record = await pb.collection('${r.name}').create(body);
 `+(l?`
 // (optional) send an email verification request
-await pb.collection('${r?.name}').requestVerification('test@example.com');
+await pb.collection('${r?.name}').requestVerification(record.email);
 `:``),footnote:t.div({className:`txt-right`},t.a({href:`https://github.com/pocketbase/js-sdk`,target:`_blank`,rel:`noopener noreferrer`,textContent:`JS SDK docs`}))},{title:`Dart SDK`,language:`dart`,value:`
 import 'package:pocketbase/pocketbase.dart';
 
@@ -42,7 +42,9 @@ final body = <String, dynamic>${JSON.stringify(o(r),null,2)};
 final record = await pb.collection('${r.name}').create(body: body, files: []);
 `+(l?`
 // (optional) send an email verification request
-await pb.collection('${r?.name}').requestVerification('test@example.com');
+await pb.collection('${r?.name}').requestVerification(
+    record.get<String>('email'),
+);
 `:``),footnote:t.div({className:`txt-right`},t.a({href:`https://github.com/pocketbase/dart-sdk`,target:`_blank`,rel:`noopener noreferrer`,textContent:`Dart SDK docs`}))},{title:`curl`,language:`bash`,value:`
                         curl -X POST \\
                           -H 'Authorization:TOKEN' \\
