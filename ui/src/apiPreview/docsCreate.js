@@ -151,12 +151,20 @@ await pb.collection('${collection?.name}').requestVerification(
                     title: "curl",
                     language: "bash",
                     value: `
-                        curl -X POST \\
-                          -H 'Authorization:TOKEN' \\
-                          -H 'Content-Type:application/json' \\
-                          -d '{ ... }' \\
-                          '${baseURL}/api/collections/${collection.name}/records'
-                    `,
+curl -X POST \\
+  -H 'Authorization:TOKEN' \\
+  -H 'Content-Type:application/json' \\
+  -d '{ ... }' \\
+  '${baseURL}/api/collections/${collection.name}/records'
+` + (isAuth
+                        ? `
+# (optional) send an email verification request
+curl -X POST \\
+  -H 'Content-Type:application/json' \\
+  -d '{ "email":"test@example.com" }' \\
+  '${baseURL}/api/collections/${collection.name}/request-verification'
+`
+                        : ""),
                 },
             ],
         }),
