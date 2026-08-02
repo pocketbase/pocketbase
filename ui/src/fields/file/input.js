@@ -105,7 +105,6 @@ export function input(props) {
             className: "field-content",
             name: () => props.field.name,
         },
-        // @todo enable ordering new files before/inbetween existing
         app.components.sortable({
             className: "list",
             data: () => {
@@ -130,6 +129,23 @@ export function input(props) {
                 return vals;
             },
             onchange: (sortedList) => {
+                // sort existing files first because at the moment we don't
+                // support putting new files between old ones
+                sortedList.sort((a, b) => {
+                    const aIsString = typeof a == "string";
+                    const bIsString = typeof b == "string";
+
+                    if (aIsString && !bIsString) {
+                        return -1;
+                    }
+
+                    if (!aIsString && bIsString) {
+                        return 1;
+                    }
+
+                    return 0;
+                });
+
                 props.record[props.field.name] = sortedList;
                 triggerChangeEvent();
             },
