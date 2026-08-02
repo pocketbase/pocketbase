@@ -365,7 +365,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "attachment; filename=test_name.txt",
+				"Content-Disposition":     `attachment; filename="test_name.txt"`,
 				"Content-Type":            "application/octet-stream",
 				"Content-Length":          "4",
 				"Content-Security-Policy": csp,
@@ -380,7 +380,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "inline; filename=test_name.png",
+				"Content-Disposition":     `inline; filename="test_name.png"`,
 				"Content-Type":            "image/png",
 				"Content-Length":          "73",
 				"Content-Security-Policy": csp,
@@ -395,7 +395,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "attachment; filename=test_name_download.png",
+				"Content-Disposition":     `attachment; filename="test_name_download.png"`,
 				"Content-Type":            "image/png",
 				"Content-Length":          "73",
 				"Content-Security-Policy": csp,
@@ -410,7 +410,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "attachment; filename=test_name.abc",
+				"Content-Disposition":     `attachment; filename="test_name.abc"`,
 				"Content-Type":            "image/svg+xml",
 				"Content-Length":          "0",
 				"Content-Security-Policy": csp,
@@ -425,7 +425,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "attachment; filename=test_name",
+				"Content-Disposition":     `attachment; filename="test_name"`,
 				"Content-Type":            "text/css",
 				"Content-Length":          "0",
 				"Content-Security-Policy": csp,
@@ -440,7 +440,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "attachment; filename=test_name.abc",
+				"Content-Disposition":     `attachment; filename="test_name.abc"`,
 				"Content-Type":            "text/javascript",
 				"Content-Length":          "0",
 				"Content-Security-Policy": csp,
@@ -455,7 +455,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "attachment; filename=test_name.abc",
+				"Content-Disposition":     `attachment; filename="test_name.abc"`,
 				"Content-Type":            "text/javascript",
 				"Content-Length":          "0",
 				"Content-Security-Policy": csp,
@@ -470,7 +470,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "attachment; filename=test_name.abc",
+				"Content-Disposition":     `attachment; filename="test_name.abc"`,
 				"Content-Type":            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 				"Content-Length":          "0",
 				"Content-Security-Policy": csp,
@@ -485,7 +485,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "attachment; filename=test_name.abc",
+				"Content-Disposition":     `attachment; filename="test_name.abc"`,
 				"Content-Type":            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 				"Content-Length":          "0",
 				"Content-Security-Policy": csp,
@@ -500,7 +500,7 @@ func TestFileSystemServe(t *testing.T) {
 			nil,
 			false,
 			map[string]string{
-				"Content-Disposition":     "attachment; filename=test_name.abc",
+				"Content-Disposition":     `attachment; filename="test_name.abc"`,
 				"Content-Type":            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 				"Content-Length":          "0",
 				"Content-Security-Policy": csp,

@@ -5,6 +5,8 @@
 
 - Fixed "API preview" examples ([#7782](https://github.com/pocketbase/pocketbase/issues/7782)).
 
+- Added quotes around the default `Content-Disposition` serving filename in case custom name with special characters is provided.
+
 
 ## v0.39.10
 

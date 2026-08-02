@@ -464,7 +464,7 @@ func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey strin
 		extContentType = ct
 	}
 
-	setHeaderIfMissing(res, "Content-Disposition", disposition+"; filename="+name)
+	setHeaderIfMissing(res, "Content-Disposition", disposition+"; filename="+strconv.Quote(name))
 	setHeaderIfMissing(res, "Content-Type", extContentType)
 	setHeaderIfMissing(res, "Content-Security-Policy", "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox")
 
