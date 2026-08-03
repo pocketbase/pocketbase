@@ -7,6 +7,8 @@
 
 - Added quotes around the default `Content-Disposition` serving filename in case custom name with special characters is provided.
 
+- Added `filesystem.NewWriter(key, opts)` low-level helper to allow direct file create from an `io.Reader` value.
+
 
 ## v0.39.10
 

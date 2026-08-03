@@ -32,7 +32,7 @@ import (
 // note: the same as blob.ErrNotFound for backward compatibility with earlier versions
 var ErrNotFound = blob.ErrNotFound
 
-const metadataOriginalName = "original-filename"
+const MetadataOriginalName = "original-filename"
 
 type System struct {
 	ctx    context.Context
@@ -145,7 +145,7 @@ func (s *System) GetReuploadableFile(fileKey string, preserveName bool) (*File, 
 	}
 
 	name := path.Base(fileKey)
-	originalName := attrs.Metadata[metadataOriginalName]
+	originalName := attrs.Metadata[MetadataOriginalName]
 	if originalName == "" {
 		originalName = name
 	}
@@ -240,7 +240,7 @@ func (s *System) UploadFile(file *File, fileKey string) error {
 	opts := &blob.WriterOptions{
 		ContentType: mt.String(),
 		Metadata: map[string]string{
-			metadataOriginalName: originalName,
+			MetadataOriginalName: originalName,
 		},
 	}
 
@@ -282,7 +282,7 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 	opts := &blob.WriterOptions{
 		ContentType: mt.String(),
 		Metadata: map[string]string{
-			metadataOriginalName: originalName,
+			MetadataOriginalName: originalName,
 		},
 	}
 
@@ -298,6 +298,30 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 	}
 
 	return w.Close()
+}
+
+// NewWriter returns a new blob.Writer instance allowing direct file
+// create from an io.Reader value.
+//
+// If a file with the specified fileKey already exists, it will be replaced.
+//
+// NB! Make sure to call `Close()` on the resulting writer after you are done working with it.
+//
+// Note: If you have a bytes slice, [filesystem.File], or a multipart header value,
+// you can check also the Upload* related methods as they are more user-friendly.
+//
+// Example:
+//
+//	content := strings.NewReader("Lorem ipsum dolor sit amet...")
+//
+//	fsys, _ := filesystem.NewLocal("dir")
+//	defer fsys.Close()
+//
+//	w, _ := fsys.NewWriter("example/file/key", nil)
+//	w.ReadFrom(content)
+//	w.Close()
+func (s *System) NewWriter(fileKey string, opts *blob.WriterOptions) (*blob.Writer, error) {
+	return s.bucket.NewWriter(s.ctx, fileKey, opts)
 }
 
 // Delete deletes stored file at fileKey location.

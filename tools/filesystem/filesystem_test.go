@@ -17,9 +17,10 @@ import (
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/filesystem/blob"
 )
 
-func TestFileSystemExists(t *testing.T) {
+func TestFilesystemExists(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -54,7 +55,7 @@ func TestFileSystemExists(t *testing.T) {
 	}
 }
 
-func TestFileSystemAttributes(t *testing.T) {
+func TestFilesystemAttributes(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -96,7 +97,68 @@ func TestFileSystemAttributes(t *testing.T) {
 	}
 }
 
-func TestFileSystemDelete(t *testing.T) {
+func TestFilesystemNewWriter(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fsys, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fsys.Close()
+
+	testKey := "test_writer"
+
+	opts := &blob.WriterOptions{
+		Metadata: map[string]string{"test": "abc"},
+	}
+
+	w, err := fsys.NewWriter("test_writer", opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedContent := "test_content"
+
+	_, err = w.ReadFrom(strings.NewReader(expectedContent))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = w.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// verify that the file attributes and content were properly saved
+	// ---------------------------------------------------------------
+	attrs, err := fsys.Attributes(testKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if attrs.Metadata["test"] != "abc" {
+		t.Fatalf("Expected metadata test:abc, got %v", attrs.Metadata)
+	}
+
+	r, err := fsys.GetReader(testKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+
+	_, err = io.Copy(&buf, r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result := buf.String()
+	if result != expectedContent {
+		t.Fatalf("Expected file content\n%s\ngot\n%s", expectedContent, result)
+	}
+}
+
+func TestFilesystemDelete(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -115,7 +177,7 @@ func TestFileSystemDelete(t *testing.T) {
 	}
 }
 
-func TestFileSystemDeletePrefixWithoutTrailingSlash(t *testing.T) {
+func TestFilesystemDeletePrefixWithoutTrailingSlash(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -151,7 +213,7 @@ func TestFileSystemDeletePrefixWithoutTrailingSlash(t *testing.T) {
 	}
 }
 
-func TestFileSystemDeletePrefixWithTrailingSlash(t *testing.T) {
+func TestFilesystemDeletePrefixWithTrailingSlash(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -183,7 +245,7 @@ func TestFileSystemDeletePrefixWithTrailingSlash(t *testing.T) {
 	}
 }
 
-func TestFileSystemIsEmptyDir(t *testing.T) {
+func TestFilesystemIsEmptyDir(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -218,7 +280,7 @@ func TestFileSystemIsEmptyDir(t *testing.T) {
 	}
 }
 
-func TestFileSystemUploadMultipart(t *testing.T) {
+func TestFilesystemUploadMultipart(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -268,7 +330,7 @@ func TestFileSystemUploadMultipart(t *testing.T) {
 	}
 }
 
-func TestFileSystemUploadFile(t *testing.T) {
+func TestFilesystemUploadFile(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -305,7 +367,7 @@ func TestFileSystemUploadFile(t *testing.T) {
 	}
 }
 
-func TestFileSystemUpload(t *testing.T) {
+func TestFilesystemUpload(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -327,7 +389,7 @@ func TestFileSystemUpload(t *testing.T) {
 	}
 }
 
-func TestFileSystemServe(t *testing.T) {
+func TestFilesystemServe(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -571,7 +633,7 @@ func TestFileSystemServe(t *testing.T) {
 	}
 }
 
-func TestFileSystemGetReader(t *testing.T) {
+func TestFilesystemGetReader(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -623,7 +685,7 @@ func TestFileSystemGetReader(t *testing.T) {
 	}
 }
 
-func TestFileSystemGetReuploadableFile(t *testing.T) {
+func TestFilesystemGetReuploadableFile(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -701,7 +763,7 @@ func TestFileSystemGetReuploadableFile(t *testing.T) {
 	})
 }
 
-func TestFileSystemCopy(t *testing.T) {
+func TestFilesystemCopy(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -735,7 +797,7 @@ func TestFileSystemCopy(t *testing.T) {
 	}
 }
 
-func TestFileSystemList(t *testing.T) {
+func TestFilesystemList(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -809,7 +871,7 @@ func TestFileSystemList(t *testing.T) {
 	}
 }
 
-func TestFileSystemServeSingleRange(t *testing.T) {
+func TestFilesystemServeSingleRange(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -843,7 +905,7 @@ func TestFileSystemServeSingleRange(t *testing.T) {
 	}
 }
 
-func TestFileSystemServeMultiRange(t *testing.T) {
+func TestFilesystemServeMultiRange(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -872,7 +934,7 @@ func TestFileSystemServeMultiRange(t *testing.T) {
 	}
 }
 
-func TestFileSystemCreateThumb(t *testing.T) {
+func TestFilesystemCreateThumb(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
