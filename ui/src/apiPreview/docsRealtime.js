@@ -57,14 +57,14 @@ export function docsRealtime(collection) {
                         // (optionally) authenticate
                         await pb.collection('users').authWithPassword('test@example.com', '123456');
 
-                        // subscribe to changes in any ${baseURL} record
-                        pb.collection('${baseURL}').subscribe('*', function (e) {
+                        // subscribe to changes in any ${collection.name} record
+                        pb.collection('${collection.name}').subscribe('*', function (e) {
                             console.log(e.action);
                             console.log(e.record);
                         }, { /* other options like: filter, expand, custom headers, etc. */ });
 
                         // subscribe to changes only in the specified record
-                        pb.collection('${baseURL}').subscribe('RECORD_ID', function (e) {
+                        pb.collection('${collection.name}').subscribe('RECORD_ID', function (e) {
                             console.log(e.action);
                             console.log(e.record);
                         }, { /* other options like: filter, expand, custom headers, etc. */ });
@@ -72,13 +72,13 @@ export function docsRealtime(collection) {
                         ...
 
                         // unsubscribe - remove all 'RECORD_ID' subscriptions
-                        pb.collection('${baseURL}').unsubscribe('RECORD_ID');
+                        pb.collection('${collection.name}').unsubscribe('RECORD_ID');
 
                         // unsubscribe - remove all '*' topic subscriptions
-                        pb.collection('${baseURL}').unsubscribe('*');
+                        pb.collection('${collection.name}').unsubscribe('*');
 
                         // unsubscribe - remove all collection subscriptions
-                        pb.collection('${baseURL}').unsubscribe();
+                        pb.collection('${collection.name}').unsubscribe();
                     `,
                     footnote: t.div(
                         { className: "txt-right" },
@@ -103,14 +103,14 @@ export function docsRealtime(collection) {
                         // (optionally) authenticate
                         await pb.collection('users').authWithPassword('test@example.com', '123456');
 
-                        // subscribe to changes in any ${baseURL} record
-                        pb.collection('${baseURL}').subscribe('*', (e) {
+                        // subscribe to changes in any ${collection.name} record
+                        pb.collection('${collection.name}').subscribe('*', (e) {
                             print(e.action);
                             print(e.record);
                         }, /* other options like: filter, expand, custom headers, etc. */);
 
                         // subscribe to changes only in the specified record
-                        pb.collection('${baseURL}').subscribe('RECORD_ID', (e) {
+                        pb.collection('${collection.name}').subscribe('RECORD_ID', (e) {
                             print(e.action);
                             print(e.record);
                         }, /* other options like: filter, expand, custom headers, etc. */);
@@ -118,13 +118,13 @@ export function docsRealtime(collection) {
                         ...
 
                         // unsubscribe - remove all 'RECORD_ID' subscriptions
-                        pb.collection('${baseURL}').unsubscribe('RECORD_ID');
+                        pb.collection('${collection.name}').unsubscribe('RECORD_ID');
 
                         // unsubscribe - remove all '*' topic subscriptions
-                        pb.collection('${baseURL}').unsubscribe('*');
+                        pb.collection('${collection.name}').unsubscribe('*');
 
                         // unsubscribe - remove all collection subscriptions
-                        pb.collection('${baseURL}').unsubscribe();
+                        pb.collection('${collection.name}').unsubscribe();
                     `,
                     footnote: t.div(
                         { className: "txt-right" },

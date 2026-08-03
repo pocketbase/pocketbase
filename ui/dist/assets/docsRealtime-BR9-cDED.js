@@ -8,14 +8,14 @@ function e(e){let n=app.utils.getApiExampleURL(),r=Object.assign({collectionId:e
                         // (optionally) authenticate
                         await pb.collection('users').authWithPassword('test@example.com', '123456');
 
-                        // subscribe to changes in any ${n} record
-                        pb.collection('${n}').subscribe('*', function (e) {
+                        // subscribe to changes in any ${e.name} record
+                        pb.collection('${e.name}').subscribe('*', function (e) {
                             console.log(e.action);
                             console.log(e.record);
                         }, { /* other options like: filter, expand, custom headers, etc. */ });
 
                         // subscribe to changes only in the specified record
-                        pb.collection('${n}').subscribe('RECORD_ID', function (e) {
+                        pb.collection('${e.name}').subscribe('RECORD_ID', function (e) {
                             console.log(e.action);
                             console.log(e.record);
                         }, { /* other options like: filter, expand, custom headers, etc. */ });
@@ -23,13 +23,13 @@ function e(e){let n=app.utils.getApiExampleURL(),r=Object.assign({collectionId:e
                         ...
 
                         // unsubscribe - remove all 'RECORD_ID' subscriptions
-                        pb.collection('${n}').unsubscribe('RECORD_ID');
+                        pb.collection('${e.name}').unsubscribe('RECORD_ID');
 
                         // unsubscribe - remove all '*' topic subscriptions
-                        pb.collection('${n}').unsubscribe('*');
+                        pb.collection('${e.name}').unsubscribe('*');
 
                         // unsubscribe - remove all collection subscriptions
-                        pb.collection('${n}').unsubscribe();
+                        pb.collection('${e.name}').unsubscribe();
                     `,footnote:t.div({className:`txt-right`},t.a({href:`https://github.com/pocketbase/js-sdk`,target:`_blank`,rel:`noopener noreferrer`,textContent:`JS SDK docs`}))},{title:`Dart SDK`,language:`dart`,value:`
                         import 'package:pocketbase/pocketbase.dart';
 
@@ -40,14 +40,14 @@ function e(e){let n=app.utils.getApiExampleURL(),r=Object.assign({collectionId:e
                         // (optionally) authenticate
                         await pb.collection('users').authWithPassword('test@example.com', '123456');
 
-                        // subscribe to changes in any ${n} record
-                        pb.collection('${n}').subscribe('*', (e) {
+                        // subscribe to changes in any ${e.name} record
+                        pb.collection('${e.name}').subscribe('*', (e) {
                             print(e.action);
                             print(e.record);
                         }, /* other options like: filter, expand, custom headers, etc. */);
 
                         // subscribe to changes only in the specified record
-                        pb.collection('${n}').subscribe('RECORD_ID', (e) {
+                        pb.collection('${e.name}').subscribe('RECORD_ID', (e) {
                             print(e.action);
                             print(e.record);
                         }, /* other options like: filter, expand, custom headers, etc. */);
@@ -55,13 +55,13 @@ function e(e){let n=app.utils.getApiExampleURL(),r=Object.assign({collectionId:e
                         ...
 
                         // unsubscribe - remove all 'RECORD_ID' subscriptions
-                        pb.collection('${n}').unsubscribe('RECORD_ID');
+                        pb.collection('${e.name}').unsubscribe('RECORD_ID');
 
                         // unsubscribe - remove all '*' topic subscriptions
-                        pb.collection('${n}').unsubscribe('*');
+                        pb.collection('${e.name}').unsubscribe('*');
 
                         // unsubscribe - remove all collection subscriptions
-                        pb.collection('${n}').unsubscribe();
+                        pb.collection('${e.name}').unsubscribe();
                     `,footnote:t.div({className:`txt-right`},t.a({href:`https://github.com/pocketbase/dart-sdk`,target:`_blank`,rel:`noopener noreferrer`,textContent:`Dart SDK docs`}))},{title:`curl`,language:`bash`,value:`
                         # init an SSE connection and start listening for messages
                         # (the first message is always PB_CONNECT with the connection "clientId")
