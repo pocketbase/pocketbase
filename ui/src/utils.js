@@ -1295,6 +1295,23 @@ const utils = {
     videoExtensions: [".mp4", ".avi", ".mov", ".3gp", ".wmv"],
     audioExtensions: [".aa", ".aac", ".m4v", ".mp3", ".ogg", ".oga", ".mogg", ".amr"],
     documentExtensions: [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odp", ".odt", ".ods", ".txt"],
+    archiveExtensions: [".zip", ".gz", ".tar", ".rar", ".7z"],
+
+    /**
+     * Loosely check if a file has an extension from the specified list.
+     *
+     * @param  {Array} extensionsList
+     * @param  {string} filename
+     * @return {boolean}
+     */
+    hasExtension(extensionsList, filename) {
+        if (typeof filename != "string") {
+            return false;
+        }
+
+        filename = filename.toLowerCase();
+        return !!extensionsList?.find((ext) => filename.endsWith(ext));
+    },
 
     /**
      * Loosely check if a file has image extension.
@@ -1303,8 +1320,7 @@ const utils = {
      * @return {boolean}
      */
     hasImageExtension(filename) {
-        filename = (filename || "").toLowerCase();
-        return !!app.utils.imageExtensions.find((ext) => filename.endsWith(ext));
+        return app.utils.hasExtension(app.utils.imageExtensions, filename);
     },
 
     /**
@@ -1314,8 +1330,7 @@ const utils = {
      * @return {boolean}
      */
     hasVideoExtension(filename) {
-        filename = (filename || "").toLowerCase();
-        return !!app.utils.videoExtensions.find((ext) => filename.endsWith(ext));
+        return app.utils.hasExtension(app.utils.videoExtensions, filename);
     },
 
     /**
@@ -1325,8 +1340,7 @@ const utils = {
      * @return {boolean}
      */
     hasAudioExtension(filename) {
-        filename = (filename || "").toLowerCase();
-        return !!app.utils.audioExtensions.find((ext) => filename.endsWith(ext));
+        return app.utils.hasExtension(app.utils.audioExtensions, filename);
     },
 
     /**
@@ -1336,8 +1350,17 @@ const utils = {
      * @return {boolean}
      */
     hasDocumentExtension(filename) {
-        filename = (filename || "").toLowerCase();
-        return !!app.utils.documentExtensions.find((ext) => filename.endsWith(ext));
+        return app.utils.hasExtension(app.utils.documentExtensions, filename);
+    },
+
+    /**
+     * Loosely check if a file has an archive extension.
+     *
+     * @param  {string} filename
+     * @return {boolean}
+     */
+    hasArchiveExtension(filename) {
+        return app.utils.hasExtension(app.utils.archiveExtensions, filename);
     },
 
     /**
@@ -1351,6 +1374,7 @@ const utils = {
         if (app.utils.hasVideoExtension(filename)) return "video";
         if (app.utils.hasAudioExtension(filename)) return "audio";
         if (app.utils.hasDocumentExtension(filename)) return "document";
+        if (app.utils.hasArchiveExtension(filename)) return "archive";
         return "file";
     },
     fileTypeIcons: {
@@ -1358,6 +1382,7 @@ const utils = {
         video: "ri-movie-line",
         audio: "ri-music-2-line",
         document: "ri-file-line",
+        archive: "ri-file-zip-line",
         file: "ri-file-line",
     },
 

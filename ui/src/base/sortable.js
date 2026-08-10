@@ -75,10 +75,6 @@ window.app.components.sortable = function(propsArg = {}) {
             }
         });
 
-        listEl.addEventListener("dragend", (e) => {
-            clearDragData();
-        });
-
         // drop
         // ---
         // prevent default to allow drop
@@ -115,6 +111,12 @@ window.app.components.sortable = function(propsArg = {}) {
 
             props.onchange(clone, fromIndex, toIndex);
         });
+
+        // note: using document because it could be an outside dragged element
+        listEl._documentDragend = function() {
+            clearDragData();
+        };
+        document.addEventListener("dragend", listEl._documentDragend);
     }
 
     function childIndex(children, child) {
@@ -151,6 +153,10 @@ window.app.components.sortable = function(propsArg = {}) {
             },
             onunmount: (listEl) => {
                 watchers.forEach((w) => w?.unwatch());
+
+                if (listEl._documentDragend) {
+                    document.removeEventListener("dragend", listEl._documentDragend);
+                }
             },
         },
         (el) => {

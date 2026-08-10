@@ -5,7 +5,7 @@ const recordsPerPage = 100;
 
 const defaultSettings = {
     btnText: "Insert",
-    fileTypes: [], // "image", "document", "video", "audio", "file"
+    fileTypes: [], // "image", "document", "video", "audio", "archive", "file"
     onselect: function(selectedFile) {},
 };
 
