@@ -307,6 +307,12 @@ window.app.components.codeEditor = function(propsArg = {}) {
                 return;
             }
 
+            // prevent "Tab trap"
+            if (!props.singleLine && e.key == "Escape" && !dropdown?.isConnected) {
+                editorContent?.blur();
+                return;
+            }
+
             if (!props.singleLine && e.key == "Tab") {
                 e.preventDefault();
                 const selection = window.getSelection();

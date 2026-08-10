@@ -64,9 +64,15 @@ document.addEventListener(
 
         dropdown.addEventListener("toggle", (e) => {
             if (e.newState == "open") {
+                // in case the dropdown is manually controlled and don't have a popovertarget
+                dropdown.__dropdownSource = e.source;
+                dropdown.__dropdownSource?.setAttribute("data-popover-state", true);
+
                 updatePopovertargetsData(e.target.id, true);
                 document.addEventListener("keydown", onKeydown);
             } else {
+                dropdown.__dropdownSource?.setAttribute("data-popover-state", false);
+
                 updatePopovertargetsData(e.target.id, false);
                 document.removeEventListener("keydown", onKeydown);
             }
