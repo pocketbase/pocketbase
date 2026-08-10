@@ -9,7 +9,7 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            "@": __dirname + "/src",
+            "@": import.meta.dirname + "/src",
         },
     },
 });

@@ -3,11 +3,18 @@
 - Propagate console command errors and recovered panics to `app.Start()` so that the program can exit with non-zero code while still ensuring that `app.OnTerminate` hook (responsible for the app graceful shutdown handling) was triggered.
     _⚠️ Note that this could be a slight breaking change in case you are chaining PocketBase commands and relied on the previous `0` exit status for `Command.RunE` returned errors._
 
-- Fixed "API preview" examples ([#7782](https://github.com/pocketbase/pocketbase/issues/7782), [#7785](https://github.com/pocketbase/pocketbase/issues/7785)).
-
 - Added quotes around the default `Content-Disposition` serving filename in case custom name with special characters is provided.
 
 - Added `filesystem.NewWriter(key, opts)` low-level helper to allow direct file create from an `io.Reader` value.
+
+
+## v0.39.11 (WIP)
+
+- Fixed "API preview" examples ([#7782](https://github.com/pocketbase/pocketbase/issues/7782), [#7785](https://github.com/pocketbase/pocketbase/issues/7785)).
+
+- Other minor UI improvements (fixed sortable `dragend` event handling, allow ESC to workaround TAB trap for the rule fields, updated shablon, updated npm dev dependencies, etc.).
+
+- (@todo) Bumped min Go GitHub action version to 1.26.6 because it comes with some [minor bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.6).
 
 
 ## v0.39.10
