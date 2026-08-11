@@ -7,6 +7,9 @@
 
 - Added `filesystem.NewWriter(key, opts)` low-level helper to allow direct file create from an `io.Reader` value.
 
+- Added `Cross-Origin-Opener-Policy:same-origin` to the default security response headers.
+    _This is just an extra precaution to prevent tab-nabbing in case custom UI plugins use `target="_blank"` without `rel="noopener"`._
+
 
 ## v0.39.11 (WIP)
 
