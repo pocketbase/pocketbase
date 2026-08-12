@@ -231,6 +231,12 @@ function collectionUpsertModal(rawCollection, modalSettings) {
         clone.created = "";
         clone.updated = "";
 
+        // reset field ids
+        // (in case the field relies on the id to dinstinguish new vs old)
+        clone.fields?.forEach((field) => {
+            delete field.id;
+        });
+
         // updated indexes ids
         clone.indexes = clone.indexes?.map((idx) => {
             return app.utils.replaceIndexFields(idx, (parsed) => {
