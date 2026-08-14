@@ -1,3 +1,8 @@
+## v0.22.52
+
+- (_Backported from v0.39.11_) Bumped `golang.org/x/*` deps and the min Go GitHub action version to 1.26.6 because it comes with some [minor bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.6).
+
+
 ## v0.22.51
 
 - (_Backported from v0.39.10_) Reverted the auto panic recover handling for the cli commands to preserve the old behavior and allow panic to force exit with non-zero code ([#7781](https://github.com/pocketbase/pocketbase/issues/7781)).
