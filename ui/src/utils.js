@@ -1118,7 +1118,7 @@ const utils = {
             return searchTerm;
         }
 
-        const opChars = ["=", "!=", "~", "!~", ">", ">=", "<", "<="];
+        const opChars = ["=", "~", ">", "<"];
 
         // loosely check if it is already a filter expression
         for (const op of opChars) {
@@ -1128,10 +1128,12 @@ const utils = {
         }
 
         searchTerm = isNaN(searchTerm) && searchTerm != "true" && searchTerm != "false"
-            ? `"${searchTerm.replace(/^[\"\'\`]|[\"\'\`]$/gm, "")}"`
+            ? searchTerm.replace(/^[\"\'\`]|[\"\'\`]$/gm, "")
             : searchTerm;
 
-        return fallbackFields.map((f) => `${f}~${searchTerm}`).join("||");
+        return fallbackFields.map((f) => {
+            return app.pb.filter(`${f}?~{:searchTerm}`, { searchTerm });
+        }).join("||");
     },
 
     logLevels: {
