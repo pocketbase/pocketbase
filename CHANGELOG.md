@@ -4,7 +4,7 @@
 
 - Other minor UI improvements (fixed sortable `dragend` event handling, allow ESC to workaround TAB trap for the rule fields, allow new duplicated collection to edit the collection of relation fields, updated shablon, updated npm dev dependencies, etc.).
 
-- (@todo) Bumped min Go GitHub action version to 1.26.6 because it comes with some [minor bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.6).
+- Bumped min Go GitHub action version to 1.26.6 because it comes with some [minor bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.6).
 
 
 ## v0.39.10
