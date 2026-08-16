@@ -2,6 +2,7 @@
 
 - Propagate console command errors and recovered panics to `app.Start()` so that the program can exit with non-zero code while still ensuring that `app.OnTerminate` hook (responsible for the app graceful shutdown handling) was triggered.
     _⚠️ Note that this could be a slight breaking change in case you are chaining PocketBase commands and relied on the previous `0` exit status for `Command.RunE` returned errors._
+    _Or in other words, if you have `./pocketbase invalid && someothercommand` and previously relied that `someothercommand` will be always executed then this is no longer the case and you'll have to adjust it or replace `&&` with `;`._
 
 - Added quotes around the default `Content-Disposition` serving filename in case custom name with special characters is provided.
 

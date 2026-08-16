@@ -234,9 +234,8 @@ window.app.components.select = function(propsArg = {}) {
         {
             type: "button",
             id: () => props.id,
-            name: () => props.name,
             disabled: () => props.disabled,
-            className: () => `selected-container ${props.className}`,
+            className: "selected-container",
             popoverTargetElement: dropdown,
             onclick: (e) => {
                 e.stopPropagation();
@@ -316,9 +315,10 @@ window.app.components.select = function(propsArg = {}) {
         ),
     );
 
-    return t.div(
+    return t.output(
         {
             rid: props.rid,
+            name: () => props.name,
             hidden: () => props.hidden,
             inert: () => props.inert,
             onmount: (el) => {
@@ -337,9 +337,10 @@ window.app.components.select = function(propsArg = {}) {
                     "input",
                     "select",
                     props.max > 1 ? "multiple" : "single",
-                    props.disabled ? "disabled" : "",
-                    props.required ? "required" : "",
-                ].join(" ");
+                    props.disabled ? "disabled" : null,
+                    props.required ? "required" : null,
+                    props.className || null,
+                ].filter(Boolean).join(" ");
             },
         },
         selectedContainer,
