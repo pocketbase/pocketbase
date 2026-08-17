@@ -3,7 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"net/http"
 
@@ -68,7 +68,6 @@ func (p *Linear) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 			} `json:"viewer"`
 		} `json:"data"`
 	}{}
-
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}

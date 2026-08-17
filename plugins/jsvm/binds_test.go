@@ -2,7 +2,7 @@ package jsvm
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"io"
@@ -505,12 +505,12 @@ func TestBindCoreMailerMessage(t *testing.T) {
 		t.Fatalf("Expected mailer.Message, got %v", m)
 	}
 
-	raw, err := json.Marshal(m)
+	raw, err := json.Marshal(m, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expected := `{"from":{"Name":"test_from","Address":"test_from@example.com"},"to":[{"Name":"test_to1","Address":"test_to1@example.com"},{"Name":"test_to2","Address":"test_to2@example.com"}],"bcc":[{"Name":"test_bcc1","Address":"test_bcc1@example.com"},{"Name":"test_bcc2","Address":"test_bcc2@example.com"}],"cc":[{"Name":"test_cc1","Address":"test_cc1@example.com"},{"Name":"test_cc2","Address":"test_cc2@example.com"}],"subject":"test_subject","html":"test_html","text":"test_text","headers":{"header1":"a","header2":"b"},"attachments":null,"inlineAttachments":null}`
+	expected := `{"from":{"Name":"test_from","Address":"test_from@example.com"},"to":[{"Name":"test_to1","Address":"test_to1@example.com"},{"Name":"test_to2","Address":"test_to2@example.com"}],"bcc":[{"Name":"test_bcc1","Address":"test_bcc1@example.com"},{"Name":"test_bcc2","Address":"test_bcc2@example.com"}],"cc":[{"Name":"test_cc1","Address":"test_cc1@example.com"},{"Name":"test_cc2","Address":"test_cc2@example.com"}],"subject":"test_subject","html":"test_html","text":"test_text","headers":{"header1":"a","header2":"b"},"attachments":{},"inlineAttachments":{}}`
 
 	if string(raw) != expected {
 		t.Fatalf("Expected \n%s, \ngot \n%s", expected, raw)
@@ -1178,7 +1178,7 @@ func TestBindApisErrors(t *testing.T) {
 			t.Errorf("[%s] Expected Message %q, got %q", s.js, s.expectMessage, apiErr.Message)
 		}
 
-		dataRaw, _ := json.Marshal(apiErr.RawData())
+		dataRaw, _ := json.Marshal(apiErr.RawData(), json.Deterministic(true))
 		if string(dataRaw) != s.expectData {
 			t.Errorf("[%s] Expected Data %q, got %q", s.js, s.expectData, dataRaw)
 		}
@@ -1439,7 +1439,7 @@ func TestBindHTTPSend(t *testing.T) {
 		res.Header().Add("X-Custom", "custom_header")
 		res.Header().Add("Set-Cookie", "sessionId=123456")
 
-		infoRaw, _ := json.Marshal(info)
+		infoRaw, _ := json.Marshal(info, json.Deterministic(true))
 
 		// write back the submitted request
 		res.Write(infoRaw)

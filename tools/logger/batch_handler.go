@@ -2,7 +2,7 @@ package logger
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"log/slog"
 	"sync"

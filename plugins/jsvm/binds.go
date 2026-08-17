@@ -3,7 +3,7 @@ package jsvm
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"io"
 	"io/fs"
@@ -352,7 +352,7 @@ func BindCore(vm *goja.Runtime) {
 			}
 
 			// as a last attempt try to json encode the value
-			rawBytes, _ := json.Marshal(raw)
+			rawBytes, _ := json.Marshal(raw, json.Deterministic(true))
 
 			return rawBytes, nil
 		}
@@ -381,7 +381,7 @@ func BindCore(vm *goja.Runtime) {
 			}
 
 			// as a last attempt try to json encode the value
-			rawBytes, _ := json.Marshal(raw)
+			rawBytes, _ := json.Marshal(raw, json.Deterministic(true))
 
 			return string(rawBytes), nil
 		}
@@ -1217,13 +1217,13 @@ func newDynamicModel(shape map[string]any) any {
 		case reflect.Map:
 			raw, _ := json.Marshal(v)
 			newV := types.JSONMap[any]{}
-			newV.Scan(raw)
+			_ = newV.Scan(raw)
 			v = newV
 			vt = reflect.TypeOf(v)
 		case reflect.Slice, reflect.Array:
 			raw, _ := json.Marshal(v)
 			newV := types.JSONArray[any]{}
-			newV.Scan(raw)
+			_ = newV.Scan(raw)
 			v = newV
 			vt = reflect.TypeOf(newV)
 		case reflect.Pointer:

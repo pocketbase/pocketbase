@@ -2,7 +2,7 @@ package core_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"strings"
 	"testing"
@@ -1016,8 +1016,8 @@ func TestOAuth2ProviderConfigInitProvider(t *testing.T) {
 				t.Fatalf("Expected PKCE %v, got %v", *s.expectedConfig.PKCE, provider.PKCE())
 			}
 
-			rawMeta, _ := json.Marshal(provider.Extra())
-			expectedMeta, _ := json.Marshal(s.expectedConfig.Extra)
+			rawMeta, _ := json.Marshal(provider.Extra(), json.Deterministic(true))
+			expectedMeta, _ := json.Marshal(s.expectedConfig.Extra, json.Deterministic(true))
 			if !bytes.Equal(rawMeta, expectedMeta) {
 				t.Fatalf("Expected PKCE %v, got %v", *s.expectedConfig.PKCE, provider.PKCE())
 			}

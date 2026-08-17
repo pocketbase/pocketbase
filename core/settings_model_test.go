@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"os"
 	"strings"
@@ -112,12 +112,12 @@ func TestSettingsMerge(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s1Encoded, err := json.Marshal(s1)
+	s1Encoded, err := json.Marshal(s1, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	s2Encoded, err := json.Marshal(s2)
+	s2Encoded, err := json.Marshal(s2, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,12 +138,12 @@ func TestSettingsClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s1Bytes, err := json.Marshal(s1)
+	s1Bytes, err := json.Marshal(s1, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	s2Bytes, err := json.Marshal(s2)
+	s2Bytes, err := json.Marshal(s2, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func TestSettingsMarshalJSON(t *testing.T) {
 	settings.S3.Secret = testSecret
 	settings.Backups.S3.Secret = testSecret
 
-	raw, err := json.Marshal(settings)
+	raw, err := json.Marshal(settings, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -228,7 +228,7 @@ func TestSettingsValidate(t *testing.T) {
 		`"rateLimits":{`,
 	}
 
-	errBytes, _ := json.Marshal(err)
+	errBytes, _ := json.Marshal(err, json.Deterministic(true))
 	jsonErr := string(errBytes)
 	for _, expected := range expectations {
 		if !strings.Contains(jsonErr, expected) {

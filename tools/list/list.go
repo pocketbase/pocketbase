@@ -1,7 +1,7 @@
 package list
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"regexp"
 	"strings"
 

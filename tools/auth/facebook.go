@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
@@ -53,12 +53,14 @@ func (p *Facebook) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	extracted := struct {
-		Id      string
-		Name    string
-		Email   string
+		Id      string `json:"id"`
+		Name    string `json:"name"`
+		Email   string `json:"email"`
 		Picture struct {
-			Data struct{ Url string }
-		}
+			Data struct {
+				Url string `json:"url"`
+			} `json:"data"`
+		} `json:"picture"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err

@@ -1,7 +1,7 @@
 package core
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"strconv"
 	"strings"
@@ -522,8 +522,6 @@ func (m *Collection) unmarshalRawOptions() error {
 // For new/"blank" Collection models it replaces the model with a factory
 // instance and then unmarshal the provided data one on top of it.
 func (m *Collection) UnmarshalJSON(b []byte) error {
-	type alias *Collection
-
 	// initialize the default fields
 	// (e.g. in case the collection was NOT created using the designated factories)
 	if m.IsNew() && m.Type == "" {
@@ -540,7 +538,8 @@ func (m *Collection) UnmarshalJSON(b []byte) error {
 		*m = *blank
 	}
 
-	return json.Unmarshal(b, alias(m))
+	type alias Collection
+	return json.Unmarshal(b, (*alias)(m))
 }
 
 // MarshalJSON implements the [json.Marshaler] interface.
@@ -550,10 +549,12 @@ func (m *Collection) UnmarshalJSON(b []byte) error {
 func (m Collection) MarshalJSON() ([]byte, error) {
 	switch m.Type {
 	case CollectionTypeView:
-		return json.Marshal(struct {
+		alias := struct {
 			baseCollection
 			collectionViewOptions
-		}{m.baseCollection, m.collectionViewOptions})
+		}{m.baseCollection, m.collectionViewOptions}
+
+		return json.Marshal(alias, json.Deterministic(true))
 	case CollectionTypeAuth:
 		alias := struct {
 			baseCollection
@@ -582,15 +583,15 @@ func (m Collection) MarshalJSON() ([]byte, error) {
 			alias.OAuth2.Providers = redactedProviders
 		}
 
-		return json.Marshal(alias)
+		return json.Marshal(alias, json.Deterministic(true))
 	default:
-		return json.Marshal(m.baseCollection)
+		return json.Marshal(m.baseCollection, json.Deterministic(true))
 	}
 }
 
 // String returns a string representation of the current collection.
 func (m Collection) String() string {
-	raw, _ := json.Marshal(m)
+	raw, _ := m.MarshalJSON()
 	return string(raw)
 }
 

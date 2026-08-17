@@ -1,7 +1,7 @@
 package picker_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/picker"
@@ -263,7 +263,7 @@ func TestPickFields(t *testing.T) {
 				return
 			}
 
-			serialized, err := json.Marshal(result)
+			serialized, err := json.Marshal(result, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}

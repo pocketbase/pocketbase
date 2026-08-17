@@ -1,7 +1,7 @@
 package cron
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"testing"
 )
 
@@ -59,7 +59,7 @@ func TestJobMarshalJSON(t *testing.T) {
 
 	j := Job{id: "test_id", schedule: s}
 
-	raw, err := json.Marshal(j)
+	raw, err := json.Marshal(j, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}

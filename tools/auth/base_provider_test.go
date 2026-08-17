@@ -3,7 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"testing"
 
 	"golang.org/x/oauth2"
@@ -215,12 +215,12 @@ func TestExtra(t *testing.T) {
 
 	after := b.Extra()
 
-	rawExtra, err := json.Marshal(extra)
+	rawExtra, err := json.Marshal(extra, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawAfter, err := json.Marshal(after)
+	rawAfter, err := json.Marshal(after, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}

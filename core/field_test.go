@@ -2,7 +2,7 @@ package core_test
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"reflect"
 	"strings"
 	"testing"

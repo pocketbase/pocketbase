@@ -2,7 +2,7 @@ package router_test
 
 import (
 	"database/sql"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -22,7 +22,7 @@ func TestNewApiErrorWithRawData(t *testing.T) {
 		"rawData_test",
 	)
 
-	result, _ := json.Marshal(e)
+	result, _ := json.Marshal(e, json.Deterministic(true))
 	expected := `{"data":{},"message":"Message_test.","status":300}`
 
 	if string(result) != expected {
@@ -61,7 +61,7 @@ func TestNewApiErrorWithValidationData(t *testing.T) {
 		},
 	)
 
-	result, _ := json.Marshal(e)
+	result, _ := json.Marshal(e, json.Deterministic(true))
 	expected := `{"data":{"err1":{"code":"validation_invalid_value","message":"Invalid value."},"err2":{"code":"validation_required","message":"Cannot be blank."},"err3":{"err3.1":{"code":"validation_invalid_value","message":"Invalid value."},"err3.2":{"code":"validation_required","message":"Cannot be blank."},"err3.3":{"err3.3.1":{"code":"validation_required","message":"Cannot be blank."}}},"err4":{"code":"mock_code","message":"Mock_error.","mock_resolve":123},"err5":{"err5.1":{"code":"validation_required","message":"Cannot be blank."}}},"message":"Message_test.","status":300}`
 
 	if string(result) != expected {
@@ -93,7 +93,7 @@ func TestNewNotFoundError(t *testing.T) {
 	for i, s := range scenarios {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			e := router.NewNotFoundError(s.message, s.data)
-			result, _ := json.Marshal(e)
+			result, _ := json.Marshal(e, json.Deterministic(true))
 
 			if str := string(result); str != s.expected {
 				t.Fatalf("Expected\n%v\ngot\n%v", s.expected, str)
@@ -118,7 +118,7 @@ func TestNewBadRequestError(t *testing.T) {
 	for i, s := range scenarios {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			e := router.NewBadRequestError(s.message, s.data)
-			result, _ := json.Marshal(e)
+			result, _ := json.Marshal(e, json.Deterministic(true))
 
 			if str := string(result); str != s.expected {
 				t.Fatalf("Expected\n%v\ngot\n%v", s.expected, str)
@@ -143,7 +143,7 @@ func TestNewForbiddenError(t *testing.T) {
 	for i, s := range scenarios {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			e := router.NewForbiddenError(s.message, s.data)
-			result, _ := json.Marshal(e)
+			result, _ := json.Marshal(e, json.Deterministic(true))
 
 			if str := string(result); str != s.expected {
 				t.Fatalf("Expected\n%v\ngot\n%v", s.expected, str)
@@ -168,7 +168,7 @@ func TestNewUnauthorizedError(t *testing.T) {
 	for i, s := range scenarios {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			e := router.NewUnauthorizedError(s.message, s.data)
-			result, _ := json.Marshal(e)
+			result, _ := json.Marshal(e, json.Deterministic(true))
 
 			if str := string(result); str != s.expected {
 				t.Fatalf("Expected\n%v\ngot\n%v", s.expected, str)
@@ -193,7 +193,7 @@ func TestNewInternalServerError(t *testing.T) {
 	for i, s := range scenarios {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			e := router.NewInternalServerError(s.message, s.data)
-			result, _ := json.Marshal(e)
+			result, _ := json.Marshal(e, json.Deterministic(true))
 
 			if str := string(result); str != s.expected {
 				t.Fatalf("Expected\n%v\ngot\n%v", s.expected, str)
@@ -218,7 +218,7 @@ func TestNewTooManyRequestsError(t *testing.T) {
 	for i, s := range scenarios {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			e := router.NewTooManyRequestsError(s.message, s.data)
-			result, _ := json.Marshal(e)
+			result, _ := json.Marshal(e, json.Deterministic(true))
 
 			if str := string(result); str != s.expected {
 				t.Fatalf("Expected\n%v\ngot\n%v", s.expected, str)
@@ -321,7 +321,7 @@ func TestToApiError(t *testing.T) {
 
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			raw, err := json.Marshal(router.ToApiError(s.err))
+			raw, err := json.Marshal(router.ToApiError(s.err), json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}

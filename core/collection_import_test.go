@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"strings"
 	"testing"
 
@@ -449,7 +449,7 @@ func TestImportCollectionsCreateRules(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	raw, err := json.Marshal(collection)
+	raw, err := json.Marshal(collection, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}

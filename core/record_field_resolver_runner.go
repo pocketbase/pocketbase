@@ -1,7 +1,7 @@
 package core
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"reflect"
@@ -333,7 +333,7 @@ func (r *runner) processRequestBodyEachModifier(bodyField Field) (*search.Resolv
 	}
 
 	bodyItems := toSlice(r.resolver.requestInfo.Body[bodyField.GetName()])
-	bodyItemsRaw, err := json.Marshal(bodyItems)
+	bodyItemsRaw, err := json.Marshal(bodyItems, json.Deterministic(true))
 	if err != nil {
 		return nil, fmt.Errorf("cannot serialize the data for field %q", r.activeProps[2])
 	}

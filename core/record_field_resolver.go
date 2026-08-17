@@ -1,7 +1,7 @@
 package core
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"slices"
@@ -354,7 +354,7 @@ func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (*search
 
 		// if that doesn't work, try encoding it
 		if castErr != nil {
-			encoded, jsonErr := json.Marshal(v)
+			encoded, jsonErr := json.Marshal(v, json.Deterministic(true))
 			if jsonErr == nil {
 				val = string(encoded)
 			}

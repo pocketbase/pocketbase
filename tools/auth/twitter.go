@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"

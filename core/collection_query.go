@@ -3,7 +3,7 @@ package core
 import (
 	"bytes"
 	"database/sql"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"slices"
@@ -324,12 +324,12 @@ func resaveViewsWithChangedFields(app App, excludeIds ...string) error {
 					f.SetId("")
 				}
 
-				encodedNewFields, err := json.Marshal(newFields)
+				encodedNewFields, err := json.Marshal(newFields, json.Deterministic(true))
 				if err != nil {
 					return err
 				}
 
-				encodedOldFields, err := json.Marshal(oldFields)
+				encodedOldFields, err := json.Marshal(oldFields, json.Deterministic(true))
 				if err != nil {
 					return err
 				}

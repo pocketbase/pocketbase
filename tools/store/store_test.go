@@ -2,7 +2,7 @@ package store_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"slices"
 	"strconv"
 	"testing"
@@ -12,7 +12,7 @@ import (
 
 func TestNew(t *testing.T) {
 	data := map[string]int{"test1": 1, "test2": 2}
-	originalRawData, err := json.Marshal(data)
+	originalRawData, err := json.Marshal(data, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func TestNew(t *testing.T) {
 	s.Remove("test1") // remove 1 item
 
 	// check if data was shallow copied
-	rawData, _ := json.Marshal(data)
+	rawData, _ := json.Marshal(data, json.Deterministic(true))
 	if !bytes.Equal(originalRawData, rawData) {
 		t.Fatalf("Expected data \n%s, \ngot \n%s", originalRawData, rawData)
 	}
@@ -44,7 +44,7 @@ func TestReset(t *testing.T) {
 	s := store.New(map[string]int{"test1": 1})
 
 	data := map[string]int{"test2": 2}
-	originalRawData, err := json.Marshal(data)
+	originalRawData, err := json.Marshal(data, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestReset(t *testing.T) {
 	s.Set("test3", 3)
 
 	// check if data was shallow copied
-	rawData, _ := json.Marshal(data)
+	rawData, _ := json.Marshal(data, json.Deterministic(true))
 	if !bytes.Equal(originalRawData, rawData) {
 		t.Fatalf("Expected data \n%s, \ngot \n%s", originalRawData, rawData)
 	}
@@ -371,7 +371,7 @@ func TestMarshalJSON(t *testing.T) {
 
 	expected := []byte(`{"a":"test1", "b":"test2"}`)
 
-	result, err := json.Marshal(s)
+	result, err := json.Marshal(s, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}

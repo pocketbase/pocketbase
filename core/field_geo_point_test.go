@@ -2,7 +2,7 @@ package core_test
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"testing"
 
@@ -57,7 +57,7 @@ func TestGeoPointFieldPrepareValue(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			raw, err := json.Marshal(v)
+			raw, err := json.Marshal(v, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}

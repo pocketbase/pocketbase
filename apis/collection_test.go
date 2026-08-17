@@ -1617,7 +1617,7 @@ func TestCollectionOAuth2Providers(t *testing.T) {
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
-				`{"name":"oidc3","displayName":"OIDC","logo":"\u003csvg`,
+				`{"name":"oidc3","displayName":"OIDC","logo":"<svg`,
 			},
 			NotExpectedContent: []string{
 				`"order":`,

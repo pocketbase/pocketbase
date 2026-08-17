@@ -1,7 +1,7 @@
 package cron
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"slices"
 	"sync"
 	"testing"
@@ -128,7 +128,7 @@ func TestCronAddAndRemove(t *testing.T) {
 			"test5": `{"minutes":{"1":{}},"hours":{"2":{}},"days":{"3":{}},"months":{"4":{}},"daysOfWeek":{"5":{}}}`,
 		}
 		for k, v := range expectedSchedules {
-			raw, err := json.Marshal(indexedJobs[k].schedule)
+			raw, err := json.Marshal(indexedJobs[k].schedule, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}

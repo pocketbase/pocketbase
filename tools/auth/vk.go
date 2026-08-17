@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"strconv"
@@ -69,7 +69,6 @@ func (p *VK) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 			AvatarURL string `json:"photo_max"`
 		} `json:"response"`
 	}{}
-
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}

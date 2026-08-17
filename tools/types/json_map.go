@@ -2,30 +2,12 @@ package types
 
 import (
 	"database/sql/driver"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 )
 
 // JSONMap defines a map that is safe for json and db read/write.
 type JSONMap[T any] map[string]T
-
-// MarshalJSON implements the [json.Marshaler] interface.
-func (m JSONMap[T]) MarshalJSON() ([]byte, error) {
-	type alias JSONMap[T] // prevent recursion
-
-	// initialize an empty map to ensure that `{}` is returned as json
-	if m == nil {
-		m = JSONMap[T]{}
-	}
-
-	return json.Marshal(alias(m))
-}
-
-// String returns the string representation of the current json map.
-func (m JSONMap[T]) String() string {
-	v, _ := m.MarshalJSON()
-	return string(v)
-}
 
 // Get retrieves a single value from the current JSONMap[T].
 //
@@ -43,10 +25,24 @@ func (m JSONMap[T]) Set(key string, value T) {
 	m[key] = value
 }
 
+// MarshalJSON implements the [json.Marshaler] interface.
+func (m JSONMap[T]) MarshalJSON() ([]byte, error) {
+	type alias JSONMap[T] // prevent recursion
+
+	// note: forces the Deterministic option to ensure consistent output
+	// in mixed json v1 and v2 configurations
+	return json.Marshal(alias(m), json.Deterministic(true))
+}
+
+// String returns the string representation of the current json map.
+func (m JSONMap[T]) String() string {
+	v, _ := m.MarshalJSON()
+	return string(v)
+}
+
 // Value implements the [driver.Valuer] interface.
 func (m JSONMap[T]) Value() (driver.Value, error) {
-	data, err := json.Marshal(m)
-
+	data, err := m.MarshalJSON()
 	return string(data), err
 }
 
@@ -69,5 +65,12 @@ func (m *JSONMap[T]) Scan(value any) error {
 		data = []byte("{}")
 	}
 
-	return json.Unmarshal(data, m)
+	err := json.Unmarshal(data, m)
+	if err != nil {
+		// reset because jsonv2 performs streaming decoding and mutates the dst even on error
+		*m = JSONMap[T]{}
+		return err
+	}
+
+	return nil
 }

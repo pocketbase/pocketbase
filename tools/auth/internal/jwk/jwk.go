@@ -7,7 +7,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"encoding/base64"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"io"
@@ -105,7 +105,7 @@ func Fetch(ctx context.Context, jwksURL string, kid string) (*JWK, error) {
 	}
 
 	jwks := struct {
-		Keys []*JWK
+		Keys []*JWK `json:"keys"`
 	}{}
 
 	err = json.Unmarshal(rawBody, &jwks)

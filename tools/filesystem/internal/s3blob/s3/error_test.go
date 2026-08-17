@@ -1,7 +1,7 @@
 package s3_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"encoding/xml"
 	"testing"
 
@@ -29,7 +29,7 @@ func TestResponseErrorSerialization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	jsonRaw, err := json.Marshal(respErr)
+	jsonRaw, err := json.Marshal(respErr, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}

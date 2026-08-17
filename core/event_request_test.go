@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"net/http"
 	"strings"
 	"testing"
@@ -183,7 +183,7 @@ func TestRequestEventRequestInfo(t *testing.T) {
 			t.Fatalf("Failed to resolve request info: %v", err)
 		}
 
-		raw, err := json.Marshal(info)
+		raw, err := json.Marshal(info, json.Deterministic(true))
 		if err != nil {
 			t.Fatalf("Failed to serialize request info: %v", err)
 		}
@@ -205,7 +205,7 @@ func TestRequestEventRequestInfo(t *testing.T) {
 			t.Fatalf("Failed to resolve request info: %v", err)
 		}
 
-		raw, err := json.Marshal(info)
+		raw, err := json.Marshal(info, json.Deterministic(true))
 		if err != nil {
 			t.Fatalf("Failed to serialize request info: %v", err)
 		}
@@ -308,7 +308,7 @@ func TestRequestInfoClone(t *testing.T) {
 
 	// check the original data
 	// ---
-	originalRaw, err := json.Marshal(info)
+	originalRaw, err := json.Marshal(info, json.Deterministic(true))
 	if err != nil {
 		t.Fatalf("Failed to serialize original request info: %v", err)
 	}
@@ -321,7 +321,7 @@ func TestRequestInfoClone(t *testing.T) {
 
 	// check the clone data
 	// ---
-	cloneRaw, err := json.Marshal(clone)
+	cloneRaw, err := json.Marshal(clone, json.Deterministic(true))
 	if err != nil {
 		t.Fatalf("Failed to serialize clone request info: %v", err)
 	}

@@ -2,7 +2,7 @@ package core
 
 import (
 	"database/sql/driver"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"slices"
 	"strconv"
@@ -277,7 +277,7 @@ func (l *FieldsList) add(pos int, newField Field) {
 
 // String returns the string representation of the current list.
 func (l FieldsList) String() string {
-	v, _ := json.Marshal(l)
+	v, _ := l.MarshalJSON()
 	return string(v)
 }
 
@@ -355,12 +355,12 @@ func (l FieldsList) MarshalJSON() ([]byte, error) {
 		wrapper = append(wrapper, data)
 	}
 
-	return json.Marshal(wrapper)
+	return json.Marshal(wrapper, json.Deterministic(true))
 }
 
 // Value implements the [driver.Valuer] interface.
 func (l FieldsList) Value() (driver.Value, error) {
-	data, err := json.Marshal(l)
+	data, err := l.MarshalJSON()
 
 	return string(data), err
 }

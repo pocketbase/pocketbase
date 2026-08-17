@@ -2,7 +2,7 @@ package router
 
 import (
 	"encoding"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"reflect"
 	"regexp"

@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"testing"
 	"time"
@@ -63,7 +63,7 @@ func TestLogsStats(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	encoded, _ := json.Marshal(result)
+	encoded, _ := json.Marshal(result, json.Deterministic(true))
 	if string(encoded) != expected {
 		t.Fatalf("Expected\n%q\ngot\n%q", expected, string(encoded))
 	}

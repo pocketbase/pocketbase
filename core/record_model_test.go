@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"regexp"
@@ -31,7 +31,7 @@ func TestNewRecord(t *testing.T) {
 
 	m := core.NewRecord(collection)
 
-	rawData, err := json.Marshal(m.FieldsData()) // should be initialized with the defaults
+	rawData, err := json.Marshal(m.FieldsData(), json.Deterministic(true)) // should be initialized with the defaults
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -520,7 +520,7 @@ func TestRecordMergeExpand(t *testing.T) {
 
 	result := m.Expand()
 
-	raw, err := json.Marshal(result)
+	raw, err := json.Marshal(result, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -566,7 +566,7 @@ func TestRecordMergeExpandNilCheck(t *testing.T) {
 			m := core.NewRecord(collection)
 			m.MergeExpand(s.expand)
 
-			raw, err := json.Marshal(m)
+			raw, err := json.Marshal(m, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -663,7 +663,7 @@ func TestRecordFieldsData(t *testing.T) {
 	m.Set("field2", 456)
 	m.Set("unknown", 789)
 
-	raw, err := json.Marshal(m.FieldsData())
+	raw, err := json.Marshal(m.FieldsData(), json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -691,7 +691,7 @@ func TestRecordCustomData(t *testing.T) {
 	m.Set("field2", 456)
 	m.Set("unknown", 789)
 
-	raw, err := json.Marshal(m.CustomData())
+	raw, err := json.Marshal(m.CustomData(), json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1103,14 +1103,16 @@ func TestRecordGetUnsavedFiles(t *testing.T) {
 		t.Run(fmt.Sprintf("%d_%#v", i, s.key), func(t *testing.T) {
 			v := record.GetUnsavedFiles(s.key)
 
-			raw, err := json.Marshal(v)
+			raw, err := json.Marshal(v,
+				json.Deterministic(true),
+				json.FormatNilSliceAsNull(true),
+			)
 			if err != nil {
 				t.Fatal(err)
 			}
-			rawStr := string(raw)
 
-			if rawStr != s.expected {
-				t.Fatalf("Expected\n%s\ngot\n%s", s.expected, rawStr)
+			if str := string(raw); str != s.expected {
+				t.Fatalf("Expected\n%s\ngot\n%s", s.expected, str)
 			}
 		})
 	}
@@ -1164,7 +1166,7 @@ func TestRecordUnmarshalJSONField(t *testing.T) {
 				t.Fatalf("Expected hasErr %v, got %v", s.expectError, hasErr)
 			}
 
-			raw, _ := json.Marshal(s.destination)
+			raw, _ := json.Marshal(s.destination, json.Deterministic(true))
 			if v := string(raw); v != s.expectedJSON {
 				t.Fatalf("Expected %q, got %q", s.expectedJSON, v)
 			}
@@ -1271,7 +1273,7 @@ func TestRecordDBExport(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			raw, err := json.Marshal(result)
+			raw, err := json.Marshal(result, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1515,7 +1517,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 			m.Unhide(s.unhideFields...)
 			m.Hide(s.hideFields...)
 
-			exportResult, err := json.Marshal(m.PublicExport())
+			exportResult, err := json.Marshal(m.PublicExport(), json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}

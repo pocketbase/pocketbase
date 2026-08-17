@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"io"
@@ -119,9 +119,9 @@ func (p *Gitea) fetchVerifiedPrimaryEmail(token *oauth2.Token) (string, error) {
 	}
 
 	emails := []struct {
-		Email    string
-		Verified bool
-		Primary  bool
+		Email    string `json:"email"`
+		Verified bool   `json:"verified"`
+		Primary  bool   `json:"primary"`
 	}{}
 	if err := json.Unmarshal(content, &emails); err != nil {
 		return "", err

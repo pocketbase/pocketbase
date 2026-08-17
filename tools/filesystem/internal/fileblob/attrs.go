@@ -1,7 +1,7 @@
 package fileblob
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"os"
 )
@@ -50,7 +50,8 @@ func setAttrs(path string, xa xattrs) error {
 		return err
 	}
 
-	if err := json.NewEncoder(f).Encode(xa); err != nil {
+	err = json.MarshalWrite(f, xa)
+	if err != nil {
 		f.Close()
 		os.Remove(f.Name())
 		return err
@@ -75,7 +76,9 @@ func getAttrs(path string) (xattrs, error) {
 	}
 
 	xa := new(xattrs)
-	if err := json.NewDecoder(f).Decode(xa); err != nil {
+
+	err = json.UnmarshalRead(f, xa)
+	if err != nil {
 		f.Close()
 		return xattrs{}, err
 	}

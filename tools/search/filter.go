@@ -1,7 +1,7 @@
 package search
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"strconv"
@@ -69,7 +69,7 @@ func (f FilterData) BuildExprWithLimit(
 
 				// try to json serialize as fallback
 				if replacement == "" {
-					raw, _ := json.Marshal(v)
+					raw, _ := json.Marshal(v, json.Deterministic(true))
 					replacement = string(raw)
 				}
 

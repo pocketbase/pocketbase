@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"regexp"
 	"slices"
 	"strings"
@@ -940,7 +940,7 @@ func TestRecordFieldResolverResolveStaticRequestInfoFields(t *testing.T) {
 				t.Fatalf("Expected parameter r.Identifier %q, got %q", paramName, r.Identifier)
 			}
 
-			encodedParamValue, _ := json.Marshal(paramValue)
+			encodedParamValue, _ := json.Marshal(paramValue, json.Deterministic(true))
 			if string(encodedParamValue) != s.expectParamValue {
 				t.Fatalf("Expected r.Params %#v for %s, got %#v", s.expectParamValue, r.Identifier, string(encodedParamValue))
 			}

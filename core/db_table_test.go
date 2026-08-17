@@ -3,7 +3,7 @@ package core_test
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"slices"
 	"testing"
@@ -120,7 +120,11 @@ func TestTableInfo(t *testing.T) {
 		t.Run(fmt.Sprintf("%d_%s", i, s.tableName), func(t *testing.T) {
 			rows, _ := app.TableInfo(s.tableName)
 
-			raw, err := json.Marshal(rows)
+			raw, err := json.Marshal(
+				rows,
+				json.Deterministic(true),
+				json.FormatNilSliceAsNull(true),
+			)
 			if err != nil {
 				t.Fatal(err)
 			}

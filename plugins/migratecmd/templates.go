@@ -2,7 +2,8 @@ package migratecmd
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -383,7 +384,7 @@ func (p *plugin) goCreateTemplate(collection *core.Collection) (string, error) {
 	const template = `package %s
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 
 	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
@@ -436,7 +437,7 @@ func (p *plugin) goDeleteTemplate(collection *core.Collection) (string, error) {
 	const template = `package %s
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 
 	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
@@ -621,7 +622,7 @@ func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (str
 
 	if strings.Contains(combined, "json.Unmarshal(") ||
 		strings.Contains(combined, "json.Marshal(") {
-		imports += "\n\t\"encoding/json\"\n"
+		imports += "\n\t\"encoding/json/v2\"\n"
 	}
 
 	imports += "\n\t\"github.com/pocketbase/pocketbase/core\""
@@ -666,7 +667,11 @@ func init() {
 }
 
 func marhshalWithoutEscape(v any, prefix string, indent string) ([]byte, error) {
-	raw, err := json.MarshalIndent(v, prefix, indent)
+	raw, err := json.Marshal(v,
+		json.Deterministic(true),
+		jsontext.WithIndentPrefix(prefix),
+		jsontext.WithIndent(indent),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -720,8 +725,8 @@ func diffMaps(old, new map[string]any, excludeKeys ...string) map[string]any {
 		}
 
 		// compare the serialized version of the values in case of slice or other custom type
-		rawOld, _ := json.Marshal(vOld)
-		rawNew, _ := json.Marshal(vNew)
+		rawOld, _ := json.Marshal(vOld, json.Deterministic(true))
+		rawNew, _ := json.Marshal(vNew, json.Deterministic(true))
 
 		if !bytes.Equal(rawOld, rawNew) {
 			// if both are maps add recursively only the changed fields

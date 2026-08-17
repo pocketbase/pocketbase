@@ -2,7 +2,7 @@ package router_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"testing"
 	"time"
 
@@ -428,7 +428,7 @@ func TestUnmarshalRequestData(t *testing.T) {
 				return
 			}
 
-			raw, err := json.Marshal(s.dst)
+			raw, err := json.Marshal(s.dst, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}

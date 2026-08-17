@@ -2,7 +2,7 @@ package core
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"os"
@@ -237,7 +237,7 @@ func (s *Settings) String() string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	raw, _ := json.Marshal(s)
+	raw, _ := s.MarshalJSON()
 	return string(raw)
 }
 
@@ -264,7 +264,7 @@ func (s *Settings) DBExport(app App) (map[string]any, error) {
 		s.settings.SuperuserIPs = []string{}
 	}
 
-	encoded, err := json.Marshal(s.settings)
+	encoded, err := json.Marshal(s.settings, json.Deterministic(true))
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +361,7 @@ func (s *Settings) MarshalJSON() ([]byte, error) {
 		copy.SuperuserIPs = []string{}
 	}
 
-	return json.Marshal(copy)
+	return json.Marshal(copy, json.Deterministic(true))
 }
 
 // -------------------------------------------------------------------

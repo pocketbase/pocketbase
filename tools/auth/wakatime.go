@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
@@ -62,7 +62,6 @@ func (p *Wakatime) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 			IsEmailConfirmed bool   `json:"is_email_confirmed"`
 		} `json:"data"`
 	}{}
-
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}

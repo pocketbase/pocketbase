@@ -7,7 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -252,7 +252,7 @@ func TestValidateTokenSignature(t *testing.T) {
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		_ = json.NewEncoder(res).Encode(map[string]any{"keys": []*jwk.JWK{
+		_ = json.MarshalWrite(res, map[string]any{"keys": []*jwk.JWK{
 			{
 				Kid: "key1",
 				Kty: "OKP",

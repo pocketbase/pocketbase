@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -326,7 +327,7 @@ func TestBatchHandlerAttrsFormat(t *testing.T) {
 	for i, data := range expected {
 		t.Run(fmt.Sprintf("log handler %d", i), func(t *testing.T) {
 			log := beforeLogs[i]
-			raw, _ := log.Data.MarshalJSON()
+			raw, _ := json.Marshal(log.Data, json.Deterministic(true))
 			if string(raw) != data {
 				t.Fatalf("Expected \n%s \ngot \n%s", data, raw)
 			}

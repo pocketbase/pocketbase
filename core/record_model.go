@@ -3,7 +3,7 @@ package core
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"log"
@@ -1218,12 +1218,12 @@ func areValuesEqual(a any, b any) bool {
 		bv, ok := b.(types.JSONRaw)
 		return ok && bytes.Equal(av, bv)
 	default:
-		aRaw, err := json.Marshal(a)
+		aRaw, err := json.Marshal(a, json.Deterministic(true))
 		if err != nil {
 			return false
 		}
 
-		bRaw, err := json.Marshal(b)
+		bRaw, err := json.Marshal(b, json.Deterministic(true))
 		if err != nil {
 			return false
 		}
@@ -1324,7 +1324,7 @@ func (record *Record) PublicExport() map[string]any {
 //
 // Only the data exported by `PublicExport()` will be serialized.
 func (m Record) MarshalJSON() ([]byte, error) {
-	return json.Marshal(m.PublicExport())
+	return json.Marshal(m.PublicExport(), json.Deterministic(true))
 }
 
 // UnmarshalJSON implements the [json.Unmarshaler] interface.

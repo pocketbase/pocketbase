@@ -2,7 +2,7 @@ package core_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"testing"
 
 	"github.com/pocketbase/dbx"
@@ -278,12 +278,12 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 				t.Fatalf("Failed to load record: %v", err)
 			}
 
-			encodedResult, err := json.Marshal(result)
+			encodedResult, err := json.Marshal(result, json.Deterministic(true))
 			if err != nil {
 				t.Fatalf("Failed to encode result: %v", err)
 			}
 
-			encodedExpectation, err := json.Marshal(s.expected)
+			encodedExpectation, err := json.Marshal(s.expected, json.Deterministic(true))
 			if err != nil {
 				t.Fatalf("Failed to encode expectation: %v", err)
 			}

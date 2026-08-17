@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"database/sql/driver"
+	"encoding/json/v2"
 	"fmt"
 	"testing"
 
@@ -154,7 +155,7 @@ func TestJSONArrayMapScan(t *testing.T) {
 				t.Fatalf("Expected %v, got %v (%v)", s.expectError, hasErr, scanErr)
 			}
 
-			result, _ := arr.MarshalJSON()
+			result, _ := json.Marshal(arr, json.Deterministic(true))
 
 			if string(result) != s.expectJSON {
 				t.Fatalf("Expected %s, got %s", s.expectJSON, result)

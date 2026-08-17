@@ -1,7 +1,7 @@
 package cron_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"testing"
 	"time"
@@ -265,7 +265,7 @@ func TestNewSchedule(t *testing.T) {
 				return
 			}
 
-			encoded, err := json.Marshal(schedule)
+			encoded, err := json.Marshal(schedule, json.Deterministic(true))
 			if err != nil {
 				t.Fatalf("Failed to marshalize the result schedule: %v", err)
 			}

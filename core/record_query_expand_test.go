@@ -3,7 +3,7 @@ package core_test
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"strings"
 	"testing"
@@ -240,7 +240,7 @@ func TestExpandRecords(t *testing.T) {
 				t.Errorf("Expected %d failures, got %d\n%v", s.expectExpandFailures, len(failed), failed)
 			}
 
-			encoded, _ := json.Marshal(records)
+			encoded, _ := json.Marshal(records, json.Deterministic(true))
 			encodedStr := string(encoded)
 			totalExpandProps := strings.Count(encodedStr, `"`+core.FieldNameExpand+`":`)
 			totalEmptyExpands := strings.Count(encodedStr, `"`+core.FieldNameExpand+`":{}`)
@@ -420,7 +420,7 @@ func TestExpandRecord(t *testing.T) {
 				t.Errorf("Expected %d failures, got %d\n%v", s.expectExpandFailures, len(failed), failed)
 			}
 
-			encoded, _ := json.Marshal(record)
+			encoded, _ := json.Marshal(record, json.Deterministic(true))
 			encodedStr := string(encoded)
 			totalExpandProps := strings.Count(encodedStr, `"`+core.FieldNameExpand+`":`)
 			totalEmptyExpands := strings.Count(encodedStr, `"`+core.FieldNameExpand+`":{}`)

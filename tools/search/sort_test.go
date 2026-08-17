@@ -1,7 +1,7 @@
 package search_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"testing"
 
@@ -67,7 +67,7 @@ func TestParseSortFromString(t *testing.T) {
 	for _, s := range scenarios {
 		t.Run(s.value, func(t *testing.T) {
 			result := search.ParseSortFromString(s.value)
-			encoded, _ := json.Marshal(result)
+			encoded, _ := json.Marshal(result, json.Deterministic(true))
 			encodedStr := string(encoded)
 
 			if encodedStr != s.expected {

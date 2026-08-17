@@ -2,7 +2,7 @@ package s3blob_test
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"io"
@@ -261,7 +261,11 @@ func TestDriverAttributes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	raw, err := json.Marshal(attrs)
+	raw, err := json.Marshal(
+		attrs,
+		json.Deterministic(true),
+		json.FormatNilSliceAsNull(true),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -362,7 +366,11 @@ func TestDriverListPaged(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			raw, err := json.Marshal(page)
+			raw, err := json.Marshal(
+				page,
+				json.Deterministic(true),
+				json.FormatNilSliceAsNull(true),
+			)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -510,7 +518,11 @@ func TestDriverNewRangeReader(t *testing.T) {
 				}
 			}
 
-			rawAttrs, err := json.Marshal(r.Attributes())
+			rawAttrs, err := json.Marshal(
+				r.Attributes(),
+				json.Deterministic(true),
+				json.FormatNilSliceAsNull(true),
+			)
 			if err != nil {
 				t.Fatal(err)
 			}

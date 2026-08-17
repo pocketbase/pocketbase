@@ -3,7 +3,7 @@ package core_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"slices"
@@ -98,7 +98,7 @@ func TestFileFieldPrepareValue(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f1Raw, err := json.Marshal(f1)
+	f1Raw, err := json.Marshal(f1, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestFileFieldPrepareValue(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			vRaw, err := json.Marshal(v)
+			vRaw, err := json.Marshal(v, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -212,7 +212,7 @@ func TestFileFieldDriverValue(t *testing.T) {
 				}
 			}
 
-			vRaw, err := json.Marshal(v)
+			vRaw, err := json.Marshal(v, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -699,7 +699,7 @@ func TestFileFieldFindGetter(t *testing.T) {
 
 			v := getter(record)
 
-			raw, err := json.Marshal(v)
+			raw, err := json.Marshal(v, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -816,7 +816,7 @@ func TestFileFieldFindSetter(t *testing.T) {
 
 			setter(record, s.value)
 
-			raw, err := json.Marshal(record.Get(s.field.GetName()))
+			raw, err := json.Marshal(record.Get(s.field.GetName()), json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -915,8 +915,8 @@ func TestFileFieldIntercept(t *testing.T) {
 
 		tests.TestValidationErrors(t, err, []string{"text"})
 
-		raw, _ := json.Marshal(record.GetRaw("file_many"))
-		expectedRaw, _ := json.Marshal([]any{f1.Name, f3})
+		raw, _ := json.Marshal(record.GetRaw("file_many"), json.Deterministic(true))
+		expectedRaw, _ := json.Marshal([]any{f1.Name, f3}, json.Deterministic(true))
 		if !bytes.Equal(expectedRaw, raw) {
 			t.Fatalf("Expected file field value\n%s\ngot\n%s", expectedRaw, raw)
 		}
@@ -935,8 +935,8 @@ func TestFileFieldIntercept(t *testing.T) {
 			t.Fatalf("Expected save to succeed, got %v", err)
 		}
 
-		raw, _ := json.Marshal(record.GetRaw("file_many"))
-		expectedRaw, _ := json.Marshal([]any{f1.Name, f3.Name})
+		raw, _ := json.Marshal(record.GetRaw("file_many"), json.Deterministic(true))
+		expectedRaw, _ := json.Marshal([]any{f1.Name, f3.Name}, json.Deterministic(true))
 		if !bytes.Equal(expectedRaw, raw) {
 			t.Fatalf("Expected file field value\n%s\ngot\n%s", expectedRaw, raw)
 		}
@@ -956,8 +956,8 @@ func TestFileFieldIntercept(t *testing.T) {
 			t.Fatalf("Expected save to succeed, got %v", err)
 		}
 
-		raw, _ := json.Marshal(record.GetRaw("file_many"))
-		expectedRaw, _ := json.Marshal([]any{f3.Name, f4.Name})
+		raw, _ := json.Marshal(record.GetRaw("file_many"), json.Deterministic(true))
+		expectedRaw, _ := json.Marshal([]any{f3.Name, f4.Name}, json.Deterministic(true))
 		if !bytes.Equal(expectedRaw, raw) {
 			t.Fatalf("Expected file field value\n%s\ngot\n%s", expectedRaw, raw)
 		}
@@ -1067,8 +1067,8 @@ func TestFileFieldInterceptTx(t *testing.T) {
 					t.Fatalf("Expected save to succeed, got %v", err)
 				}
 
-				raw, _ := json.Marshal(record.GetRaw("file_many"))
-				expectedRaw, _ := json.Marshal([]any{f1.Name, f3.Name})
+				raw, _ := json.Marshal(record.GetRaw("file_many"), json.Deterministic(true))
+				expectedRaw, _ := json.Marshal([]any{f1.Name, f3.Name}, json.Deterministic(true))
 				if !bytes.Equal(expectedRaw, raw) {
 					t.Fatalf("Expected file field value\n%s\ngot\n%s", expectedRaw, raw)
 				}
@@ -1090,8 +1090,8 @@ func TestFileFieldInterceptTx(t *testing.T) {
 					t.Fatalf("Expected save to succeed, got %v", err)
 				}
 
-				raw, _ := json.Marshal(record.GetRaw("file_many"))
-				expectedRaw, _ := json.Marshal([]any{f3.Name, f4.Name})
+				raw, _ := json.Marshal(record.GetRaw("file_many"), json.Deterministic(true))
+				expectedRaw, _ := json.Marshal([]any{f3.Name, f4.Name}, json.Deterministic(true))
 				if !bytes.Equal(expectedRaw, raw) {
 					t.Fatalf("Expected file field value\n%s\ngot\n%s", expectedRaw, raw)
 				}

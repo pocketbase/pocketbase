@@ -1,7 +1,7 @@
 package picker
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"strings"
 
 	"github.com/pocketbase/pocketbase/tools/search"

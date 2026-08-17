@@ -2,7 +2,7 @@ package jsvm
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"strings"
 	"testing"
 
@@ -166,7 +166,7 @@ func TestFormDataEntries(t *testing.T) {
 
 	entries := data.Entries()
 
-	rawEntries, err := json.Marshal(entries)
+	rawEntries, err := json.Marshal(entries, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}

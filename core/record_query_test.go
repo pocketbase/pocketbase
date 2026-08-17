@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"slices"
@@ -107,7 +107,7 @@ func TestRecordQueryOne(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			raw, err := json.Marshal(s.model)
+			raw, err := json.Marshal(s.model, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -192,7 +192,7 @@ func TestRecordQueryAll(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			raw, err := json.Marshal(s.result)
+			raw, err := json.Marshal(s.result, json.Deterministic(true))
 			if err != nil {
 				t.Fatal(err)
 			}

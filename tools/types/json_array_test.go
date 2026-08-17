@@ -2,7 +2,7 @@ package types_test
 
 import (
 	"database/sql/driver"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"testing"
 
@@ -115,7 +115,7 @@ func TestJSONArrayScan(t *testing.T) {
 			continue
 		}
 
-		result, _ := arr.MarshalJSON()
+		result, _ := json.Marshal(arr, json.Deterministic(true))
 
 		if string(result) != s.expectJSON {
 			t.Errorf("(%d) Expected %s, got %v", i, s.expectJSON, string(result))

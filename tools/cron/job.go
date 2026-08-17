@@ -1,6 +1,6 @@
 package cron
 
-import "encoding/json"
+import "encoding/json/v2"
 
 // Job defines a single registered cron job.
 type Job struct {

@@ -3,7 +3,7 @@ package search_test
 import (
 	"bytes"
 	"database/sql"
-	"encoding/json"
+	"encoding/json/v2"
 	"testing"
 
 	"github.com/pocketbase/dbx"
@@ -40,7 +40,7 @@ func TestMultiMatchSubqueryBuild(t *testing.T) {
 	}
 
 	// the params from all expressions should be merged in the root
-	rawParams, err := json.Marshal(params)
+	rawParams, err := json.Marshal(params, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}

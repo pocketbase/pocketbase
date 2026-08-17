@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"io"
 	"strconv"
 
@@ -120,9 +120,9 @@ func (p *Gitee) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
 	}
 
 	emails := []struct {
-		Email string
-		State string
-		Scope []string
+		Email string   `json:"email"`
+		State string   `json:"state"`
+		Scope []string `json:"scope"`
 	}{}
 	if err := json.Unmarshal(content, &emails); err != nil {
 		// ignore unmarshal error in case "Keep my email address private"

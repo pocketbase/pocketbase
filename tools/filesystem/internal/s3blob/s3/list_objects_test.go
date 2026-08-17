@@ -2,7 +2,7 @@ package s3_test
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"io"
 	"net/http"
 	"strings"
@@ -143,7 +143,7 @@ func TestS3ListObjects(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	raw, err := json.Marshal(resp)
+	raw, err := json.Marshal(resp, json.Deterministic(true))
 	if err != nil {
 		t.Fatal(err)
 	}

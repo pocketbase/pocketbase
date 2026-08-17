@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"slices"
 	"testing"
@@ -530,7 +530,7 @@ func TestCreateViewFields(t *testing.T) {
 			}
 
 			if len(s.expectFields) != len(result) {
-				serialized, _ := json.Marshal(result)
+				serialized, _ := json.Marshal(result, json.Deterministic(true))
 				t.Fatalf("Expected %d fields, got %d: \n%s", len(s.expectFields), len(result), serialized)
 			}
 
@@ -835,7 +835,7 @@ func TestDryRunView(t *testing.T) {
 			// check fields
 			// ---
 			if len(s.expectFields) != len(result.Fields) {
-				serialized, _ := json.Marshal(result.Fields)
+				serialized, _ := json.Marshal(result.Fields, json.Deterministic(true))
 				t.Fatalf("Expected %d fields, got %d: \n%s", len(s.expectFields), len(result.Fields), serialized)
 			}
 			for name, typ := range s.expectFields {
