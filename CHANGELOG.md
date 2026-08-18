@@ -11,6 +11,10 @@
 - Added `Cross-Origin-Opener-Policy:same-origin` to the default security response headers.
     _This is just an extra precaution to prevent tab-nabbing in case custom UI plugins use `target="_blank"` without `rel="noopener"`._
 
+- Added new log settings option to limit the max `Log.Data` size (default to ~16KB).
+    _This is an extra precaution for the cases when logging user supplied data without validating it beforehand._
+    _If the resulting `Log.Data` json is above the limit, it is truncated to the last valid decoded character and an extra `"__pb_truncated__":true` log data entry will be added.`_
+
 
 ## v0.39.11
 

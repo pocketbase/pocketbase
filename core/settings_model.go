@@ -559,6 +559,12 @@ func (c MetaConfig) Validate() error {
 // -------------------------------------------------------------------
 
 type LogsConfig struct {
+	// MaxDataSize specifies the maximum allowed serialized log data
+	// size before it gets truncated (see [Log.DBExport]).
+	//
+	// If zero, fallbacks to ~16kb by default.
+	MaxDataSize int64 `form:"maxDataSize" json:"maxDataSize"`
+
 	MaxDays   int  `form:"maxDays" json:"maxDays"`
 	MinLevel  int  `form:"minLevel" json:"minLevel"`
 	LogIP     bool `form:"logIP" json:"logIP"`
@@ -568,7 +574,9 @@ type LogsConfig struct {
 // Validate makes LogsConfig validatable by implementing [validation.Validatable] interface.
 func (c LogsConfig) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.MaxDays, validation.Min(0)),
+		validation.Field(&c.MaxDataSize, validation.Min(0), validation.Max(maxSafeJSONInt)),
+		validation.Field(&c.MaxDays, validation.Min(0), validation.Max(maxSafeJSONInt)),
+		validation.Field(&c.MinLevel, validation.Max(maxSafeJSONInt)),
 	)
 }
 

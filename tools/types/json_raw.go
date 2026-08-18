@@ -73,7 +73,7 @@ func (j *JSONRaw) Scan(value any) error {
 			data = []byte(v)
 		}
 	default:
-		bytes, err := json.Marshal(v)
+		bytes, err := json.Marshal(v, json.Deterministic(true))
 		if err != nil {
 			return err
 		}

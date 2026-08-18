@@ -1,12 +1,19 @@
 package core
 
-import "github.com/pocketbase/pocketbase/tools/types"
+import (
+	"encoding/json/v2"
+
+	"github.com/pocketbase/pocketbase/tools/types"
+)
 
 var (
-	_ Model = (*Log)(nil)
+	_ Model      = (*Log)(nil)
+	_ DBExporter = (*Log)(nil)
 )
 
 const LogsTableName = "_logs"
+
+const defaultMaxLogDataSize = 16 << 10 // ~16kb
 
 type Log struct {
 	BaseModel
@@ -17,6 +24,57 @@ type Log struct {
 	Level   int                `db:"level" json:"level"`
 }
 
-func (m *Log) TableName() string {
+func (l *Log) TableName() string {
 	return LogsTableName
+}
+
+// DBExport prepares and exports the current log model for db persistence.
+//
+// It also truncates the log's message and data to ensure that it is
+// under app.Settings().Logs.MaxDataSize.
+func (l *Log) DBExport(app App) (map[string]any, error) {
+	result := map[string]any{
+		"id":      l.Id,
+		"created": l.Created,
+		"level":   l.Level,
+	}
+
+	maxDataSize := app.Settings().Logs.MaxDataSize
+	if maxDataSize == 0 {
+		maxDataSize = defaultMaxLogDataSize
+	}
+
+	// truncate the raw message bytes
+	// (this is expected to be very rare so it is ok even if multi-byte chars)
+	if int64(len(l.Message)) > maxDataSize {
+		result["message"] = l.Message[:maxDataSize]
+	} else {
+		result["message"] = l.Message
+	}
+
+	if len(l.Data) == 0 {
+		result["data"] = l.Data
+	} else {
+		rawData, err := l.Data.MarshalJSON()
+		if int64(len(rawData)) > maxDataSize {
+			truncatedData := types.JSONMap[any]{}
+
+			// ignore syntax errors in case of truncated incomplete json
+			//
+			// jsonv2 stream decodes and all "valid" attrs read up to the
+			// invalid part will be populated in truncatedData
+			_ = json.Unmarshal(rawData[:maxDataSize], &truncatedData)
+
+			truncatedData["__pb_truncated__"] = true
+
+			rawData, err = truncatedData.MarshalJSON()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		result["data"] = types.JSONRaw(rawData)
+	}
+
+	return result, nil
 }
