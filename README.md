@@ -49,7 +49,7 @@ your own custom app specific business logic and still have a single portable exe
 
 Here is a minimal example:
 
-0. [Install Go 1.25+](https://go.dev/doc/install) (_if you haven't already_)
+0. [Install Go 1.27+](https://go.dev/doc/install) (_if you haven't already_)
 
 1. Create a new project directory with the following `main.go` file inside it:
     ```go
@@ -92,7 +92,7 @@ _For more details please refer to [Extend with Go](https://pocketbase.io/docs/go
 
 To build the minimal standalone executable, like the prebuilt ones in the releases page, you can simply run `go build` inside the `examples/base` directory:
 
-0. [Install Go 1.25+](https://go.dev/doc/install) (_if you haven't already_)
+0. [Install Go 1.27+](https://go.dev/doc/install) (_if you haven't already_)
 1. Clone/download the repo
 2. Navigate to `examples/base`
 3. Run `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build`
@@ -101,23 +101,23 @@ To build the minimal standalone executable, like the prebuilt ones in the releas
 
 Note that the supported build targets by the pure Go SQLite driver at the moment are:
 
-```
-darwin  amd64
-darwin  arm64
-freebsd amd64
-freebsd arm64
-linux   386
-linux   amd64
-linux   arm
-linux   arm64
-linux   loong64
-linux   ppc64le
-linux   riscv64
-linux   s390x
-windows 386
-windows amd64
-windows arm64
-```
+| GOOS    | GOARCH  |
+|---------|---------|
+| darwin  | amd64   |
+| darwin  | arm64   |
+| freebsd | amd64   |
+| freebsd | arm64   |
+| linux   | 386     |
+| linux   | amd64   |
+| linux   | arm     |
+| linux   | arm64   |
+| linux   | loong64 |
+| linux   | ppc64le |
+| linux   | riscv64 |
+| linux   | s390x   |
+| windows | 386     |
+| windows | amd64   |
+| windows | arm64   |
 
 ### Testing
 
@@ -134,7 +134,7 @@ Check also the [Testing guide](http://pocketbase.io/docs/testing) to learn how t
 
 If you discover a security vulnerability within PocketBase, please send an e-mail to **support at pocketbase.io**.
 
-All reports will be promptly addressed and you'll be credited in the fix release notes.
+You could find more details in the project [Security policy](https://github.com/pocketbase/pocketbase/security/policy).
 
 ## Contributing
 

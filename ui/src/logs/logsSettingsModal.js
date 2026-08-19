@@ -93,8 +93,7 @@ function logsSettingsModal(modalSettings) {
         data.isDeleting = true;
 
         try {
-            // @todo replace with SDK method
-            await app.pb.send("/api/logs", { method: "DELETE" });
+            await app.pb.logs.truncate();
 
             modalSettings.ondelete?.();
 
