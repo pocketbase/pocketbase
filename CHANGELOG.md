@@ -8,6 +8,8 @@
 
 - Added new `DELETE /api/logs` endpoint and UI control to delete all logs without changing the `maxDays` retention setting.
 
+- Added `Record.GetInt64(field)` helper (note that the serializable max safe integer of the `number` field is ~2^53-1).
+
 - Added quotes around the default `Content-Disposition` serving filename in case custom name with special characters is provided.
 
 - Added `Cross-Origin-Opener-Policy:same-origin` to the default security response headers.

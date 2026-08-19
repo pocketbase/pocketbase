@@ -959,6 +959,11 @@ func (m *Record) GetInt(key string) int {
 	return cast.ToInt(m.Get(key))
 }
 
+// GetInt64 returns the data value for "key" as an int64.
+func (m *Record) GetInt64(key string) int64 {
+	return cast.ToInt64(m.Get(key))
+}
+
 // GetFloat returns the data value for "key" as a float64.
 func (m *Record) GetFloat(key string) float64 {
 	return cast.ToFloat64(m.Get(key))

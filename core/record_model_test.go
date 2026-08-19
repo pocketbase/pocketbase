@@ -899,6 +899,43 @@ func TestRecordGetInt(t *testing.T) {
 	}
 }
 
+func TestRecordGetInt64(t *testing.T) {
+	t.Parallel()
+
+	scenarios := []struct {
+		value    any
+		expected int64
+	}{
+		{nil, 0},
+		{"", 0},
+		{[]string{"true"}, 0},
+		{map[string]int{"test": 1}, 0},
+		{time.Now(), 0},
+		{"test", 0},
+		{123, 123},
+		{2.4, 2},
+		{1<<63 - 1, 1<<63 - 1},
+		{"123", 123},
+		{"123.5", 123},
+		{false, 0},
+		{true, 1},
+	}
+
+	collection := core.NewBaseCollection("test")
+	record := core.NewRecord(collection)
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.value), func(t *testing.T) {
+			record.Set("test", s.value)
+
+			result := record.GetInt64("test")
+			if result != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, result)
+			}
+		})
+	}
+}
+
 func TestRecordGetFloat(t *testing.T) {
 	t.Parallel()
 
