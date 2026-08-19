@@ -13,8 +13,9 @@
 - Added `Cross-Origin-Opener-Policy:same-origin` to the default security response headers.
     _This is an extra precaution to prevent tab-nabbing in case custom UI plugins use `target="_blank"` without `rel="noopener"`._
 
-- Added new log settings option to limit the max `Log.Data` size (default to ~16KB).
+- Added new log settings option to limit the max `Log.Data` size that will be saved in the database (default to ~16KB).
     _This is an extra precaution for the cases when logging user supplied data without validating it beforehand._
     _If the resulting `Log.Data` json is above the limit, it is truncated to the last valid decoded character and an extra `"__pb_truncated__":true` log data entry will be added.`_
+    _Additionally, for just in case the log message is also truncated at max 8k characters._
 
 - (@todo) Bumped the min Go version to 1.27.0 and migrated to the new `encoding/json/v2` package.

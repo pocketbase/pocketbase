@@ -32,7 +32,8 @@ func TestLogDBExport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defaultLimit := 16 << 10
+	messageLimit := 8000
+	dataLimit := 16 << 10
 
 	scenarios := []struct {
 		name       string
@@ -47,7 +48,7 @@ func TestLogDBExport(t *testing.T) {
 			`{"created":"","data":{},"id":"","level":0,"message":""}`,
 		},
 		{
-			"with message and data below the default limit",
+			"with message and data below the default limits",
 			core.Log{
 				BaseModel: core.BaseModel{Id: "test_id"},
 				Created:   date,
@@ -59,40 +60,40 @@ func TestLogDBExport(t *testing.T) {
 			`{"created":"2026-08-18 10:20:30.456Z","data":{"a":"test1","b":"test2"},"id":"test_id","level":123,"message":"test_message"}`,
 		},
 		{
-			"with message and data exactly the default limit",
+			"with message and data exactly the default limits",
 			core.Log{
 				BaseModel: core.BaseModel{Id: "test_id"},
 				Created:   date,
 				Level:     123,
-				Message:   strings.Repeat("a", defaultLimit),
-				Data:      types.JSONMap[any]{"a": "test1", "b": "test2", "c": strings.Repeat("a", defaultLimit-32)},
+				Message:   strings.Repeat("a", messageLimit),
+				Data:      types.JSONMap[any]{"a": "test1", "b": "test2", "c": strings.Repeat("a", dataLimit-32)},
 			},
 			0,
-			`{"created":"2026-08-18 10:20:30.456Z","data":{"a":"test1","b":"test2","c":"` + strings.Repeat("a", defaultLimit-32) + `"},"id":"test_id","level":123,"message":"` + strings.Repeat("a", defaultLimit) + `"}`,
+			`{"created":"2026-08-18 10:20:30.456Z","data":{"a":"test1","b":"test2","c":"` + strings.Repeat("a", dataLimit-32) + `"},"id":"test_id","level":123,"message":"` + strings.Repeat("a", messageLimit) + `"}`,
 		},
 		{
-			"with message and data above the default limit",
+			"with message and data above the default limits",
 			core.Log{
 				BaseModel: core.BaseModel{Id: "test_id"},
 				Created:   date,
 				Level:     123,
-				Message:   strings.Repeat("a", defaultLimit) + "x",                                                         // "x" should be omitted
-				Data:      types.JSONMap[any]{"a": "test1", "b": "test2", "c": strings.Repeat("a", defaultLimit-32) + "x"}, // the end will be incomplete and something like `"c":"...aaaaaax`
+				Message:   strings.Repeat("a", messageLimit) + "x",                                                      // "x" should be omitted
+				Data:      types.JSONMap[any]{"a": "test1", "b": "test2", "c": strings.Repeat("a", dataLimit-32) + "x"}, // the end will be incomplete and something like `"c":"...aaaaaax`
 			},
 			0,
-			`{"created":"2026-08-18 10:20:30.456Z","data":{"__pb_truncated__":true,"a":"test1","b":"test2","c":"` + strings.Repeat("a", defaultLimit-32) + `x"},"id":"test_id","level":123,"message":"` + strings.Repeat("a", defaultLimit) + `"}`,
+			`{"created":"2026-08-18 10:20:30.456Z","data":{"__pb_truncated__":true,"a":"test1","b":"test2","c":"` + strings.Repeat("a", dataLimit-32) + `x"},"id":"test_id","level":123,"message":"` + strings.Repeat("a", messageLimit) + `"}`,
 		},
 		{
-			"with message and data above custom limit",
+			"with data above custom limit",
 			core.Log{
 				BaseModel: core.BaseModel{Id: "test_id"},
 				Created:   date,
 				Level:     123,
-				Message:   strings.Repeat("a", 2<<10) + "x",                                                           // "x" should be omitted
+				Message:   "test_message",
 				Data:      types.JSONMap[any]{"a": "test1", "b": "test2", "c": strings.Repeat("a", (2<<10)-32) + "x"}, // the end will be incomplete and something like `"c":"...aaaaaax`
 			},
 			2 << 10,
-			`{"created":"2026-08-18 10:20:30.456Z","data":{"__pb_truncated__":true,"a":"test1","b":"test2","c":"` + strings.Repeat("a", (2<<10)-32) + `x"},"id":"test_id","level":123,"message":"` + strings.Repeat("a", 2<<10) + `"}`,
+			`{"created":"2026-08-18 10:20:30.456Z","data":{"__pb_truncated__":true,"a":"test1","b":"test2","c":"` + strings.Repeat("a", (2<<10)-32) + `x"},"id":"test_id","level":123,"message":"test_message"}`,
 		},
 	}
 

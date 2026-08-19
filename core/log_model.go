@@ -13,7 +13,10 @@ var (
 
 const LogsTableName = "_logs"
 
-const defaultMaxLogDataSize = 16 << 10 // ~16kb
+const (
+	defaultMaxLogDataSize    = 16 << 10 // ~16kb
+	defaultMaxLogMessageSize = 8000
+)
 
 type Log struct {
 	BaseModel
@@ -39,15 +42,10 @@ func (l *Log) DBExport(app App) (map[string]any, error) {
 		"level":   l.Level,
 	}
 
-	maxDataSize := app.Settings().Logs.MaxDataSize
-	if maxDataSize == 0 {
-		maxDataSize = defaultMaxLogDataSize
-	}
-
 	// truncate the raw message bytes
 	// (this is expected to be very rare so it is ok even if multi-byte chars)
-	if int64(len(l.Message)) > maxDataSize {
-		result["message"] = l.Message[:maxDataSize]
+	if int64(len(l.Message)) > defaultMaxLogMessageSize {
+		result["message"] = l.Message[:defaultMaxLogMessageSize]
 	} else {
 		result["message"] = l.Message
 	}
@@ -55,6 +53,11 @@ func (l *Log) DBExport(app App) (map[string]any, error) {
 	if len(l.Data) == 0 {
 		result["data"] = l.Data
 	} else {
+		maxDataSize := app.Settings().Logs.MaxDataSize
+		if maxDataSize == 0 {
+			maxDataSize = defaultMaxLogDataSize
+		}
+
 		rawData, err := l.Data.MarshalJSON()
 		if int64(len(rawData)) > maxDataSize {
 			truncatedData := types.JSONMap[any]{}
