@@ -95,8 +95,8 @@ To build the minimal standalone executable, like the prebuilt ones in the releas
 0. [Install Go 1.27+](https://go.dev/doc/install) (_if you haven't already_)
 1. Clone/download the repo
 2. Navigate to `examples/base`
-3. Run `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build`
-   (_https://go.dev/doc/install/source#environment_)
+3. Run `CGO_ENABLED=0 go build` to build a binary for your current environment
+   _(or to target other platforms use `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build`; see https://go.dev/doc/install/source#environment)_
 4. Start the created executable by running `./base serve`.
 
 Note that the supported build targets by the pure Go SQLite driver at the moment are:
@@ -105,7 +105,9 @@ Note that the supported build targets by the pure Go SQLite driver at the moment
 |---------|---------|
 | darwin  | amd64   |
 | darwin  | arm64   |
+| freebsd | 386     |
 | freebsd | amd64   |
+| freebsd | arm     |
 | freebsd | arm64   |
 | linux   | 386     |
 | linux   | amd64   |
@@ -115,6 +117,9 @@ Note that the supported build targets by the pure Go SQLite driver at the moment
 | linux   | ppc64le |
 | linux   | riscv64 |
 | linux   | s390x   |
+| netbsd  | amd64   |
+| openbsd | amd64   |
+| openbsd | arm64   |
 | windows | 386     |
 | windows | amd64   |
 | windows | arm64   |

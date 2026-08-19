@@ -18,4 +18,6 @@
     _If the resulting `Log.Data` json is above the limit, it is truncated to the last valid decoded character and an extra `"__pb_truncated__":true` log data entry will be added.`_
     _Additionally, for just in case the log message is also truncated at max 8k characters._
 
+- Updated `modernc.org/sqlite` to 1.57 and registered by default the new `_defensive=1` DSN query parameter to enable [SQLite's defensive mode](https://sqlite.org/c3ref/c_dbconfig_defensive.html#sqlitedbconfigdefensive).
+
 - (@todo) Bumped the min Go version to 1.27.0 and migrated to the new `encoding/json/v2` package.
