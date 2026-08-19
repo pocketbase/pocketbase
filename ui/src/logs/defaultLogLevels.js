@@ -4,9 +4,12 @@ export function defaultLogLevels() {
         t.span(null, "Default log levels:"),
         () => {
             const result = [];
-            for (const level in app.utils.logLevels) {
+
+            const sorted = Object.keys(app.utils.logLevels).sort();
+            for (const level of sorted) {
                 result.push(t.code(null, `${level}:${app.utils.logLevels[level].label}`));
             }
+
             return result;
         },
     );

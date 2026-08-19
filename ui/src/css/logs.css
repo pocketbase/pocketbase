@@ -10,6 +10,7 @@
     align-content: center;
     overflow: hidden;
     touch-action: none;
+    transform: translateZ(0); /* try to use the GPU */
     transition:
         opacity var(--animationSpeed),
         max-height var(--slideAnimationSpeed),

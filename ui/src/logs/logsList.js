@@ -19,9 +19,12 @@ export function logsList(logsSettings) {
         },
         get paddedDefaultLogLevels() {
             const result = [];
-            for (let level in app.utils.logLevels) {
+
+            const sorted = Object.keys(app.utils.logLevels).sort();
+            for (const level of sorted) {
                 result.push(("" + level).padStart(2, " ") + ": " + app.utils.logLevels[level].label);
             }
+
             return result;
         },
     });
@@ -133,11 +136,16 @@ export function logsList(logsSettings) {
             if (log.data.referer && !log.data.referer.includes(window.location.host)) {
                 keys.push({ key: "referer" });
             }
-        } else {
-            // extract the first 6 keys (excluding the error and details)
+        } else if (keys.length < 6) {
+            // extract the first 6 keys (excluding the error, details and system truncate keys)
             const allKeys = Object.keys(log.data);
             for (const key of allKeys) {
-                if (key != "error" && key != "details" && keys.length < 6) {
+                if (
+                    keys.length < 6
+                    && key != "error"
+                    && key != "details"
+                    && key != "__pb_truncated__"
+                ) {
                     keys.push({ key });
                 }
             }

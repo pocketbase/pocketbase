@@ -113,6 +113,7 @@ export function pageLogs(route) {
                                 onclick: () =>
                                     app.modals.openLogsSettings({
                                         onsave: () => refreshLogsList(),
+                                        ondelete: () => refreshLogsList(),
                                     }),
                             },
                             t.i({ className: "ri-settings-3-line", ariaHidden: true }),

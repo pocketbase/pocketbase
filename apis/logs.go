@@ -11,8 +11,13 @@ import (
 
 // bindLogsApi registers the request logs api endpoints.
 func bindLogsApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
-	sub := rg.Group("/logs").Bind(RequireSuperuserAuth(), SkipSuccessActivityLog())
+	sub := rg.Group("/logs").Bind(
+		RequireSuperuserAuth(),
+		SkipSuccessActivityLog(),
+	)
+
 	sub.GET("", logsList)
+	sub.DELETE("", logsTruncate)
 	sub.GET("/stats", logsStats)
 	sub.GET("/{id}", logsView)
 }
@@ -70,4 +75,20 @@ func logsView(e *core.RequestEvent) error {
 	}
 
 	return e.JSON(http.StatusOK, log)
+}
+
+func logsTruncate(e *core.RequestEvent) error {
+	// delete all rows directly (aka. no model hooks will be fired)
+	_, err := e.App.AuxNonconcurrentDB().Delete((&core.Log{}).TableName(), nil).Execute()
+	if err != nil {
+		return e.InternalServerError("Failed to truncate all logs.", err)
+	}
+
+	// try to free the unused disk space
+	err = e.App.AuxVacuum()
+	if err != nil {
+		e.App.Logger().Warn("Failed to VACUUM aux database", "error", err)
+	}
+
+	return e.NoContent(http.StatusNoContent)
 }

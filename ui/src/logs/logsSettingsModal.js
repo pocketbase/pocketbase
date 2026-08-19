@@ -9,6 +9,7 @@ window.app.modals.openLogsSettings = function(modalSettings = {
     onbeforeclose: null,
     onafterclose: null,
     onsave: null,
+    ondelete: null,
 }) {
     const modal = logsSettingsModal(modalSettings);
     if (!modal) {
@@ -26,6 +27,7 @@ function logsSettingsModal(modalSettings) {
     const data = store({
         isLoading: false,
         isSaving: false,
+        isDeleting: false,
         formSettings: {},
         initFormSettingsHash: "",
         get hasChanges() {
@@ -85,6 +87,39 @@ function logsSettingsModal(modalSettings) {
                 app.checkApiError(err);
             }
         }
+    }
+
+    async function deleteLogs() {
+        data.isDeleting = true;
+
+        try {
+            // @todo replace with SDK method
+            await app.pb.send("/api/logs", { method: "DELETE" });
+
+            modalSettings.ondelete?.();
+
+            app.toasts.success("Successfully deleted all logs.");
+
+            data.isDeleting = false;
+
+            if (!data.hasChanges) {
+                app.modals.close(modal);
+            }
+        } catch (err) {
+            if (!err.isAbort) {
+                data.isDeleting = false;
+                app.checkApiError(err);
+            }
+        }
+    }
+
+    function confirmLogsDelete() {
+        app.modals.confirm(
+            "Do you really want to delete all logs?",
+            () => deleteLogs(),
+            null,
+            { yesButton: "Yes, delete" },
+        );
     }
 
     modal = t.div(
@@ -147,7 +182,7 @@ function logsSettingsModal(modalSettings) {
                                 { className: "field-help" },
                                 "Set to ",
                                 t.code(null, 0),
-                                " to disable logs persistence.",
+                                " to delete all logs and disable logs persistence.",
                             ),
                         ),
                         t.div(
@@ -170,6 +205,46 @@ function logsSettingsModal(modalSettings) {
                                 { className: "field-help" },
                                 t.div(null, "Logs with level below the minimum will be ignored."),
                                 defaultLogLevels(),
+                            ),
+                        ),
+                        t.div(
+                            { className: "col-lg-12" },
+                            t.field(
+                                { className: "field" },
+                                t.label(
+                                    { htmlFor: "logs.maxDataSize" },
+                                    t.span({ className: "txt" }, "Max data size"),
+                                    t.small(null, "(bytes)"),
+                                    t.i({
+                                        className: "ri-information-line link-hint",
+                                        ariaDescription: app.attrs.tooltip(
+                                            `The max size in bytes of the serialized log JSON data field (truncated on "best-effort" basis).`,
+                                        ),
+                                    }),
+                                ),
+                                t.input({
+                                    type: "number",
+                                    id: "logs.maxDataSize",
+                                    name: "logs.maxDataSize",
+                                    min: 0,
+                                    max: Number.MAX_SAFE_INTEGER,
+                                    placeholder: "Default to ~16KB",
+                                    value: () => data.formSettings.logs.maxDataSize || "",
+                                    oninput: (e) => {
+                                        if (e.target.value <= 0) {
+                                            data.formSettings.logs.maxDataSize = 0;
+                                        } else {
+                                            data.formSettings.logs.maxDataSize = Number(e.target.value);
+                                        }
+                                    },
+                                    onchange: () => {
+                                        // force placeholder rendering
+                                        if (!data.formSettings.logs.maxDataSize) {
+                                            data.formSettings.logs.maxDataSize = null;
+                                            data.formSettings.logs.maxDataSize = 0;
+                                        }
+                                    },
+                                }),
                             ),
                         ),
                         t.div(
@@ -214,6 +289,19 @@ function logsSettingsModal(modalSettings) {
                             disabled: () => data.isSaving,
                         },
                         t.span({ className: "txt" }, "Close"),
+                    ),
+                    t.button(
+                        {
+                            type: "button",
+                            ariaLabel: app.attrs.tooltip("Delete all logs", "left"),
+                            className: () =>
+                                `btn circle sm secondary transparent link-faded ${data.isDeleting ? "loading" : ""}`,
+                            disabled: () => data.isDeleting || data.isSaving,
+                            onclick: () => {
+                                confirmLogsDelete();
+                            },
+                        },
+                        t.i({ className: "ri-delete-bin-7-line", ariaHidden: true }),
                     ),
                     t.button(
                         {
