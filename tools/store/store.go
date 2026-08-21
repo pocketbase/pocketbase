@@ -122,7 +122,21 @@ func (s *Store[K, T]) GetAll() map[K]T {
 	return clone
 }
 
-// Values returns a slice with all of the current store values.
+// Keys returns a slice with all of the store keys.
+func (s *Store[K, T]) Keys() []K {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var keys = make([]K, 0, len(s.data))
+
+	for k := range s.data {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+// Values returns a slice with all of the store values.
 func (s *Store[K, T]) Values() []T {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

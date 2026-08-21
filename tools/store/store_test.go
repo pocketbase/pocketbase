@@ -205,6 +205,27 @@ func TestGetAll(t *testing.T) {
 	}
 }
 
+func TestKeys(t *testing.T) {
+	data := map[string]int{
+		"a": 1,
+		"b": 2,
+	}
+
+	keys := store.New(data).Keys()
+
+	expected := []string{"a", "b"}
+
+	if len(keys) != len(expected) {
+		t.Fatalf("Expected %d keys, got %d", len(expected), len(keys))
+	}
+
+	for _, k := range expected {
+		if !slices.Contains(keys, k) {
+			t.Fatalf("Missing key %s in\n%v", k, keys)
+		}
+	}
+}
+
 func TestValues(t *testing.T) {
 	data := map[string]int{
 		"a": 1,
