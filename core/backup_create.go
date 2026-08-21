@@ -50,7 +50,7 @@ import (
 //
 //  3. Stop listening for DELETED files.
 //
-//  4. Start listening for NEW storage files and mark all new files as excluded.
+//  4. Start listening for NEW storage files and mark all new files from this point as "excluded".
 //
 //  5. Copy the logs database with VACUUM INTO, write it in the zip and mark it as "excluded".
 //
@@ -142,8 +142,8 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 	const tempFilesHookId = "__pbTempBackupFilesystemWatcher__"
 	defer func() {
 		// unbind again in cacase of an error
-		be.App.OnFilesystemDelete().Unbind(tempFilesHookId)
-		be.App.OnFilesystemNewWriter().Unbind(tempFilesHookId)
+		be.App.onFilesystemDelete().Unbind(tempFilesHookId)
+		be.App.onFilesystemNewWriter().Unbind(tempFilesHookId)
 	}()
 
 	zf, err := os.Create(tempZipPath)
@@ -170,8 +170,9 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 
 	// init deleted files tracker
 	// ---------------------------------------------------------------
-	be.App.OnFilesystemDelete().Bind(&hook.Handler[*FilesystemDeleteEvent]{
-		Id: tempFilesHookId,
+	be.App.onFilesystemDelete().Bind(&hook.Handler[*FilesystemDeleteEvent]{
+		Id:       tempFilesHookId,
+		Priority: -99,
 		Func: func(e *FilesystemDeleteEvent) error {
 			// note: the zip header name allow only forward slashes
 			zipPath := path.Join(LocalStorageDirName, e.FileKey)
@@ -214,8 +215,8 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 		return err
 	}
 
-	// eageerly stop listenining for deleted files since we already have what we needed
-	be.App.OnFilesystemDelete().Unbind(tempFilesHookId)
+	// eagerly stop listening for deleted files since we already have what we needed
+	be.App.onFilesystemDelete().Unbind(tempFilesHookId)
 
 	be.App.Logger().Debug(
 		logPrefix+dataDBFilename+" copy completed",
@@ -235,12 +236,13 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 
 	// init to-be-created files tracker
 	// ---------------------------------------------------------------
-	be.App.OnFilesystemNewWriter().Bind(&hook.Handler[*FilesystemNewWriterEvent]{
-		Id: tempFilesHookId,
+	be.App.onFilesystemNewWriter().Bind(&hook.Handler[*FilesystemNewWriterEvent]{
+		Id:       tempFilesHookId,
+		Priority: -99,
 		Func: func(e *FilesystemNewWriterEvent) error {
 			if !be.App.Settings().S3.Enabled {
 				// mark for exclude even if the writer eventually fails
-				// (all record files have random name so collusions are unlikely)
+				// (all record files have random name so collisions are unlikely)
 				name := normalizePathExclude(filepath.Join(LocalStorageDirName, e.FileKey))
 				excluded.Set(name, struct{}{})
 			}
@@ -296,6 +298,10 @@ func copyFileToZip(w *zip.Writer, localPath string, zipPath string) error {
 		return err
 	}
 
+	if info.IsDir() {
+		return nil
+	}
+
 	h, err := zip.FileInfoHeader(info)
 	if err != nil {
 		return err
@@ -329,7 +335,7 @@ func copyDirToZip(w *zip.Writer, fsys fs.FS, excludedPrefixes *store.Store[strin
 		// skip excluded prefixes
 		if excludedPrefixes != nil {
 			check := normalizePathExclude(name)
-			prefixes := excludedPrefixes.Keys() // refetch in case to avoid races
+			prefixes := excludedPrefixes.Keys() // refetch to avoid races
 			for _, prefix := range prefixes {
 				if strings.HasPrefix(check, prefix) {
 					if d.IsDir() {

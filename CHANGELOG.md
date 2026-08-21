@@ -6,8 +6,8 @@
 
 - Added helper `filesystem` methods:
     - `filesystem.NewWriter(key, opts)` to allow direct file create from an `io.Reader` value.
-    - `filesystem.OnNewWriter()` hook to allow listening for new/to-be-creaded files (app level equivalent `app.OnFilesystemNewWriter()` hook is also available).
-    - `filesystem.OnDelete()` hook to allow listening for deleted files (app level equivalent `app.OnFilesystemDelete()` hook is also available).
+    - `filesystem.OnNewWriter()` low-level hook to allow listening for new/to-be-creaded files _(app level equivalent hook is also available but not exposed for now to avoid introducing breaking changes)_.
+    - `filesystem.OnDelete()` low-level hook to allow listening for deleted files _(app level equivalent hook is also available but not exposed for now to avoid introducing breaking changes)_.
 
 - Added new `DELETE /api/logs` endpoint and UI control to delete all logs without changing the `maxDays` retention setting.
 

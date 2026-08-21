@@ -482,7 +482,7 @@ func (s *System) DeletePrefix(prefix string) []error {
 // A trailing slash will be appended to a non-empty dir string argument
 // to ensure that the checked prefix is a "directory".
 //
-// Returns "false" in case the has at least one file, otherwise - "true".
+// Returns "false" in case it has at least one file, otherwise - "true".
 func (s *System) IsEmptyDir(dir string) bool {
 	if dir != "" && !strings.HasSuffix(dir, "/") {
 		dir += "/"

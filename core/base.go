@@ -150,8 +150,8 @@ type BaseApp struct {
 	onMailerRecordAuthAlertSend     *hook.Hook[*MailerRecordEvent]
 
 	// filesystem event hooks
-	onFilesystemNewWriter *hook.Hook[*FilesystemNewWriterEvent]
-	onFilesystemDelete    *hook.Hook[*FilesystemDeleteEvent]
+	_onFilesystemNewWriter *hook.Hook[*FilesystemNewWriterEvent]
+	_onFilesystemDelete    *hook.Hook[*FilesystemDeleteEvent]
 
 	// realtime api event hooks
 	onRealtimeConnectRequest   *hook.Hook[*RealtimeConnectRequestEvent]
@@ -302,8 +302,12 @@ func (app *BaseApp) initHooks() {
 	app.onMailerRecordAuthAlertSend = &hook.Hook[*MailerRecordEvent]{}
 
 	// filesystem event hooks
-	app.onFilesystemNewWriter = &hook.Hook[*FilesystemNewWriterEvent]{}
-	app.onFilesystemDelete = &hook.Hook[*FilesystemDeleteEvent]{}
+	//
+	// intentionally not exposed since the events are too "chatty" and
+	// can cause unnecessery userland tests breaking changes;
+	// reevaluate once refactoring the file_field
+	app._onFilesystemNewWriter = &hook.Hook[*FilesystemNewWriterEvent]{}
+	app._onFilesystemDelete = &hook.Hook[*FilesystemDeleteEvent]{}
 
 	// realtime API event hooks
 	app.onRealtimeConnectRequest = &hook.Hook[*RealtimeConnectRequestEvent]{}
@@ -743,26 +747,26 @@ func (app *BaseApp) NewFilesystem() (fsys *filesystem.System, err error) {
 	}
 
 	// attach delete hook
-	if app.onFilesystemDelete.Length() > 0 {
+	if app._onFilesystemDelete.Length() > 0 {
 		fsys.OnDelete().BindFunc(func(originalEvent *filesystem.DeleteEvent) error {
 			appEvent := new(FilesystemDeleteEvent)
 			appEvent.DeleteEvent = originalEvent
 			appEvent.App = app
 
-			return app.onFilesystemDelete.Trigger(appEvent, func(fde *FilesystemDeleteEvent) error {
+			return app._onFilesystemDelete.Trigger(appEvent, func(fde *FilesystemDeleteEvent) error {
 				return originalEvent.Next()
 			})
 		})
 	}
 
 	// attach write hook
-	if app.onFilesystemNewWriter.Length() > 0 {
+	if app._onFilesystemNewWriter.Length() > 0 {
 		fsys.OnNewWriter().BindFunc(func(originalEvent *filesystem.NewWriterEvent) error {
 			appEvent := new(FilesystemNewWriterEvent)
 			appEvent.NewWriterEvent = originalEvent
 			appEvent.App = app
 
-			return app.onFilesystemNewWriter.Trigger(appEvent, func(fwe *FilesystemNewWriterEvent) error {
+			return app._onFilesystemNewWriter.Trigger(appEvent, func(fwe *FilesystemNewWriterEvent) error {
 				return originalEvent.Next()
 			})
 		})
@@ -1063,12 +1067,12 @@ func (app *BaseApp) OnMailerRecordAuthAlertSend(tags ...string) *hook.TaggedHook
 // Filesystem event hooks
 // -------------------------------------------------------------------
 
-func (app *BaseApp) OnFilesystemNewWriter() *hook.Hook[*FilesystemNewWriterEvent] {
-	return app.onFilesystemNewWriter
+func (app *BaseApp) onFilesystemNewWriter() *hook.Hook[*FilesystemNewWriterEvent] {
+	return app._onFilesystemNewWriter
 }
 
-func (app *BaseApp) OnFilesystemDelete() *hook.Hook[*FilesystemDeleteEvent] {
-	return app.onFilesystemDelete
+func (app *BaseApp) onFilesystemDelete() *hook.Hook[*FilesystemDeleteEvent] {
+	return app._onFilesystemDelete
 }
 
 // -------------------------------------------------------------------

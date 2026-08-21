@@ -1266,14 +1266,14 @@ type App interface {
 	// Filesystem event hooks
 	// ---------------------------------------------------------------
 
-	// OnFilesystemNewWriter is a low level hook for app.NewFilesystem()
+	// onFilesystemNewWriter is an internal hook for app.NewFilesystem()
 	// instances that is triggered on every storage filesystem writer initialization
 	// (aka. whenever attempting to create a new file).
-	OnFilesystemNewWriter() *hook.Hook[*FilesystemNewWriterEvent]
+	onFilesystemNewWriter() *hook.Hook[*FilesystemNewWriterEvent]
 
-	// OnFilesystemDelete is a low level hook for app.NewFilesystem()
+	// onFilesystemDelete is an internal hook for app.NewFilesystem()
 	// instances that is triggered for every storage file delete call.
-	OnFilesystemDelete() *hook.Hook[*FilesystemDeleteEvent]
+	onFilesystemDelete() *hook.Hook[*FilesystemDeleteEvent]
 
 	// ---------------------------------------------------------------
 	// Realtime API event hooks
