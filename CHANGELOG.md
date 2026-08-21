@@ -4,11 +4,16 @@
     _⚠️ Note that this could be a slight breaking change in case you are chaining PocketBase commands and relied on the previous `0` exit status for `Command.RunE` returned errors._
     _Or in other words, if you have `./pocketbase invalid && someothercommand` and previously relied that `someothercommand` will be always executed then this is no longer the case and you'll have to adjust it or replace `&&` with `;`._
 
-- Added `filesystem.NewWriter(key, opts)` low-level helper to allow direct file create from an `io.Reader` value.
+- Added helper `filesystem` methods:
+    - `filesystem.NewWriter(key, opts)` to allow direct file create from an `io.Reader` value.
+    - `filesystem.OnNewWriter()` hook to allow listening for new/to-be-creaded files (app level equivalent `app.OnFilesystemNewWriter()` hook is also available).
+    - `filesystem.OnDelete()` hook to allow listening for deleted files (app level equivalent `app.OnFilesystemDelete()` hook is also available).
 
 - Added new `DELETE /api/logs` endpoint and UI control to delete all logs without changing the `maxDays` retention setting.
 
 - Added `Record.GetInt64(field)` helper (note that the serializable max safe integer of the `number` field is ~2^53-1).
+
+- Added `Store.Keys()` method that returns a slice with all of the store keys.
 
 - Added quotes around the default `Content-Disposition` serving filename in case custom name with special characters is provided.
 
@@ -20,6 +25,8 @@
     _If the resulting `Log.Data` json is above the limit, it is truncated to the last valid decoded character and an extra `"__pb_truncated__":true` log data entry will be added.`_
     _Additionally, for just in case the log message is also truncated at max 8k characters._
 
+- (@todo tests and docs) Refactored backups create to minimize the DB lock times.
+
 - Updated `modernc.org/sqlite` to 1.57 and registered by default the new `_defensive=1` DSN query parameter to enable [SQLite's defensive mode](https://sqlite.org/c3ref/c_dbconfig_defensive.html#sqlitedbconfigdefensive).
 
-- (@todo) Bumped the min Go version to 1.27.0 and migrated to the new `encoding/json/v2` package.
+- (@todo docs) Bumped the min Go version to 1.27.0 and migrated to the new `encoding/json/v2` package.

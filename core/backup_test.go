@@ -126,11 +126,7 @@ func verifyBackupContent(app core.App, path string) error {
 	expectedRootEntries := []string{
 		"storage",
 		"data.db",
-		"data.db-shm",
-		"data.db-wal",
 		"auxiliary.db",
-		"auxiliary.db-shm",
-		"auxiliary.db-wal",
 		".gitignore",
 	}
 

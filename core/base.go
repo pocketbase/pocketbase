@@ -44,6 +44,9 @@ const (
 
 	// @todo consider removing after backups refactoring
 	lostFoundDirName string = "lost+found"
+
+	dataDBFilename string = "data.db"
+	auxDBFilename  string = "auxiliary.db"
 )
 
 // FilesManager defines an interface with common methods that files manager models should implement.
@@ -145,6 +148,10 @@ type BaseApp struct {
 	onMailerRecordEmailChangeSend   *hook.Hook[*MailerRecordEvent]
 	onMailerRecordOTPSend           *hook.Hook[*MailerRecordEvent]
 	onMailerRecordAuthAlertSend     *hook.Hook[*MailerRecordEvent]
+
+	// filesystem event hooks
+	onFilesystemNewWriter *hook.Hook[*FilesystemNewWriterEvent]
+	onFilesystemDelete    *hook.Hook[*FilesystemDeleteEvent]
 
 	// realtime api event hooks
 	onRealtimeConnectRequest   *hook.Hook[*RealtimeConnectRequestEvent]
@@ -293,6 +300,10 @@ func (app *BaseApp) initHooks() {
 	app.onMailerRecordEmailChangeSend = &hook.Hook[*MailerRecordEvent]{}
 	app.onMailerRecordOTPSend = &hook.Hook[*MailerRecordEvent]{}
 	app.onMailerRecordAuthAlertSend = &hook.Hook[*MailerRecordEvent]{}
+
+	// filesystem event hooks
+	app.onFilesystemNewWriter = &hook.Hook[*FilesystemNewWriterEvent]{}
+	app.onFilesystemDelete = &hook.Hook[*FilesystemDeleteEvent]{}
 
 	// realtime API event hooks
 	app.onRealtimeConnectRequest = &hook.Hook[*RealtimeConnectRequestEvent]{}
@@ -712,9 +723,10 @@ func (app *BaseApp) NewMailClient() mailer.Mailer {
 //
 // NB! Make sure to call Close() on the returned result
 // after you are done working with it.
-func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
+func (app *BaseApp) NewFilesystem() (fsys *filesystem.System, err error) {
 	if app.settings != nil && app.settings.S3.Enabled {
-		return filesystem.NewS3(
+		// S3
+		fsys, err = filesystem.NewS3(
 			app.settings.S3.Bucket,
 			app.settings.S3.Region,
 			app.settings.S3.Endpoint,
@@ -722,10 +734,41 @@ func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 			app.settings.S3.Secret,
 			app.settings.S3.ForcePathStyle,
 		)
+	} else {
+		// local filesystem
+		fsys, err = filesystem.NewLocal(filepath.Join(app.DataDir(), LocalStorageDirName))
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	// fallback to local filesystem
-	return filesystem.NewLocal(filepath.Join(app.DataDir(), LocalStorageDirName))
+	// attach delete hook
+	if app.onFilesystemDelete.Length() > 0 {
+		fsys.OnDelete().BindFunc(func(originalEvent *filesystem.DeleteEvent) error {
+			appEvent := new(FilesystemDeleteEvent)
+			appEvent.DeleteEvent = originalEvent
+			appEvent.App = app
+
+			return app.onFilesystemDelete.Trigger(appEvent, func(fde *FilesystemDeleteEvent) error {
+				return originalEvent.Next()
+			})
+		})
+	}
+
+	// attach write hook
+	if app.onFilesystemNewWriter.Length() > 0 {
+		fsys.OnNewWriter().BindFunc(func(originalEvent *filesystem.NewWriterEvent) error {
+			appEvent := new(FilesystemNewWriterEvent)
+			appEvent.NewWriterEvent = originalEvent
+			appEvent.App = app
+
+			return app.onFilesystemNewWriter.Trigger(appEvent, func(fwe *FilesystemNewWriterEvent) error {
+				return originalEvent.Next()
+			})
+		})
+	}
+
+	return fsys, nil
 }
 
 // NewBackupsFilesystem creates a new local or S3 filesystem instance
@@ -1017,6 +1060,18 @@ func (app *BaseApp) OnMailerRecordAuthAlertSend(tags ...string) *hook.TaggedHook
 }
 
 // -------------------------------------------------------------------
+// Filesystem event hooks
+// -------------------------------------------------------------------
+
+func (app *BaseApp) OnFilesystemNewWriter() *hook.Hook[*FilesystemNewWriterEvent] {
+	return app.onFilesystemNewWriter
+}
+
+func (app *BaseApp) OnFilesystemDelete() *hook.Hook[*FilesystemDeleteEvent] {
+	return app.onFilesystemDelete
+}
+
+// -------------------------------------------------------------------
 // Realtime API event hooks
 // -------------------------------------------------------------------
 
@@ -1173,7 +1228,7 @@ func (app *BaseApp) OnBatchRequest() *hook.Hook[*BatchRequestEvent] {
 // -------------------------------------------------------------------
 
 func (app *BaseApp) initDataDB() error {
-	dbPath := filepath.Join(app.DataDir(), "data.db")
+	dbPath := filepath.Join(app.DataDir(), dataDBFilename)
 
 	concurrentDB, err := app.config.DBConnect(dbPath)
 	if err != nil {
@@ -1235,7 +1290,7 @@ func normalizeSQLLog(sql string) string {
 func (app *BaseApp) initAuxDB() error {
 	// note: renamed to "auxiliary" because "aux" is a reserved Windows filename
 	// (see https://github.com/pocketbase/pocketbase/issues/5607)
-	dbPath := filepath.Join(app.DataDir(), "auxiliary.db")
+	dbPath := filepath.Join(app.DataDir(), auxDBFilename)
 
 	concurrentDB, err := app.config.DBConnect(dbPath)
 	if err != nil {

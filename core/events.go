@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pocketbase/pocketbase/tools/auth"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/router"
@@ -186,6 +187,24 @@ type MailerRecordEvent struct {
 	MailerEvent
 	baseRecordEventData
 	Meta map[string]any
+}
+
+// -------------------------------------------------------------------
+// Filesystem events data
+// -------------------------------------------------------------------
+
+type FilesystemNewWriterEvent struct {
+	hook.Event
+	*filesystem.NewWriterEvent
+
+	App App
+}
+
+type FilesystemDeleteEvent struct {
+	hook.Event
+	*filesystem.DeleteEvent
+
+	App App
 }
 
 // -------------------------------------------------------------------

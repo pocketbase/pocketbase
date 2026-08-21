@@ -22,6 +22,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/fileblob"
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob"
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3"
+	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/routine"
 
@@ -34,9 +35,28 @@ var ErrNotFound = blob.ErrNotFound
 
 const MetadataOriginalName = "original-filename"
 
+type DeleteEvent struct {
+	hook.Event
+	Filesystem *System
+	FileKey    string
+}
+
+type NewWriterEvent struct {
+	hook.Event
+	Filesystem *System
+	FileKey    string
+	Options    *blob.WriterOptions
+	Writer     *blob.Writer // filled only after e.Next()
+}
+
+// @todo consider renaming
+
 type System struct {
 	ctx    context.Context
 	bucket *blob.Bucket
+
+	onNewWriter *hook.Hook[*NewWriterEvent]
+	onDelete    *hook.Hook[*DeleteEvent]
 }
 
 // NewS3 initializes a new S3 filesystem instance.
@@ -97,7 +117,29 @@ func (s *System) SetContext(ctx context.Context) {
 
 // Close releases any resources used for the related filesystem.
 func (s *System) Close() error {
+	s.onNewWriter = nil
+	s.onDelete = nil
+
 	return s.bucket.Close()
+}
+
+// OnNewWriter is a low level hook that is triggered on every writer initialization
+// (aka. when attempting to create a new file with [system.NewWriter], [system.Upload], etc.).
+func (s *System) OnNewWriter() *hook.Hook[*NewWriterEvent] {
+	if s.onNewWriter == nil {
+		s.onNewWriter = &hook.Hook[*NewWriterEvent]{}
+	}
+
+	return s.onNewWriter
+}
+
+// OnDelete is a low level hook that is triggered on every [System.Delete] call.
+func (s *System) OnDelete() *hook.Hook[*DeleteEvent] {
+	if s.onDelete == nil {
+		s.onDelete = &hook.Hook[*DeleteEvent]{}
+	}
+
+	return s.onDelete
 }
 
 // Exists checks if file with fileKey path exists or not.
@@ -203,7 +245,7 @@ func (s *System) Upload(content []byte, fileKey string) error {
 		ContentType: mimetype.Detect(content).String(),
 	}
 
-	w, writerErr := s.bucket.NewWriter(s.ctx, fileKey, opts)
+	w, writerErr := s.NewWriter(fileKey, opts)
 	if writerErr != nil {
 		return writerErr
 	}
@@ -244,7 +286,7 @@ func (s *System) UploadFile(file *File, fileKey string) error {
 		},
 	}
 
-	w, err := s.bucket.NewWriter(s.ctx, fileKey, opts)
+	w, err := s.NewWriter(fileKey, opts)
 	if err != nil {
 		return err
 	}
@@ -286,7 +328,7 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 		},
 	}
 
-	w, err := s.bucket.NewWriter(s.ctx, fileKey, opts)
+	w, err := s.NewWriter(fileKey, opts)
 	if err != nil {
 		return err
 	}
@@ -321,14 +363,47 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 //	w.ReadFrom(content)
 //	w.Close()
 func (s *System) NewWriter(fileKey string, opts *blob.WriterOptions) (*blob.Writer, error) {
-	return s.bucket.NewWriter(s.ctx, fileKey, opts)
+	if s.onNewWriter == nil {
+		return s.bucket.NewWriter(s.ctx, fileKey, opts)
+	}
+
+	event := new(NewWriterEvent)
+	event.Filesystem = s
+	event.FileKey = fileKey
+	event.Options = opts
+
+	err := s.onNewWriter.Trigger(event, func(e *NewWriterEvent) error {
+		writer, err := e.Filesystem.bucket.NewWriter(e.Filesystem.ctx, e.FileKey, e.Options)
+		if err != nil {
+			return err
+		}
+
+		e.Writer = writer
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return event.Writer, nil
 }
 
 // Delete deletes stored file at fileKey location.
 //
 // If the file doesn't exist returns ErrNotFound.
 func (s *System) Delete(fileKey string) error {
-	return s.bucket.Delete(s.ctx, fileKey)
+	if s.onDelete == nil {
+		return s.bucket.Delete(s.ctx, fileKey)
+	}
+
+	event := new(DeleteEvent)
+	event.Filesystem = s
+	event.FileKey = fileKey
+
+	return s.onDelete.Trigger(event, func(e *DeleteEvent) error {
+		return e.Filesystem.bucket.Delete(e.Filesystem.ctx, e.FileKey)
+	})
 }
 
 // DeletePrefix deletes everything starting with the specified prefix.
@@ -603,7 +678,7 @@ func (s *System) createThumb(originalKey, thumbKey, thumbSize string) error {
 	}
 
 	// open a thumb storage writer (aka. prepare for upload)
-	w, err := s.bucket.NewWriter(s.ctx, thumbKey, opts)
+	w, err := s.NewWriter(thumbKey, opts)
 	if err != nil {
 		return err
 	}
