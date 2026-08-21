@@ -150,6 +150,13 @@ type BaseApp struct {
 	onMailerRecordAuthAlertSend     *hook.Hook[*MailerRecordEvent]
 
 	// filesystem event hooks
+	//
+	// @todo 1:
+	// intentionally not exposed since the events are too "chatty" and
+	// can cause unnecessery userland tests breaking changes;
+	// reevaluate once refactoring the file_field
+	//
+	// @todo 2: if exposed consider registering the same for the backup filesystem
 	_onFilesystemNewWriter *hook.Hook[*FilesystemNewWriterEvent]
 	_onFilesystemDelete    *hook.Hook[*FilesystemDeleteEvent]
 
@@ -302,10 +309,6 @@ func (app *BaseApp) initHooks() {
 	app.onMailerRecordAuthAlertSend = &hook.Hook[*MailerRecordEvent]{}
 
 	// filesystem event hooks
-	//
-	// intentionally not exposed since the events are too "chatty" and
-	// can cause unnecessery userland tests breaking changes;
-	// reevaluate once refactoring the file_field
 	app._onFilesystemNewWriter = &hook.Hook[*FilesystemNewWriterEvent]{}
 	app._onFilesystemDelete = &hook.Hook[*FilesystemDeleteEvent]{}
 
