@@ -329,7 +329,7 @@ func (z *zipWriter) close() error {
 	}
 
 	if z.f != nil {
-		wErr = z.f.Close()
+		fErr = z.f.Close()
 	}
 
 	return errors.Join(wErr, fErr)
