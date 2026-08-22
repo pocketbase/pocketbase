@@ -7,6 +7,7 @@ import (
 	"os"
 	"slices"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	_ "unsafe"
@@ -302,31 +303,34 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 	})
 
 	t.Run("test batch logs writes", func(t *testing.T) {
-		app.Settings().Logs.MaxDays = 1
+		synctest.Test(t, func(t *testing.T) {
+			app.Settings().Logs.MaxDays = 1
 
-		for i := 0; i < logsThreshold-1; i++ {
+			for i := 0; i < logsThreshold-1; i++ {
+				app.Logger().Error("test")
+			}
+
+			if total := totalLogs(app, t); total != 0 {
+				t.Fatalf("Expected no logs, got %d", total)
+			}
+
+			// should trigger batch write
 			app.Logger().Error("test")
-		}
 
-		if total := totalLogs(app, t); total != 0 {
-			t.Fatalf("Expected no logs, got %d", total)
-		}
+			// should be added for the next batch write
+			app.Logger().Error("test")
 
-		// should trigger batch write
-		app.Logger().Error("test")
+			if total := totalLogs(app, t); total != logsThreshold {
+				t.Fatalf("Expected %d logs, got %d", logsThreshold, total)
+			}
 
-		// should be added for the next batch write
-		app.Logger().Error("test")
+			// wait for 3 secs to check the timer trigger
+			synctest.Sleep(3000 * time.Millisecond)
 
-		if total := totalLogs(app, t); total != logsThreshold {
-			t.Fatalf("Expected %d logs, got %d", logsThreshold, total)
-		}
-
-		// wait for ~3 secs to check the timer trigger
-		time.Sleep(3200 * time.Millisecond)
-		if total := totalLogs(app, t); total != logsThreshold+1 {
-			t.Fatalf("Expected %d logs, got %d", logsThreshold+1, total)
-		}
+			if total := totalLogs(app, t); total != logsThreshold {
+				t.Fatalf("Expected %d logs, got %d", logsThreshold, total)
+			}
+		})
 	})
 }
 

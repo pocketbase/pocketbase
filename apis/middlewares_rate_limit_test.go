@@ -1,8 +1,10 @@
 package apis_test
 
 import (
+	"fmt"
 	"net/http/httptest"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/pocketbase/pocketbase/apis"
@@ -127,27 +129,29 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 		{"/rate/guest", 0, true, 429},
 	}
 
-	for _, s := range scenarios {
-		t.Run(s.url, func(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		for i, s := range scenarios {
+			prefix := fmt.Sprintf("[%s:%d] ", s.url, i+1)
+
 			rec := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", s.url, nil)
 
 			if s.authenticated {
 				auth, err := app.FindAuthRecordByEmail("users", "test@example.com")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf(prefix+"%v", err)
 				}
 
 				token, err := auth.NewAuthToken()
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf(prefix+"%v", err)
 				}
 
 				req.Header.Add("Authorization", token)
 			}
 
 			if s.wait > 0 {
-				time.Sleep(time.Duration(s.wait) * time.Millisecond)
+				synctest.Sleep(time.Duration(s.wait) * time.Millisecond)
 			}
 
 			mux.ServeHTTP(rec, req)
@@ -155,10 +159,10 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 			result := rec.Result()
 
 			if result.StatusCode != s.expectedStatus {
-				t.Fatalf("Expected response status %d, got %d", s.expectedStatus, result.StatusCode)
+				t.Fatalf(prefix+"Expected response status %d, got %d", s.expectedStatus, result.StatusCode)
 			}
-		})
-	}
+		}
+	})
 }
 
 func TestDefaultRateLimitMiddlewareSkipChecks(t *testing.T) {

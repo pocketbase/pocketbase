@@ -257,13 +257,6 @@ func (s *Settings) DBExport(app App) (map[string]any, error) {
 	}
 	result["updated"] = now
 
-	// @todo remove with encoding/json/2
-	// serialize as empty array
-	//nolint:staticcheck
-	if s.settings.SuperuserIPs == nil {
-		s.settings.SuperuserIPs = []string{}
-	}
-
 	encoded, err := json.Marshal(s.settings, json.Deterministic(true))
 	if err != nil {
 		return nil, err
@@ -353,12 +346,6 @@ func (s *Settings) MarshalJSON() ([]byte, error) {
 		if v != nil && *v != "" {
 			*v = ""
 		}
-	}
-
-	// @todo remove with encoding/json/2
-	// serialize as empty array
-	if copy.SuperuserIPs == nil {
-		copy.SuperuserIPs = []string{}
 	}
 
 	return json.Marshal(copy, json.Deterministic(true))

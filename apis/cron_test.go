@@ -77,10 +77,13 @@ func TestCronsRun(t *testing.T) {
 		app.Cron().Add("test", "* * * * *", func() {
 			app.Store().Set("testJobCalls", cast.ToInt(app.Store().Get("testJobCalls"))+1)
 		})
+		app.Cron().Stop()
 	}
 
 	expectedCalls := func(expected int) func(t testing.TB, app *tests.TestApp, res *http.Response) {
 		return func(t testing.TB, app *tests.TestApp, res *http.Response) {
+			time.Sleep(50 * time.Millisecond)
+
 			total := cast.ToInt(app.Store().Get("testJobCalls"))
 			if total != expected {
 				t.Fatalf("Expected total testJobCalls %d, got %d", expected, total)
@@ -93,7 +96,6 @@ func TestCronsRun(t *testing.T) {
 			Name:            "unauthorized",
 			Method:          http.MethodPost,
 			URL:             "/api/crons/test",
-			Delay:           50 * time.Millisecond,
 			BeforeTestFunc:  beforeTestFunc,
 			AfterTestFunc:   expectedCalls(0),
 			ExpectedStatus:  401,
@@ -107,7 +109,6 @@ func TestCronsRun(t *testing.T) {
 			Headers: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
-			Delay:           50 * time.Millisecond,
 			BeforeTestFunc:  beforeTestFunc,
 			AfterTestFunc:   expectedCalls(0),
 			ExpectedStatus:  403,
@@ -121,7 +122,6 @@ func TestCronsRun(t *testing.T) {
 			Headers: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
 			},
-			Delay:           50 * time.Millisecond,
 			BeforeTestFunc:  beforeTestFunc,
 			AfterTestFunc:   expectedCalls(0),
 			ExpectedStatus:  404,
@@ -135,7 +135,6 @@ func TestCronsRun(t *testing.T) {
 			Headers: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
 			},
-			Delay:          50 * time.Millisecond,
 			BeforeTestFunc: beforeTestFunc,
 			AfterTestFunc:  expectedCalls(1),
 			ExpectedStatus: 204,

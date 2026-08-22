@@ -249,6 +249,7 @@ func (scenario *ApiScenario) test(t testing.TB) {
 			t.Errorf("Expected status code %d, got %d", scenario.ExpectedStatus, res.StatusCode)
 		}
 
+		// @todo consider removing in favour of synctest.Wait()
 		if scenario.Delay > 0 {
 			time.Sleep(scenario.Delay)
 		}

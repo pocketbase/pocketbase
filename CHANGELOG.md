@@ -4,10 +4,10 @@
     _⚠️ Note that this could be a slight breaking change in case you are chaining PocketBase commands and relied on the previous `0` exit status for `Command.RunE` returned errors._
     _Or in other words, if you have `./pocketbase invalid && someothercommand` and previously relied that `someothercommand` will be always executed then this is no longer the case and you'll have to adjust it or replace `&&` with `;`._
 
-- Added helper `filesystem` methods:
+- Added new `filesystem` low-level helper methods:
     - `filesystem.NewWriter(key, opts)` to allow direct file create from an `io.Reader` value.
-    - `filesystem.OnNewWriter()` low-level hook to allow listening for new/to-be-creaded files _(app level equivalent hook is also available but not exposed for now to avoid introducing breaking changes)_.
-    - `filesystem.OnDelete()` low-level hook to allow listening for deleted files _(app level equivalent hook is also available but not exposed for now to avoid introducing breaking changes)_.
+    - `filesystem.OnNewWriter()` hook to allow listening for new/to-be-creaded files _(app level hook is not exposed for now to avoid introducing breaking changes)_.
+    - `filesystem.OnDelete()` hook to allow listening for deleted files _(app level hook is not exposed for now to avoid introducing breaking changes)_.
 
 - Added new `DELETE /api/logs` endpoint and UI control to delete all logs without changing the `maxDays` retention setting.
 

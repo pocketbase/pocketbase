@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sync"
 	"testing"
+	"testing/synctest"
 	"time"
 )
 
@@ -254,63 +255,65 @@ func TestCronJobs(t *testing.T) {
 func TestCronStartStop(t *testing.T) {
 	t.Parallel()
 
-	var mu sync.Mutex
+	synctest.Test(t, func(t *testing.T) {
+		var mu sync.Mutex
 
-	test1 := 0
-	test2 := 0
+		test1 := 0
+		test2 := 0
 
-	c := New()
+		c := New()
 
-	c.SetInterval(250 * time.Millisecond)
+		c.SetInterval(250 * time.Millisecond)
 
-	c.Add("test1", "* * * * *", func() {
+		c.Add("test1", "* * * * *", func() {
+			mu.Lock()
+			defer mu.Unlock()
+			test1++
+		})
+
+		c.Add("test2", "* * * * *", func() {
+			mu.Lock()
+			defer mu.Unlock()
+			test2++
+		})
+
+		// call twice Start to check if the previous ticker will be reseted
+		c.Start()
+		c.Start()
+
+		synctest.Sleep(500 * time.Millisecond)
+
+		// call twice Stop to ensure that the second stop is no-op
+		c.Stop()
+		c.Stop()
+
+		expectedCalls := 2
+
 		mu.Lock()
-		defer mu.Unlock()
-		test1++
-	})
+		if test1 != expectedCalls {
+			t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
+		}
+		if test2 != expectedCalls {
+			t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
+		}
+		mu.Unlock()
 
-	c.Add("test2", "* * * * *", func() {
+		// resume for 1 seconds
+		c.Start()
+
+		synctest.Sleep(1000 * time.Millisecond)
+
+		c.Stop()
+
+		expectedCalls += 4
+
 		mu.Lock()
-		defer mu.Unlock()
-		test2++
+		if test1 != expectedCalls {
+			t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
+		}
+		if test2 != expectedCalls {
+			t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
+		}
+		mu.Unlock()
 	})
-
-	// call twice Start to check if the previous ticker will be reseted
-	c.Start()
-	c.Start()
-
-	time.Sleep(505 * time.Millisecond) // slightly larger to minimize flakiness
-
-	// call twice Stop to ensure that the second stop is no-op
-	c.Stop()
-	c.Stop()
-
-	expectedCalls := 2
-
-	mu.Lock()
-	if test1 != expectedCalls {
-		t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
-	}
-	if test2 != expectedCalls {
-		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
-	}
-	mu.Unlock()
-
-	// resume for 1 seconds
-	c.Start()
-
-	time.Sleep(1005 * time.Millisecond) // slightly larger to minimize flakiness
-
-	c.Stop()
-
-	expectedCalls += 4
-
-	mu.Lock()
-	if test1 != expectedCalls {
-		t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
-	}
-	if test2 != expectedCalls {
-		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
-	}
-	mu.Unlock()
 }

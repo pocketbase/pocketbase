@@ -131,8 +131,8 @@ func (s *System) Close() error {
 	return s.bucket.Close()
 }
 
-// OnNewWriter is a low level hook that is triggered on every writer initialization
-// (aka. when attempting to create a new file with [system.NewWriter], [system.Upload], etc.).
+// OnNewWriter is a low level hook that is triggered on every new writer initialization
+// (aka. when attempting to create a new file with [system.NewWriter] or [system.Upload]).
 //
 // Note that currently it doesn't trigger on [System.Copy] but this may change in future releases.
 func (s *System) OnNewWriter() *hook.Hook[*NewWriterEvent] {
@@ -144,6 +144,9 @@ func (s *System) OnNewWriter() *hook.Hook[*NewWriterEvent] {
 }
 
 // OnDelete is a low level hook that is triggered on every [System.Delete] call.
+//
+// Note that the hook doesn't fire when a file is being overwritten
+// by a new one, because in that case [System.Delete] is not invoked.
 func (s *System) OnDelete() *hook.Hook[*DeleteEvent] {
 	if s.onDelete == nil {
 		s.onDelete = &hook.Hook[*DeleteEvent]{}
