@@ -96,7 +96,7 @@ function backupCreateModal(settings) {
                             { className: "content" },
                             t.p(
                                 null,
-                                `Please note that during the backup other concurrent write requests may fail since the database will be temporary "locked" (this usually happens only during the ZIP generation).`,
+                                `Please note that during the backup the performance could be slightly degraded and some queries may take longer to complete than usual.`,
                             ),
                             t.p(
                                 { className: "txt-bold" },

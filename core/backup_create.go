@@ -89,6 +89,8 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 			e.Name = generateBackupName(e.App, "pb_backup_")
 		}
 
+		app.Logger().Debug("[" + e.Name + "] zip archive started")
+
 		// create backup zip
 		// (it needs to be inside the current pb_data to avoid "cross-device link" errors)
 		// -----------------------------------------------------------
@@ -210,7 +212,7 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 	dataStartTime := time.Now()
 	tempDataDBPath := filepath.Join(localTempDir, dataDBFilename)
 
-	_, err = be.App.NonconcurrentDB().NewQuery("VACUUM INTO {:path}").Bind(dbx.Params{"path": tempDataDBPath}).Execute()
+	_, err = be.App.ConcurrentDB().NewQuery("VACUUM INTO {:path}").Bind(dbx.Params{"path": tempDataDBPath}).Execute()
 	if err != nil {
 		return err
 	}
@@ -256,7 +258,7 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 	auxStartTime := time.Now()
 	tempAuxDBPath := filepath.Join(localTempDir, auxDBFilename)
 
-	_, err = be.App.AuxNonconcurrentDB().NewQuery("VACUUM INTO {:path}").Bind(dbx.Params{"path": tempAuxDBPath}).Execute()
+	_, err = be.App.AuxConcurrentDB().NewQuery("VACUUM INTO {:path}").Bind(dbx.Params{"path": tempAuxDBPath}).Execute()
 	if err != nil {
 		return err
 	}
