@@ -279,6 +279,13 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 	excluded.Set(normalizePathExclude(auxDBFilename+"-wal"), struct{}{})
 	excluded.Set(normalizePathExclude(auxDBFilename+"-shm"), struct{}{})
 
+	// try to run manual checkpoints to ensure that all wal writes during the
+	// previous VACUUM INTO are transferred and don't accumulate
+	// (errors are ignore because some drivers may not support the wal_checkpoint pragma)
+	// ---------------------------------------------------------------
+	_, _ = be.App.NonconcurrentDB().NewQuery("PRAGMA wal_checkpoint(TRUNCATE)").Execute()
+	_, _ = be.App.AuxNonconcurrentDB().NewQuery("PRAGMA wal_checkpoint(TRUNCATE)").Execute()
+
 	// copy the rest of the pb_data
 	// ---------------------------------------------------------------
 	err = copyDirToZip(zw, os.DirFS(be.App.DataDir()), excluded)
@@ -289,11 +296,12 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 	return closeZip()
 }
 
-// normalize the provided file path to always use and end with forward slash
+// normalize the provided file path to always end with forward slash
 func normalizePathExclude(filePath string) string {
 	return path.Clean(filePath) + "/"
 }
 
+// note: directories are ignored
 func copyFileToZip(w *zip.Writer, localPath string, zipPath string) error {
 	info, err := os.Stat(localPath)
 	if err != nil {
@@ -301,7 +309,7 @@ func copyFileToZip(w *zip.Writer, localPath string, zipPath string) error {
 	}
 
 	if info.IsDir() {
-		return fmt.Errorf("%s is a directory and not a regular file", localPath)
+		return nil
 	}
 
 	h, err := zip.FileInfoHeader(info)
