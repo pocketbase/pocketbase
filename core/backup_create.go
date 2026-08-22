@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pocketbase/dbx"
@@ -150,22 +151,13 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 		be.App.onFilesystemNewWriter().Unbind(tempFilesHookId)
 	}()
 
-	zf, err := os.Create(tempZipPath)
+	zipper, err := newZipWriter(tempZipPath)
 	if err != nil {
 		return err
 	}
-
-	zw := zip.NewWriter(zf)
-	zw.RegisterCompressor(zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
-		return flate.NewWriter(out, flate.BestSpeed)
-	})
-
-	closeZip := func() error {
-		return errors.Join(zw.Close(), zf.Close())
-	}
-	// call defer even though zf.Close will error if invoked multiple times
+	// call defer even though z.f.Close will error if invoked multiple times
 	// because otherwise the code become too brittle
-	defer closeZip()
+	defer zipper.close()
 
 	excluded := store.New[string, struct{}](nil)
 	for _, name := range be.Exclude {
@@ -192,7 +184,7 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 			)
 
 			// copy to zip before delete
-			err := copyFileToZip(zw, localPath, zipPath)
+			err := zipper.copyFileToZip(localPath, zipPath)
 			if err != nil {
 				// it is ok to ignore directories
 				if !errors.Is(err, errIsDir) {
@@ -230,7 +222,7 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 		slog.Float64("execTime", float64(time.Since(dataStartTime))/float64(time.Millisecond)),
 	)
 
-	err = copyFileToZip(zw, tempDataDBPath, dataDBFilename)
+	err = zipper.copyFileToZip(tempDataDBPath, dataDBFilename)
 	if err != nil {
 		_ = os.Remove(tempDataDBPath)
 		return err
@@ -273,7 +265,7 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 		slog.Float64("execTime", float64(time.Since(auxStartTime))/float64(time.Millisecond)),
 	)
 
-	err = copyFileToZip(zw, tempAuxDBPath, auxDBFilename)
+	err = zipper.copyFileToZip(tempAuxDBPath, auxDBFilename)
 	if err != nil {
 		_ = os.Remove(tempAuxDBPath)
 		return err
@@ -293,12 +285,12 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 
 	// copy the rest of the pb_data
 	// ---------------------------------------------------------------
-	err = copyDirToZip(zw, os.DirFS(be.App.DataDir()), excluded)
+	err = zipper.copyDirToZip(os.DirFS(be.App.DataDir()), excluded)
 	if err != nil {
 		return err
 	}
 
-	return closeZip()
+	return zipper.close()
 }
 
 // normalize the provided file path to always end with forward slash
@@ -306,7 +298,44 @@ func normalizePathExclude(filePath string) string {
 	return path.Clean(filePath) + "/"
 }
 
-func copyFileToZip(w *zip.Writer, localPath string, zipPath string) error {
+type zipWriter struct {
+	mu sync.Mutex
+	w  *zip.Writer
+	f  *os.File
+}
+
+func newZipWriter(zipFilePath string) (*zipWriter, error) {
+	f, err := os.Create(zipFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	w := zip.NewWriter(f)
+	w.RegisterCompressor(zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
+		return flate.NewWriter(out, flate.BestSpeed)
+	})
+
+	return &zipWriter{
+		w: w,
+		f: f,
+	}, nil
+}
+
+func (z *zipWriter) close() error {
+	var wErr, fErr error
+
+	if z.w != nil {
+		wErr = z.w.Close()
+	}
+
+	if z.f != nil {
+		wErr = z.f.Close()
+	}
+
+	return errors.Join(wErr, fErr)
+}
+
+func (z *zipWriter) copyFileToZip(localPath string, zipPath string) error {
 	info, err := os.Stat(localPath)
 	if err != nil {
 		return err
@@ -324,7 +353,10 @@ func copyFileToZip(w *zip.Writer, localPath string, zipPath string) error {
 	h.Name = zipPath
 	h.Method = zip.Deflate
 
-	fw, err := w.CreateHeader(h)
+	z.mu.Lock()
+	defer z.mu.Unlock()
+
+	fw, err := z.w.CreateHeader(h)
 	if err != nil {
 		return err
 	}
@@ -340,7 +372,7 @@ func copyFileToZip(w *zip.Writer, localPath string, zipPath string) error {
 	return err
 }
 
-func copyDirToZip(w *zip.Writer, fsys fs.FS, excludedPrefixes *store.Store[string, struct{}]) error {
+func (z *zipWriter) copyDirToZip(fsys fs.FS, excludedPrefixes *store.Store[string, struct{}]) error {
 	return fs.WalkDir(fsys, ".", func(name string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -377,7 +409,10 @@ func copyDirToZip(w *zip.Writer, fsys fs.FS, excludedPrefixes *store.Store[strin
 		h.Name = name
 		h.Method = zip.Deflate
 
-		fw, err := w.CreateHeader(h)
+		z.mu.Lock()
+		defer z.mu.Unlock()
+
+		fw, err := z.w.CreateHeader(h)
 		if err != nil {
 			return err
 		}
