@@ -22,7 +22,7 @@
 
 - Added new `filesystem` low-level helper methods:
     - `filesystem.NewWriter(key, opts)` to allow direct file create from an `io.Reader` value.
-    - `filesystem.OnNewWriter()` hook to allow listening for new/to-be-creaded files _(it is not exposed in `core.App` instance for now to avoid introducing breaking changes)_.
+    - `filesystem.OnNewWriter()` hook to allow listening for new/to-be-created files _(it is not exposed in `core.App` instance for now to avoid introducing breaking changes)_.
     - `filesystem.OnDelete()` hook to allow listening for deleted files _(it is not exposed in `core.App` instance for now to avoid introducing breaking changes)_.
 
 - Optimized backups to no longer transaction lock the database during backup generation ([#7799](https://github.com/pocketbase/pocketbase/discussions/7799#discussioncomment-18108244)).
