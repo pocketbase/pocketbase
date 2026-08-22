@@ -368,7 +368,7 @@ func TestFileSystemServe(t *testing.T) {
 			map[string]string{
 				"Content-Disposition":     "inline; filename=test_name.png",
 				"Content-Type":            "image/png",
-				"Content-Length":          "73",
+				"Content-Length":          "77",
 				"Content-Security-Policy": csp,
 				"Cache-Control":           cacheControl,
 			},
@@ -383,7 +383,7 @@ func TestFileSystemServe(t *testing.T) {
 			map[string]string{
 				"Content-Disposition":     "attachment; filename=test_name_download.png",
 				"Content-Type":            "image/png",
-				"Content-Length":          "73",
+				"Content-Length":          "77",
 				"Content-Security-Policy": csp,
 				"Cache-Control":           cacheControl,
 			},
@@ -528,8 +528,8 @@ func TestFileSystemCopy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Missing copied file %q: %v", dst, err)
 	}
-	if f.Size() != 73 {
-		t.Fatalf("Expected file size %d, got %d", 73, f.Size())
+	if f.Size() != 77 {
+		t.Fatalf("Expected file size %d, got %d", 77, f.Size())
 	}
 }
 
@@ -618,7 +618,7 @@ func TestFileSystemServeSingleRange(t *testing.T) {
 		t.Fatalf("Expected StatusCode %d, got %d", http.StatusPartialContent, result.StatusCode)
 	}
 
-	expectedRange := "bytes 0-20/73"
+	expectedRange := "bytes 0-20/77"
 	if cr := result.Header.Get("Content-Range"); cr != expectedRange {
 		t.Fatalf("Expected Content-Range %q, got %q", expectedRange, cr)
 	}

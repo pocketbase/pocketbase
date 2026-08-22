@@ -183,9 +183,8 @@ func (f SchemaField) MarshalJSON() ([]byte, error) {
 //
 // The schema field options are auto initialized on success.
 func (f *SchemaField) UnmarshalJSON(data []byte) error {
-	type alias *SchemaField // alias to prevent recursion
-
-	a := alias(f)
+	type alias SchemaField // alias to prevent recursion
+	a := (*alias)(f)
 
 	if err := json.Unmarshal(data, a); err != nil {
 		return err
