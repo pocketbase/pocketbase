@@ -2,6 +2,11 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.53
+
+- Workaround `encoding/json` infinite recursion when used with Go 1.27 ([#7808](https://github.com/pocketbase/pocketbase/issues/7808)).
+
+
 ## v0.22.52
 
 - (_Backported from v0.39.11_) Bumped `golang.org/x/*` deps and the min Go GitHub action version to 1.26.6 because it comes with some [minor bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.6).
