@@ -155,8 +155,6 @@ func createZip(be *BackupEvent, tempZipPath string) error {
 	if err != nil {
 		return err
 	}
-	// call defer even though z.f.Close will error if invoked multiple times
-	// because otherwise the code become too brittle
 	defer zipper.close()
 
 	excluded := store.New[string, struct{}](nil)
@@ -299,9 +297,10 @@ func normalizePathExclude(filePath string) string {
 }
 
 type zipWriter struct {
-	mu sync.Mutex
-	w  *zip.Writer
-	f  *os.File
+	mu     sync.Mutex
+	w      *zip.Writer
+	f      *os.File
+	closed bool
 }
 
 func newZipWriter(zipFilePath string) (*zipWriter, error) {
@@ -325,17 +324,13 @@ func (z *zipWriter) close() error {
 	z.mu.Lock()
 	defer z.mu.Unlock()
 
-	var wErr, fErr error
-
-	if z.w != nil {
-		wErr = z.w.Close()
+	if z.closed {
+		return nil
 	}
 
-	if z.f != nil {
-		fErr = z.f.Close()
-	}
+	z.closed = true
 
-	return errors.Join(wErr, fErr)
+	return errors.Join(z.w.Close(), z.f.Close())
 }
 
 func (z *zipWriter) copyFileToZip(localPath string, zipPath string) error {
@@ -358,6 +353,10 @@ func (z *zipWriter) copyFileToZip(localPath string, zipPath string) error {
 
 	z.mu.Lock()
 	defer z.mu.Unlock()
+
+	if z.closed {
+		return errors.New("zip writer is already closed")
+	}
 
 	fw, err := z.w.CreateHeader(h)
 	if err != nil {
@@ -388,7 +387,7 @@ func (z *zipWriter) copyDirToZip(fsys fs.FS, excludedPrefixes *store.Store[strin
 			for _, prefix := range prefixes {
 				if strings.HasPrefix(check, prefix) {
 					if d.IsDir() {
-						return filepath.SkipDir
+						return fs.SkipDir
 					}
 					return nil
 				}
@@ -414,6 +413,11 @@ func (z *zipWriter) copyDirToZip(fsys fs.FS, excludedPrefixes *store.Store[strin
 
 		z.mu.Lock()
 		defer z.mu.Unlock()
+
+		if z.closed {
+			// note: fs.WalkDir perform direct comparison with the value
+			return fs.SkipAll
+		}
 
 		fw, err := z.w.CreateHeader(h)
 		if err != nil {
