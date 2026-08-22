@@ -322,6 +322,9 @@ func newZipWriter(zipFilePath string) (*zipWriter, error) {
 }
 
 func (z *zipWriter) close() error {
+	z.mu.Lock()
+	defer z.mu.Unlock()
+
 	var wErr, fErr error
 
 	if z.w != nil {
