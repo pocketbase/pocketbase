@@ -59,6 +59,10 @@ func (l *Log) DBExport(app App) (map[string]any, error) {
 		}
 
 		rawData, err := l.Data.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+
 		if int64(len(rawData)) > maxDataSize {
 			truncatedData := types.JSONMap[any]{}
 

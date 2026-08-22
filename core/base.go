@@ -153,7 +153,7 @@ type BaseApp struct {
 	//
 	// @todo 1:
 	// intentionally not exposed since the events are too "chatty" and
-	// can cause unnecessery userland tests breaking changes;
+	// can cause unnecessary userland tests breaking changes;
 	// reevaluate once refactoring the file_field
 	//
 	// @todo 2: if exposed consider registering the same for the backup filesystem

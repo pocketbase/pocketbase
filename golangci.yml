@@ -7,7 +7,7 @@ linters:
   enable:
     - asasalint
     - asciicheck
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
     - govet
     - ineffassign
@@ -20,6 +20,11 @@ linters:
     - unconvert
     - unused
     - whitespace
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - prealloc
 formatters:
   enable:
     - gofmt

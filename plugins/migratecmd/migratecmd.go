@@ -194,7 +194,8 @@ func (p *plugin) migrateCreateHandler(template string, args []string, interactiv
 }
 
 func (p *plugin) migrateCollectionsHandler(args []string, interactive bool) (string, error) {
-	createArgs := []string{"collections_snapshot"}
+	createArgs := make([]string, 0, len(args)+1)
+	createArgs = append(createArgs, "collections_snapshot")
 	createArgs = append(createArgs, args...)
 
 	collections := []*core.Collection{}

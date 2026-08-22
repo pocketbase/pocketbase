@@ -139,7 +139,7 @@ func unmarshalInStructValue(
 		fieldValue := dereference(dstStructValue.Field(i))
 
 		ft := fieldType.Type
-		if ft.Kind() == reflect.Ptr {
+		if ft.Kind() == reflect.Pointer {
 			ft = ft.Elem()
 		}
 
@@ -237,7 +237,7 @@ func unmarshalInStructValue(
 
 // dereference returns the underlying value v points to.
 func dereference(v reflect.Value) reflect.Value {
-	for v.Kind() == reflect.Ptr {
+	for v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			// initialize with a new value and continue searching
 			v.Set(reflect.New(v.Type().Elem()))

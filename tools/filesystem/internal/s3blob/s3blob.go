@@ -254,26 +254,27 @@ func (drv *driver) NewTypedWriter(ctx context.Context, key string, contentType s
 	}
 	u.Metadata = md
 
-	var reqOptions []func(*http.Request)
-	reqOptions = append(reqOptions, func(r *http.Request) {
-		r.Header.Set("Content-Type", contentType)
+	reqOptions := []func(*http.Request){
+		func(r *http.Request) {
+			r.Header.Set("Content-Type", contentType)
 
-		if opts.CacheControl != "" {
-			r.Header.Set("Cache-Control", opts.CacheControl)
-		}
-		if opts.ContentDisposition != "" {
-			r.Header.Set("Content-Disposition", opts.ContentDisposition)
-		}
-		if opts.ContentEncoding != "" {
-			r.Header.Set("Content-Encoding", opts.ContentEncoding)
-		}
-		if opts.ContentLanguage != "" {
-			r.Header.Set("Content-Language", opts.ContentLanguage)
-		}
-		if len(opts.ContentMD5) > 0 {
-			r.Header.Set("Content-MD5", base64.StdEncoding.EncodeToString(opts.ContentMD5))
-		}
-	})
+			if opts.CacheControl != "" {
+				r.Header.Set("Cache-Control", opts.CacheControl)
+			}
+			if opts.ContentDisposition != "" {
+				r.Header.Set("Content-Disposition", opts.ContentDisposition)
+			}
+			if opts.ContentEncoding != "" {
+				r.Header.Set("Content-Encoding", opts.ContentEncoding)
+			}
+			if opts.ContentLanguage != "" {
+				r.Header.Set("Content-Language", opts.ContentLanguage)
+			}
+			if len(opts.ContentMD5) > 0 {
+				r.Header.Set("Content-MD5", base64.StdEncoding.EncodeToString(opts.ContentMD5))
+			}
+		},
+	}
 
 	return &writer{
 		ctx:        ctx,
