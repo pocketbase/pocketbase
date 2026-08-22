@@ -299,7 +299,7 @@ func copyFileToZip(w *zip.Writer, localPath string, zipPath string) error {
 	}
 
 	if info.IsDir() {
-		return nil
+		return fmt.Errorf("%s is a directory and not a regular file", localPath)
 	}
 
 	h, err := zip.FileInfoHeader(info)

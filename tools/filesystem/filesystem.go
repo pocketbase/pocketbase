@@ -26,7 +26,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/routine"
 
-	// explicit webp decoder because disintegration/imaging does not support webp
+	// manually register the webp decoder because disintegration/imaging does not support webp
 	_ "golang.org/x/image/webp"
 )
 
@@ -55,6 +55,7 @@ type System struct {
 	ctx    context.Context
 	bucket *blob.Bucket
 
+	// @todo consider with the refactoring to bind on driver level
 	onNewWriter *hook.Hook[*NewWriterEvent]
 	onDelete    *hook.Hook[*DeleteEvent]
 }
@@ -117,14 +118,23 @@ func (s *System) SetContext(ctx context.Context) {
 
 // Close releases any resources used for the related filesystem.
 func (s *System) Close() error {
-	s.onNewWriter = nil
-	s.onDelete = nil
+	if s.onNewWriter != nil {
+		s.onNewWriter.UnbindAll()
+		s.onNewWriter = nil
+	}
+
+	if s.onDelete != nil {
+		s.onDelete.UnbindAll()
+		s.onDelete = nil
+	}
 
 	return s.bucket.Close()
 }
 
 // OnNewWriter is a low level hook that is triggered on every writer initialization
 // (aka. when attempting to create a new file with [system.NewWriter], [system.Upload], etc.).
+//
+// Note that currently it doesn't trigger on [System.Copy] but this may change in future releases.
 func (s *System) OnNewWriter() *hook.Hook[*NewWriterEvent] {
 	if s.onNewWriter == nil {
 		s.onNewWriter = &hook.Hook[*NewWriterEvent]{}

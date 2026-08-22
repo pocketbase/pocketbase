@@ -30,6 +30,8 @@ func TestFilesystemExists(t *testing.T) {
 	}
 	defer fsys.Close()
 
+	hookCalls := bindHooks(fsys)
+
 	scenarios := []struct {
 		file   string
 		exists bool
@@ -53,6 +55,8 @@ func TestFilesystemExists(t *testing.T) {
 			}
 		})
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemAttributes(t *testing.T) {
@@ -64,6 +68,8 @@ func TestFilesystemAttributes(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	scenarios := []struct {
 		file              string
@@ -95,6 +101,8 @@ func TestFilesystemAttributes(t *testing.T) {
 			}
 		})
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemNewWriter(t *testing.T) {
@@ -106,6 +114,8 @@ func TestFilesystemNewWriter(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	testKey := "test_writer"
 
@@ -156,6 +166,8 @@ func TestFilesystemNewWriter(t *testing.T) {
 	if result != expectedContent {
 		t.Fatalf("Expected file content\n%s\ngot\n%s", expectedContent, result)
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 1})
 }
 
 func TestFilesystemDelete(t *testing.T) {
@@ -168,6 +180,8 @@ func TestFilesystemDelete(t *testing.T) {
 	}
 	defer fsys.Close()
 
+	hookCalls := bindHooks(fsys)
+
 	if err := fsys.Delete("missing.txt"); err == nil || !errors.Is(err, filesystem.ErrNotFound) {
 		t.Fatalf("Expected ErrNotFound error, got %v", err)
 	}
@@ -175,6 +189,8 @@ func TestFilesystemDelete(t *testing.T) {
 	if err := fsys.Delete("image.png"); err != nil {
 		t.Fatalf("Expected nil, got error %v", err)
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 2, "OnNewWriter": 0})
 }
 
 func TestFilesystemDeletePrefixWithoutTrailingSlash(t *testing.T) {
@@ -186,6 +202,8 @@ func TestFilesystemDeletePrefixWithoutTrailingSlash(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	if errs := fsys.DeletePrefix(""); len(errs) == 0 {
 		t.Fatal("Expected error, got nil", errs)
@@ -211,6 +229,8 @@ func TestFilesystemDeletePrefixWithoutTrailingSlash(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "test")); os.IsNotExist(err) {
 		t.Fatal("Expected the prefix dir to remain")
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 2, "OnNewWriter": 0})
 }
 
 func TestFilesystemDeletePrefixWithTrailingSlash(t *testing.T) {
@@ -222,6 +242,8 @@ func TestFilesystemDeletePrefixWithTrailingSlash(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	if errs := fsys.DeletePrefix("missing/"); len(errs) != 0 {
 		t.Fatalf("Not existing prefix shouldn't error, got %v", errs)
@@ -243,6 +265,8 @@ func TestFilesystemDeletePrefixWithTrailingSlash(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "test")); !os.IsNotExist(err) {
 		t.Fatal("Expected the prefix dir to be deleted")
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 4, "OnNewWriter": 0})
 }
 
 func TestFilesystemIsEmptyDir(t *testing.T) {
@@ -254,6 +278,8 @@ func TestFilesystemIsEmptyDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	scenarios := []struct {
 		dir      string
@@ -278,6 +304,8 @@ func TestFilesystemIsEmptyDir(t *testing.T) {
 			}
 		})
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemUploadMultipart(t *testing.T) {
@@ -310,6 +338,8 @@ func TestFilesystemUploadMultipart(t *testing.T) {
 	}
 	defer fsys.Close()
 
+	hookCalls := bindHooks(fsys)
+
 	fileKey := "newdir/newkey.txt"
 
 	uploadErr := fsys.UploadMultipart(fh, fileKey)
@@ -328,6 +358,8 @@ func TestFilesystemUploadMultipart(t *testing.T) {
 	if name, ok := attrs.Metadata["original-filename"]; !ok || name != "test" {
 		t.Fatalf("Expected original-filename to be %q, got %q", "test", name)
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 1})
 }
 
 func TestFilesystemUploadFile(t *testing.T) {
@@ -339,6 +371,8 @@ func TestFilesystemUploadFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	fileKey := "newdir/newkey.txt"
 
@@ -365,6 +399,8 @@ func TestFilesystemUploadFile(t *testing.T) {
 	if name, ok := attrs.Metadata["original-filename"]; !ok || name != file.OriginalName {
 		t.Fatalf("Expected original-filename to be %q, got %q", file.OriginalName, name)
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 1})
 }
 
 func TestFilesystemUpload(t *testing.T) {
@@ -377,6 +413,8 @@ func TestFilesystemUpload(t *testing.T) {
 	}
 	defer fsys.Close()
 
+	hookCalls := bindHooks(fsys)
+
 	fileKey := "newdir/newkey.txt"
 
 	uploadErr := fsys.Upload([]byte("demo"), fileKey)
@@ -387,6 +425,8 @@ func TestFilesystemUpload(t *testing.T) {
 	if exists, _ := fsys.Exists(fileKey); !exists {
 		t.Fatalf("Expected %s to exist", fileKey)
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 1})
 }
 
 func TestFilesystemServe(t *testing.T) {
@@ -398,6 +438,8 @@ func TestFilesystemServe(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	csp := "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox"
 	cacheControl := "max-age=2592000, stale-while-revalidate=86400"
@@ -631,6 +673,8 @@ func TestFilesystemServe(t *testing.T) {
 			}
 		})
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemGetReader(t *testing.T) {
@@ -642,6 +686,8 @@ func TestFilesystemGetReader(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	scenarios := []struct {
 		file            string
@@ -683,6 +729,8 @@ func TestFilesystemGetReader(t *testing.T) {
 			}
 		})
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemGetReuploadableFile(t *testing.T) {
@@ -694,6 +742,8 @@ func TestFilesystemGetReuploadableFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	t.Run("missing.txt", func(t *testing.T) {
 		_, err := fsys.GetReuploadableFile("missing.txt", false)
@@ -761,6 +811,8 @@ func TestFilesystemGetReuploadableFile(t *testing.T) {
 
 		testReader(t, file, "sub1")
 	})
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemCopy(t *testing.T) {
@@ -772,6 +824,8 @@ func TestFilesystemCopy(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	src := "image.png"
 	dst := "image.png_copy"
@@ -795,6 +849,8 @@ func TestFilesystemCopy(t *testing.T) {
 	if f.Size() != 77 {
 		t.Fatalf("Expected file size %d, got %d", 77, f.Size())
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemList(t *testing.T) {
@@ -806,6 +862,8 @@ func TestFilesystemList(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	scenarios := []struct {
 		prefix   string
@@ -869,6 +927,8 @@ func TestFilesystemList(t *testing.T) {
 			}
 		})
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemServeSingleRange(t *testing.T) {
@@ -880,6 +940,8 @@ func TestFilesystemServeSingleRange(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/", nil)
@@ -903,6 +965,8 @@ func TestFilesystemServeSingleRange(t *testing.T) {
 	if l := result.Header.Get("Content-Length"); l != "21" {
 		t.Fatalf("Expected Content-Length %v, got %v", 21, l)
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemServeMultiRange(t *testing.T) {
@@ -914,6 +978,8 @@ func TestFilesystemServeMultiRange(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer fsys.Close()
+
+	hookCalls := bindHooks(fsys)
 
 	res := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/", nil)
@@ -932,17 +998,13 @@ func TestFilesystemServeMultiRange(t *testing.T) {
 	if ct := result.Header.Get("Content-Type"); !strings.HasPrefix(ct, "multipart/byteranges; boundary=") {
 		t.Fatalf("Expected Content-Type to be multipart/byteranges, got %v", ct)
 	}
+
+	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
 }
 
 func TestFilesystemCreateThumb(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
-
-	fsys, err := filesystem.NewLocal(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer fsys.Close()
 
 	scenarios := []struct {
 		file             string
@@ -980,9 +1042,17 @@ func TestFilesystemCreateThumb(t *testing.T) {
 
 	for _, s := range scenarios {
 		t.Run(s.file+"_"+s.thumb+"_"+s.size, func(t *testing.T) {
-			err := fsys.CreateThumb(s.file, s.thumb, s.size)
+			fsys, err := filesystem.NewLocal(dir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer fsys.Close()
+
+			hookCalls := bindHooks(fsys)
 
 			expectErr := s.expectedMimeType == ""
+
+			err = fsys.CreateThumb(s.file, s.thumb, s.size)
 
 			hasErr := err != nil
 			if hasErr != expectErr {
@@ -1014,7 +1084,42 @@ func TestFilesystemCreateThumb(t *testing.T) {
 			if attrsMimeType != s.expectedMimeType {
 				t.Fatalf("Expected thumb attrs %s MimeType %q, got %q", s.thumb, s.expectedMimeType, attrsMimeType)
 			}
+
+			checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 1})
 		})
+	}
+}
+
+func TestFilesystemClose(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fsys, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bindHooks(fsys)
+
+	if v := fsys.OnDelete().Length(); v != 1 {
+		t.Fatalf("Expected 1 OnDelete listener, got %d", v)
+	}
+
+	if v := fsys.OnNewWriter().Length(); v != 1 {
+		t.Fatalf("Expected 1 OnNewWriter listener, got %d", v)
+	}
+
+	err = fsys.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if v := fsys.OnDelete().Length(); v != 0 {
+		t.Fatalf("Expected 0 OnDelete listeners after close, got %d", v)
+	}
+
+	if v := fsys.OnNewWriter().Length(); v != 0 {
+		t.Fatalf("Expected 0 OnNewWriter listeners after close, got %d", v)
 	}
 }
 
@@ -1179,4 +1284,29 @@ func createTestDir(t *testing.T) string {
 	}
 
 	return dir
+}
+
+func bindHooks(fsys *filesystem.System) map[string]int {
+	hookCalls := map[string]int{}
+
+	fsys.OnDelete().BindFunc(func(e *filesystem.DeleteEvent) error {
+		hookCalls["OnDelete"]++
+		return e.Next()
+	})
+
+	fsys.OnNewWriter().BindFunc(func(e *filesystem.NewWriterEvent) error {
+		hookCalls["OnNewWriter"]++
+		return e.Next()
+	})
+
+	return hookCalls
+}
+
+func checkHooks(t *testing.T, hookCalls, expectations map[string]int) {
+	for event, expected := range expectations {
+		got, _ := hookCalls[event]
+		if got != expected {
+			t.Fatalf("Expected event %q to be called %d, got %d", event, expected, got)
+		}
+	}
 }

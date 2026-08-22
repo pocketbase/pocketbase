@@ -1264,6 +1264,7 @@ type App interface {
 
 	// ---------------------------------------------------------------
 	// Filesystem event hooks
+	// (not publicly exposed until file_field refactoring)
 	// ---------------------------------------------------------------
 
 	// onFilesystemNewWriter is an internal hook for app.NewFilesystem()
