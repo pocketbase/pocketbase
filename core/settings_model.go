@@ -581,18 +581,6 @@ type TrustedProxyConfig struct {
 	UseLeftmostIP bool `form:"useLeftmostIP" json:"useLeftmostIP"`
 }
 
-// MarshalJSON implements the [json.Marshaler] interface.
-func (c TrustedProxyConfig) MarshalJSON() ([]byte, error) {
-	type alias TrustedProxyConfig
-
-	// serialize as empty array
-	if c.Headers == nil {
-		c.Headers = []string{}
-	}
-
-	return json.Marshal(alias(c))
-}
-
 // Validate makes RateLimitRule validatable by implementing [validation.Validatable] interface.
 func (c TrustedProxyConfig) Validate() error {
 	return nil
@@ -638,21 +626,6 @@ func (c *RateLimitsConfig) FindRateLimitRule(searchLabels []string, optOnlyAudie
 	}
 
 	return RateLimitRule{}, false
-}
-
-// MarshalJSON implements the [json.Marshaler] interface.
-func (c RateLimitsConfig) MarshalJSON() ([]byte, error) {
-	type alias RateLimitsConfig
-
-	// serialize as empty array
-	if c.Rules == nil {
-		c.Rules = []RateLimitRule{}
-	}
-	if c.ExcludedIPs == nil {
-		c.ExcludedIPs = []string{}
-	}
-
-	return json.Marshal(alias(c))
 }
 
 // Validate makes RateLimitsConfig validatable by implementing [validation.Validatable] interface.
