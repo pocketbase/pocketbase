@@ -1225,6 +1225,71 @@ func TestCollectionUpdate(t *testing.T) {
 				"OnModelValidate":              1,
 			},
 		},
+		{
+			Name:   "add another OAuth2 provider to an auth collection",
+			Method: http.MethodPatch,
+			URL:    "/api/collections/users",
+			Body: strings.NewReader(`{
+				"oauth2": {
+					"providers": [
+						{"name": "apple", "clientId": "a", "clientSecret": "b"},
+						{
+							"pkce": null,
+							"name": "google",
+							"authURL": "",
+							"displayName": "existing",
+							"extra": {}
+						}
+					]
+				}
+			}`),
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				// verify that the collection has google and gitlab as OAuth2 providers
+				users, err := app.FindCollectionByNameOrId("users")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if v := len(users.OAuth2.Providers); v != 2 {
+					t.Fatalf("Expected 2 OAuth2 providers, got %d", v)
+				}
+
+				if v := users.OAuth2.Providers[0].Name; v != "gitlab" {
+					t.Fatalf("Expected provider 0 to be %s, got %s", "gitlab", v)
+				}
+
+				if v := users.OAuth2.Providers[1].Name; v != "google" {
+					t.Fatalf("Expected provider 1 to be %s, got %s", "google", v)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"name":"google"`,
+				`"name":"apple"`,
+				`"displayName":"existing"`,
+				`"clientId":"test"`,
+				`"clientId":"a"`,
+			},
+			NotExpectedContent: []string{
+				`"name":"gitlab"`,
+				`clientSecret`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                              0,
+				"OnCollectionUpdateRequest":      1,
+				"OnCollectionUpdate":             1,
+				"OnCollectionUpdateExecute":      1,
+				"OnCollectionAfterUpdateSuccess": 1,
+				"OnCollectionValidate":           1,
+				"OnModelUpdate":                  1,
+				"OnModelUpdateExecute":           1,
+				"OnModelAfterUpdateSuccess":      1,
+				"OnModelValidate":                1,
+			},
+		},
 
 		// view
 		// -----------------------------------------------------------
