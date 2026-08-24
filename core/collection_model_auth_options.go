@@ -414,9 +414,9 @@ type OAuth2Config struct {
 
 // UnmarshalJSON implements the [json.Unmarshaler] interface.
 //
-// The main difference from the standrad unmarshalization is that
+// The main difference from the standard unmarshalization is that
 // instead of replacing the entire providers config slice, we ensure
-// that parially submitted provider data (e.g. without clientSecret)
+// that partially submitted provider data (e.g. without clientSecret)
 // is merged on per config level based on the provider name
 // (https://github.com/pocketbase/pocketbase/issues/7815).
 func (c *OAuth2Config) UnmarshalJSON(b []byte) error {
