@@ -409,9 +409,14 @@ func TestEventHTML(t *testing.T) {
 }
 
 func TestEventJSON(t *testing.T) {
-	body := map[string]any{"a": 123, "b": 456, "c": "test"}
+	body := map[string]any{
+		"a": 123,
+		"b": true,
+		"c": "test",
+		"d": "\xc3", /* invalid utf8 char to test mangling */
+	}
 	expectedPickedBody := `{"a":123,"c":"test"}`
-	expectedFullBody := `{"a":123,"b":456,"c":"test"}`
+	expectedFullBody := `{"a":123,"b":true,"c":"test","d":"�"}`
 
 	scenarios := []testResponseWriteScenario[any]{
 		{

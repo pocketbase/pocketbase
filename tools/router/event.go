@@ -185,6 +185,9 @@ const jsonFieldsParam = "fields"
 // It also provides a generic response data fields picker if the "fields" query parameter is set.
 // For example, if you are requesting `?fields=a,b` for `e.JSON(200, map[string]int{ "a":1, "b":2, "c":3 })`,
 // it should result in a JSON response like: `{"a":1, "b": 2}`.
+//
+// Note that invalid UTF8 characters are mangled for compatibility
+// with earlier versions and to prevent unnecessery causing a response error.
 func (e *Event) JSON(status int, data any) error {
 	e.setResponseHeaderIfEmpty(headerContentType, "application/json")
 	e.Response.WriteHeader(status)
@@ -193,7 +196,7 @@ func (e *Event) JSON(status int, data any) error {
 
 	// error response or no fields to pick
 	if rawFields == "" || status < 200 || status > 299 {
-		return json.MarshalWrite(e.Response, data)
+		return json.MarshalWrite(e.Response, data, jsontext.AllowInvalidUTF8(true))
 	}
 
 	// pick only the requested fields
@@ -202,7 +205,7 @@ func (e *Event) JSON(status int, data any) error {
 		return err
 	}
 
-	return json.MarshalWrite(e.Response, modified)
+	return json.MarshalWrite(e.Response, modified, jsontext.AllowInvalidUTF8(true))
 }
 
 // XML writes an XML response.

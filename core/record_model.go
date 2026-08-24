@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"context"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
 	"fmt"
@@ -1329,7 +1330,12 @@ func (record *Record) PublicExport() map[string]any {
 //
 // Only the data exported by `PublicExport()` will be serialized.
 func (m Record) MarshalJSON() ([]byte, error) {
-	return json.Marshal(m.PublicExport(), json.Deterministic(true))
+	return json.Marshal(
+		m.PublicExport(),
+		json.Deterministic(true),
+		// to preserve the old jsonv1 behavior in case of invalid data
+		jsontext.AllowInvalidUTF8(true),
+	)
 }
 
 // UnmarshalJSON implements the [json.Unmarshaler] interface.

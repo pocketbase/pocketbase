@@ -50,6 +50,8 @@ func (l *Log) DBExport(app App) (map[string]any, error) {
 		result["message"] = l.Message
 	}
 
+	// @todo once added in the standard library consider replacing with
+	// WithByteLimit and WithDepthLimit as suggested in https://github.com/golang/go/issues/56733
 	if len(l.Data) == 0 {
 		result["data"] = l.Data
 	} else {

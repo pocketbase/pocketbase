@@ -1,3 +1,9 @@
+## v0.40.1
+
+- `encoding/json/v2` compatibility fixes:
+    - allow mangling invalid UTF8 characters when serializing json data instead of returning response error ([#7814](https://github.com/pocketbase/pocketbase/issues/7814)).
+
+
 ## v0.40.0
 
 - Propagate console command errors and recovered panics to `app.Start()` so that the program can exit with non-zero code while still ensuring that `app.OnTerminate` hook was triggered _(responsible for the app graceful shutdown handling)_.
