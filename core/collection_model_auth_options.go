@@ -442,6 +442,11 @@ func (c *OAuth2Config) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
+	// no providers were submitted
+	if len(plain.Providers) == 0 {
+		return nil
+	}
+
 	if len(c.Providers) != len(plain.Providers) {
 		return errors.New("the length of the plain unmarshalized providers and the ones from the config doesn't match")
 	}
