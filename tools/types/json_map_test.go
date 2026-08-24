@@ -16,8 +16,11 @@ func TestJSONMapMarshalJSON(t *testing.T) {
 	}{
 		{nil, "{}"},
 		{types.JSONMap[any]{}, `{}`},
-		{types.JSONMap[any]{"test1": 123, "test2": "lorem"}, `{"test1":123,"test2":"lorem"}`},
 		{types.JSONMap[any]{"test": []int{1, 2, 3}}, `{"test":[1,2,3]}`},
+		{
+			types.JSONMap[any]{"test1": 123, "test2": "lorem\xc3" /* invalid utf8 char to test mangling */},
+			`{"test1":123,"test2":"lorem�"}`,
+		},
 	}
 
 	for i, s := range scenarios {

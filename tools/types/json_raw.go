@@ -2,6 +2,7 @@ package types
 
 import (
 	"database/sql/driver"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
 )
@@ -73,7 +74,7 @@ func (j *JSONRaw) Scan(value any) error {
 			data = []byte(v)
 		}
 	default:
-		bytes, err := json.Marshal(v, json.Deterministic(true))
+		bytes, err := json.Marshal(v, json.Deterministic(true), jsontext.AllowInvalidUTF8(true))
 		if err != nil {
 			return err
 		}

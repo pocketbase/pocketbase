@@ -167,7 +167,11 @@ func TestJSONRawScan(t *testing.T) {
 		{`{"test":1}`, false, `{"test":1}`},
 		{[]byte(`[1,2,3]`), false, `[1,2,3]`},
 		{[]int{1, 2, 3}, false, `[1,2,3]`},
-		{map[string]int{"test": 1}, false, `{"test":1}`},
+		{
+			map[string]string{"test": "a\xc3" /* invalid utf8 char to test mangling */},
+			false,
+			`{"test":"a�"}`,
+		},
 	}
 
 	for i, s := range scenarios {

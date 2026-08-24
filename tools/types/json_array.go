@@ -2,6 +2,7 @@ package types
 
 import (
 	"database/sql/driver"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
 )
@@ -14,9 +15,13 @@ type jsonArrayAlias[T any] JSONArray[T]
 
 // MarshalJSON implements the [json.Marshaler] interface.
 func (m JSONArray[T]) MarshalJSON() ([]byte, error) {
-	// note: forces the Deterministic option to ensure consistent output
-	// in mixed json v1 and v2 configurations
-	return json.Marshal(jsonArrayAlias[T](m), json.Deterministic(true))
+	// note: forces the Deterministic and AllowInvalidUTF8 options to
+	// ensure consistent output in mixed json v1 and v2 configurations
+	return json.Marshal(
+		jsonArrayAlias[T](m),
+		json.Deterministic(true),
+		jsontext.AllowInvalidUTF8(true),
+	)
 }
 
 // String returns the string representation of the current json array.
