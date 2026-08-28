@@ -56,27 +56,36 @@ func (f FilterData) BuildExprWithLimit(
 	raw := string(f)
 
 	// replace the placeholder params in the raw string filter
-	for _, p := range placeholderReplacements {
-		for key, value := range p {
-			var replacement string
-			switch v := value.(type) {
-			case nil:
-				replacement = "null"
-			case bool, float64, float32, int, int64, int32, int16, int8, uint, uint64, uint32, uint16, uint8:
-				replacement = cast.ToString(v)
-			default:
-				replacement = cast.ToString(v)
+	if len(placeholderReplacements) > 0 {
+		replacements := make([]string, 0, len(placeholderReplacements[0])*2)
 
-				// try to json serialize as fallback
-				if replacement == "" {
-					raw, _ := json.Marshal(v, json.Deterministic(true))
-					replacement = string(raw)
+		for _, p := range placeholderReplacements {
+			for key, value := range p {
+				var replacement string
+
+				switch v := value.(type) {
+				case nil:
+					replacement = "null"
+				case bool, float64, float32, int, int64, int32, int16, int8, uint, uint64, uint32, uint16, uint8:
+					replacement = cast.ToString(v)
+				default:
+					replacement = cast.ToString(v)
+
+					// try to json serialize as fallback
+					if replacement == "" {
+						raw, _ := json.Marshal(v, json.Deterministic(true))
+						replacement = string(raw)
+					}
+
+					replacement = strconv.Quote(replacement)
 				}
 
-				replacement = strconv.Quote(replacement)
+				replacements = append(replacements, "{:"+key+"}", replacement)
 			}
-			raw = strings.ReplaceAll(raw, "{:"+key+"}", replacement)
 		}
+
+		replacer := strings.NewReplacer(replacements...)
+		raw = replacer.Replace(raw)
 	}
 
 	cacheKey := raw + "/" + strconv.Itoa(maxExpressions)
