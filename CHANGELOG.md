@@ -1,10 +1,10 @@
 ## v0.40.2 (WIP)
 
-- Minor filter params replacement optimization.
+- Return an error when invalid values are passed as placeholder filter params and optimized params replacements to apply in a single pass.
 
-- Minor UI autocomplete optimizations.
+- Fixed collection index parsing error for indexes with missing name.
 
-- Fixed harmless index parsing error when no index name is provided.
+- Minor UI autocomplete optimizations _(prefix match, autocomplete debounce, etc.)_.
 
 
 ## v0.40.1

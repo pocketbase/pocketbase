@@ -69,15 +69,18 @@ func (f FilterData) BuildExprWithLimit(
 				case bool, float64, float32, int, int64, int32, int16, int8, uint, uint64, uint32, uint16, uint8:
 					replacement = cast.ToString(v)
 				default:
-					replacement = cast.ToString(v)
+					casted, err := cast.ToStringE(v)
 
 					// try to json serialize as fallback
-					if replacement == "" {
-						raw, _ := json.Marshal(v, json.Deterministic(true))
-						replacement = string(raw)
+					if err != nil {
+						raw, err := json.Marshal(v, json.Deterministic(true))
+						if err != nil {
+							return nil, fmt.Errorf("failed to serialize param %q: %w", key, err)
+						}
+						casted = string(raw)
 					}
 
-					replacement = strconv.Quote(replacement)
+					replacement = strconv.Quote(casted)
 				}
 
 				replacements = append(replacements, "{:"+key+"}", replacement)
