@@ -4,6 +4,8 @@
 
 - Minor UI autocomplete optimizations.
 
+- Fixed harmless index parsing error when no index name is provided.
+
 
 ## v0.40.1
 

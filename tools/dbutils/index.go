@@ -148,11 +148,12 @@ func ParseIndex(createIndexExpr string) Index {
 	nameTk.Separators('.')
 
 	nameParts, _ := nameTk.ScanAll()
-	if len(nameParts) == 2 {
+	switch len(nameParts) {
+	case 1:
+		result.IndexName = strings.Trim(nameParts[0], trimChars)
+	case 2:
 		result.SchemaName = strings.Trim(nameParts[0], trimChars)
 		result.IndexName = strings.Trim(nameParts[1], trimChars)
-	} else {
-		result.IndexName = strings.Trim(nameParts[0], trimChars)
 	}
 
 	// TableName
