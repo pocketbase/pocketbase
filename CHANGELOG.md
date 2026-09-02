@@ -1,3 +1,7 @@
+## v0.40.2
+
+- Minor UI autocomplete optimizations.
+
 ## v0.40.1
 
 - Fixes for some reported regressions related to the `encoding/json/v2` update:

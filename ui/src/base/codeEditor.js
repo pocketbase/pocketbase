@@ -108,6 +108,8 @@ window.app.components.codeEditor = function(propsArg = {}) {
     }
 
     function closeAutocompleteDropdown() {
+        clearTimeout(autocompleteTimeoutId);
+
         if (dropdown) {
             dropdown.remove();
             dropdown = null;
@@ -130,6 +132,8 @@ window.app.components.codeEditor = function(propsArg = {}) {
     let isCtrlOrCmdKey = false;
 
     let valueWatcher;
+
+    let autocompleteTimeoutId;
 
     // note1: use contenteditable so that we can call getBoundingClientRect on the selected text
     // note2: getSelection also doesn't seem to work in Firefox for textarea and inputs
@@ -173,7 +177,7 @@ window.app.components.codeEditor = function(propsArg = {}) {
             props.onblur?.(props.value);
         },
         oninput: (e) => {
-            closeAutocompleteDropdown();
+            clearTimeout(autocompleteTimeoutId);
 
             updateValue(editorContent.textContent);
 
@@ -182,77 +186,81 @@ window.app.components.codeEditor = function(propsArg = {}) {
                 return;
             }
 
-            if (!editorContent?.isConnected) {
-                return;
-            }
+            autocompleteTimeoutId = setTimeout(() => {
+                closeAutocompleteDropdown();
 
-            const pos = getCaretPos(editorContent);
+                if (!editorContent?.isConnected) {
+                    return;
+                }
 
-            const match = getWord(props.value, pos);
+                const pos = getCaretPos(editorContent);
 
-            if (
-                !match.word.length
-                // don't show suggestions in case the cursor is at the
-                // beginning of an already typed word
-                || pos == match.start
-            ) {
-                return;
-            }
+                const match = getWord(props.value, pos);
 
-            let suggestions = [];
-            if (typeof props.autocomplete == "function") {
-                suggestions = props.autocomplete(match.word) || [];
-            } else if (!app.utils.isEmpty(props.autocomplete)) {
-                const wordLowercased = match.word.toLowerCase();
-                suggestions = props.autocomplete.filter((item) => {
-                    if (typeof item == "object") {
-                        item = item?.value;
-                    }
+                if (
+                    !match.word.length
+                    // don't show suggestions in case the cursor is at the
+                    // beginning of an already typed word
+                    || pos == match.start
+                ) {
+                    return;
+                }
 
-                    item = item?.toLowerCase();
+                let suggestions = [];
+                if (typeof props.autocomplete == "function") {
+                    suggestions = props.autocomplete(match.word) || [];
+                } else if (!app.utils.isEmpty(props.autocomplete)) {
+                    const wordLowercased = match.word.toLowerCase();
+                    suggestions = props.autocomplete.filter((item) => {
+                        if (typeof item == "object") {
+                            item = item?.value;
+                        }
 
-                    return item && item != wordLowercased && item.includes(wordLowercased);
-                });
-            }
+                        item = item?.toLowerCase();
 
-            if (!suggestions?.length) {
-                return;
-            }
+                        return item && item != wordLowercased && item.includes(wordLowercased);
+                    });
+                }
 
-            openAutocompleteDropdown(() => {
-                return suggestions.map((suggestion, i) => {
-                    return t.button({
-                        type: "button",
-                        className: `dropdown-item ${i == 0 ? "active" : ""}`,
-                        textContent: suggestion.label || suggestion.value || suggestion,
-                        onclick: (e) => {
-                            e.preventDefault();
+                if (!suggestions?.length) {
+                    return;
+                }
 
-                            editorContent.focus();
+                openAutocompleteDropdown(() => {
+                    return suggestions.map((suggestion, i) => {
+                        return t.button({
+                            type: "button",
+                            className: `dropdown-item ${i == 0 ? "active" : ""}`,
+                            textContent: suggestion.label || suggestion.value || suggestion,
+                            onclick: (e) => {
+                                e.preventDefault();
 
-                            const word = suggestion.value || suggestion;
+                                editorContent.focus();
 
-                            // note: replacing the text doesn't preserve the native "undo" history
-                            // (document.execCommand is being deprecated)
-                            editorContent.textContent = editorContent.textContent.substring(0, match.start)
-                                + word
-                                + editorContent.textContent.substring(match.end + 1);
+                                const word = suggestion.value || suggestion;
 
-                            updateValue(editorContent.textContent);
+                                // note: replacing the text doesn't preserve the native "undo" history
+                                // (document.execCommand is being deprecated)
+                                editorContent.textContent = editorContent.textContent.substring(0, match.start)
+                                    + word
+                                    + editorContent.textContent.substring(match.end + 1);
 
-                            try {
-                                window
-                                    .getSelection()
-                                    .setPosition(editorContent.childNodes[0], match.start + word.length);
-                            } catch (err) {
-                                console.warn("failed to set caret position", err);
-                            }
+                                updateValue(editorContent.textContent);
 
-                            closeAutocompleteDropdown();
-                        },
+                                try {
+                                    window
+                                        .getSelection()
+                                        .setPosition(editorContent.childNodes[0], match.start + word.length);
+                                } catch (err) {
+                                    console.warn("failed to set caret position", err);
+                                }
+
+                                closeAutocompleteDropdown();
+                            },
+                        });
                     });
                 });
-            });
+            }, 50);
         },
         onkeydown: (e) => {
             isCtrlOrCmdKey = e.ctrlKey || e.metaKey;
@@ -404,7 +412,7 @@ window.app.components.codeEditor = function(propsArg = {}) {
     );
 };
 
-const highlightThreshold = 500;
+const highlightThreshold = 800;
 
 function highlight(content, language) {
     content = typeof content == "string" ? content : "";
