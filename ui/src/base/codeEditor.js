@@ -209,9 +209,9 @@ window.app.components.codeEditor = function(propsArg = {}) {
 
                 let suggestions = [];
                 if (typeof props.autocomplete == "function") {
-                    suggestions = props.autocomplete(match.word) || [];
+                    suggestions = props.autocomplete(match.prefix || match.word) || [];
                 } else if (!app.utils.isEmpty(props.autocomplete)) {
-                    const wordLowercased = match.word.toLowerCase();
+                    const wordLowercased = (match.prefix || match.word).toLowerCase();
                     suggestions = props.autocomplete.filter((item) => {
                         if (typeof item == "object") {
                             item = item?.value;
@@ -460,6 +460,7 @@ function getWord(value, caretPos) {
 
     return {
         word: value.substring(start, end + 1),
+        prefix: value.substring(start, caretPos),
         start: start,
         end: end,
     };
