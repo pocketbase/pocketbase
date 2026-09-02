@@ -73,11 +73,11 @@ func (f FilterData) BuildExprWithLimit(
 
 					// try to json serialize as fallback
 					if err != nil {
-						raw, err := json.Marshal(v, json.Deterministic(true))
+						fallback, err := json.Marshal(v, json.Deterministic(true))
 						if err != nil {
 							return nil, fmt.Errorf("failed to serialize param %q: %w", key, err)
 						}
-						casted = string(raw)
+						casted = string(fallback)
 					}
 
 					replacement = strconv.Quote(casted)
