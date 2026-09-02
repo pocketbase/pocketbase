@@ -41,27 +41,39 @@ func (f FilterData) BuildExpr(
 	raw := string(f)
 
 	// replace the placeholder params in the raw string filter
-	for _, p := range placeholderReplacements {
-		for key, value := range p {
-			var replacement string
-			switch v := value.(type) {
-			case nil:
-				replacement = "null"
-			case bool, float64, float32, int, int64, int32, int16, int8, uint, uint64, uint32, uint16, uint8:
-				replacement = cast.ToString(v)
-			default:
-				replacement = cast.ToString(v)
+	if len(placeholderReplacements) > 0 {
+		replacements := make([]string, 0, len(placeholderReplacements[0])*2)
 
-				// try to json serialize as fallback
-				if replacement == "" {
-					raw, _ := json.Marshal(v)
-					replacement = string(raw)
+		for _, p := range placeholderReplacements {
+			for key, value := range p {
+				var replacement string
+
+				switch v := value.(type) {
+				case nil:
+					replacement = "null"
+				case bool, float64, float32, int, int64, int32, int16, int8, uint, uint64, uint32, uint16, uint8:
+					replacement = cast.ToString(v)
+				default:
+					casted, err := cast.ToStringE(v)
+
+					// try to json serialize as fallback
+					if err != nil {
+						raw, err := json.Marshal(v)
+						if err != nil {
+							return nil, fmt.Errorf("failed to serialize param %q: %w", key, err)
+						}
+						casted = string(raw)
+					}
+
+					replacement = strconv.Quote(casted)
 				}
 
-				replacement = strconv.Quote(replacement)
+				replacements = append(replacements, "{:"+key+"}", replacement)
 			}
-			raw = strings.ReplaceAll(raw, "{:"+key+"}", replacement)
 		}
+
+		replacer := strings.NewReplacer(replacements...)
+		raw = replacer.Replace(raw)
 	}
 
 	if parsedFilterData.Has(raw) {
