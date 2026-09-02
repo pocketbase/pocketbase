@@ -222,7 +222,14 @@ window.app.components.codeEditor = function(propsArg = {}) {
                     });
                 }
 
-                if (!suggestions?.length) {
+                if (
+                    !suggestions?.length
+                    // don't show if the only suggestion is exact match
+                    || (
+                        suggestions.length == 1
+                        && (suggestions[0].value || suggestions[0]) == match.word
+                    )
+                ) {
                     return;
                 }
 
