@@ -1,6 +1,9 @@
-## v0.40.2
+## v0.40.2 (WIP)
+
+- Minor filter params replacement optimization.
 
 - Minor UI autocomplete optimizations.
+
 
 ## v0.40.1
 
