@@ -23,11 +23,12 @@ func TestParseIndex(t *testing.T) {
 		// no names
 		{
 			`create index on ()`,
-			dbutils.Index{
-				IndexName: "",
-				TableName: "",
-				Columns:   []dbutils.IndexColumn{},
-			},
+			dbutils.Index{},
+		},
+		// invalid index name
+		{
+			`create index a.b.c on ()`,
+			dbutils.Index{},
 		},
 		// simple (multiple spaces between the table and columns list)
 		{
