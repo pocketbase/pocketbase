@@ -3,6 +3,7 @@ package search_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -249,6 +250,12 @@ func TestFilterDataBuildExprWithParams(t *testing.T) {
 	}
 }
 
+type brokenJSON struct{}
+
+func (j brokenJSON) MarshalJSON() ([]byte, error) {
+	return nil, errors.New("test_error")
+}
+
 func TestFilterDataBuildExprWithParamsFallbackError(t *testing.T) {
 	t.Parallel()
 
@@ -256,7 +263,7 @@ func TestFilterDataBuildExprWithParamsFallbackError(t *testing.T) {
 
 	filter := search.FilterData(`test = {:test}`)
 
-	t.Run("non-string type but valid marshalized json", func(t *testing.T) {
+	t.Run("non-string type but valid json", func(t *testing.T) {
 		_, err := filter.BuildExpr(resolver, dbx.Params{
 			"test": map[string]any{"a": "123"},
 		})
@@ -265,9 +272,9 @@ func TestFilterDataBuildExprWithParamsFallbackError(t *testing.T) {
 		}
 	})
 
-	t.Run("non-string type but invalid marshalized json", func(t *testing.T) {
+	t.Run("non-string type but invalid json", func(t *testing.T) {
 		_, err := filter.BuildExpr(resolver, dbx.Params{
-			"test": map[string]any{"a": "123\xc3"},
+			"test": brokenJSON{},
 		})
 		if err == nil {
 			t.Fatal("Expected filter build error, got nil")
