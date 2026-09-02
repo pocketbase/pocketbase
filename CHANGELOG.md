@@ -1,6 +1,6 @@
-## v0.40.2 (WIP)
+## v0.40.2
 
-- Return an error when unsupported values are passed as placeholder filter params and optimized params replacement to apply in a single pass.
+- Return an error when filter params fallback fails to json serialize and optimized params replacement to execute in a single pass.
 
 - Fixed collection index parsing error for indexes with missing name.
 
