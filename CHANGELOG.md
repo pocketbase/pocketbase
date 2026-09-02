@@ -6,6 +6,8 @@
 
 - Minor UI autocomplete optimizations _(prefix match, autocomplete debounce, etc.)_.
 
+- Bumped the min Go GitHub action version to 1.27.1 as it includes some [minor `database/sql` and `enconding/json/v2` bug fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.27.1).
+
 
 ## v0.40.1
 
