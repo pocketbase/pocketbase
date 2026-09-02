@@ -129,7 +129,7 @@ app.pb.authStore.onChange((_, record) => {
 
 /**
  * Return a superuser file token.
- * Optionally you can provide a collection identifier, to avoid unnecessery
+ * Optionally you can provide a collection identifier, to avoid unnecessary
  * calls in case the collection doesn't have protected files.
  *
  * @param  {String} optCollectionIdORName

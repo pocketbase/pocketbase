@@ -187,7 +187,7 @@ const jsonFieldsParam = "fields"
 // it should result in a JSON response like: `{"a":1, "b": 2}`.
 //
 // Note that invalid UTF8 characters are mangled for compatibility
-// with earlier versions and to prevent unnecessery causing a response error.
+// with earlier versions and to prevent unnecessary causing a response error.
 func (e *Event) JSON(status int, data any) error {
 	e.setResponseHeaderIfEmpty(headerContentType, "application/json")
 	e.Response.WriteHeader(status)

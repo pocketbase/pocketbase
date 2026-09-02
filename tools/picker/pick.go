@@ -31,7 +31,7 @@ func Pick(data any, rawFields string) (any, error) {
 	// json value that we can further operate on.
 	//
 	// Note that invalid UTF8 characters are mangled for compatibility
-	// with earlier versions and to prevent unnecessery causing an error.
+	// with earlier versions and to prevent unnecessary causing an error.
 	//
 	// @todo research other approaches to avoid the double serialization
 	// ---

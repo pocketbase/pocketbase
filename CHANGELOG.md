@@ -1,10 +1,12 @@
 ## v0.40.2 (WIP)
 
-- Return an error when invalid values are passed as placeholder filter params and optimized params replacements to apply in a single pass.
+- Return an error when unsupported values are passed as placeholder filter params and optimized params replacement to apply in a single pass.
 
 - Fixed collection index parsing error for indexes with missing name.
 
 - Minor UI autocomplete optimizations _(prefix match, autocomplete debounce, etc.)_.
+
+- Fixed linter warnings and comment typos.
 
 - Bumped the min Go GitHub action version to 1.27.1 as it includes some [minor `database/sql` and `enconding/json/v2` bug fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.27.1).
 
