@@ -183,6 +183,7 @@ window.app.components.codeEditor = function(propsArg = {}) {
 
             if (!props.value?.length) {
                 editorContent.textContent = ""; // ensure that no comments, br, etc. tags are left
+                closeAutocompleteDropdown();
                 return;
             }
 
