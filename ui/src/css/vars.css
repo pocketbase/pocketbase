@@ -155,8 +155,8 @@
     --secondaryAlt1Color: var(--surfaceAlt3Color);
     --secondaryAlt2Color: var(--surfaceAlt4Color);
 
-    --primaryColor: #e6e6e6;
-    --primaryTxtColor: var(--surfaceColor);
+    --primaryColor: var(--surfaceAlt4Color);
+    --primaryTxtColor: var(--surfaceTxtColor);
     --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), black 12%);
     --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), black 25%);
     --primaryTxtHintColor: color-mix(in srgb, var(--primaryTxtColor), transparent 35%);
