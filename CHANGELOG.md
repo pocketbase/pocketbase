@@ -1,3 +1,10 @@
+## v0.40.3 (WIP)
+
+- Minor UI improvements (updated dark primary btn contrast).
+
+- Bumped `golang.org/x/*` dependencies to silence security scanners ([#7829](https://github.com/pocketbase/pocketbase/discussions/7829)).
+
+
 ## v0.40.2
 
 - Return an error when filter params fallback fails to json serialize and optimized params replacement to execute in a single pass.
