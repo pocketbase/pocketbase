@@ -7,6 +7,8 @@
 
 - Fixed collection index validator to allow expressions with parenthesis in the optional `WHERE` clause.
 
+- Clamped arccosine to [-1,1] in the Harvesine formula for the `geoDistance()` filter function to workaround edge case related to float rounding errors for some coordinates.
+
 - Bumped `golang.org/x/*` dependencies to silence security scanners ([#7829](https://github.com/pocketbase/pocketbase/discussions/7829)).
 
 

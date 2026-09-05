@@ -49,11 +49,14 @@ var TokenFunctions = map[string]func(
 
 		return &ResolverResult{
 			NullFallback: NullFallbackDisabled,
-			Identifier: `(6371 * acos(` +
+			// the clamping is to prevent floating point rounding errors for values like
+			// "1.0002" that could occur for example when comparing identical points
+			// (see the NULL note for arccosine in https://sqlite.org/lang_mathfunc.html#overview)
+			Identifier: `(6371 * acos(min(1, max(-1, ` +
 				`cos(radians(` + latA + `)) * cos(radians(` + latB + `)) * ` +
 				`cos(radians(` + lonB + `) - radians(` + lonA + `)) + ` +
 				`sin(radians(` + latA + `)) * sin(radians(` + latB + `))` +
-				`))`,
+				`))))`,
 			Params: mergeParams(resolvedArgs[0].Params, resolvedArgs[1].Params, resolvedArgs[2].Params, resolvedArgs[3].Params),
 		}, nil
 	},

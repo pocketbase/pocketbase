@@ -117,7 +117,7 @@ func TestTokenFunctionsGeoDistance(t *testing.T) {
 			baseTokenResolver,
 			&ResolverResult{
 				NullFallback: NullFallbackDisabled,
-				Identifier:   `(6371 * acos(cos(radians({:latA})) * cos(radians({:latB})) * cos(radians({:lonB}) - radians({:lonA})) + sin(radians({:latA})) * sin(radians({:latB}))))`,
+				Identifier:   `(6371 * acos(min(1, max(-1, cos(radians({:latA})) * cos(radians({:latB})) * cos(radians({:lonB}) - radians({:lonA})) + sin(radians({:latA})) * sin(radians({:latB}))))))`,
 				Params: map[string]any{
 					"lonA": 1,
 					"latA": 2,
@@ -138,7 +138,7 @@ func TestTokenFunctionsGeoDistance(t *testing.T) {
 			baseTokenResolver,
 			&ResolverResult{
 				NullFallback: NullFallbackDisabled,
-				Identifier:   `(6371 * acos(cos(radians({:latA})) * cos(radians({:latB})) * cos(radians({:lonB}) - radians({:lonA})) + sin(radians({:latA})) * sin(radians({:latB}))))`,
+				Identifier:   `(6371 * acos(min(1, max(-1, cos(radians({:latA})) * cos(radians({:latB})) * cos(radians({:lonB}) - radians({:lonA})) + sin(radians({:latA})) * sin(radians({:latB}))))))`,
 				Params: map[string]any{
 					"lonA": "null",
 					"latA": 2,
@@ -178,34 +178,64 @@ func TestTokenFunctionsGeoDistanceExec(t *testing.T) {
 		t.Error("Expected geoDistance token function to be registered.")
 	}
 
-	result, err := fn(
-		func(t fexpr.Token) (*ResolverResult, error) {
-			placeholder := "t" + security.PseudorandomString(5)
-			return &ResolverResult{Identifier: "{:" + placeholder + "}", Params: map[string]any{placeholder: t.Literal}}, nil
+	scenarios := []struct {
+		name     string
+		coords   []string // [lonA, latA, lonB, latB]
+		expected string
+	}{
+		{
+			"distinct points",
+			[]string{
+				"23.23033854945808",
+				"42.713146090563384",
+				"23.44920680886216",
+				"42.7078484153991",
+			},
+			"17.89",
 		},
-		fexpr.Token{Literal: "23.23033854945808", Type: fexpr.TokenNumber},
-		fexpr.Token{Literal: "42.713146090563384", Type: fexpr.TokenNumber},
-		fexpr.Token{Literal: "23.44920680886216", Type: fexpr.TokenNumber},
-		fexpr.Token{Literal: "42.7078484153991", Type: fexpr.TokenNumber},
-	)
-	if err != nil {
-		t.Fatal(err)
+		{
+			"identical points (rounding check with 8 lat)",
+			[]string{"0", "8", "0", "8"}, // 8 is an example latitude where rounding happens to result in > 1.0
+			"0.00",
+		},
+		{
+			"identical points (rounding check with 45 lat)",
+			[]string{"0", "45", "0", "45"}, // 45 is an example latitude where rounding happens to result in > 1.0
+			"0.00",
+		},
 	}
 
-	column := []float64{}
-	err = testDB.NewQuery("select " + result.Identifier).Bind(result.Params).Column(&column)
-	if err != nil {
-		t.Fatal(err)
-	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			result, err := fn(
+				func(t fexpr.Token) (*ResolverResult, error) {
+					placeholder := "t" + security.PseudorandomString(5)
+					return &ResolverResult{Identifier: "{:" + placeholder + "}", Params: map[string]any{placeholder: t.Literal}}, nil
+				},
+				fexpr.Token{Literal: s.coords[0], Type: fexpr.TokenNumber},
+				fexpr.Token{Literal: s.coords[1], Type: fexpr.TokenNumber},
+				fexpr.Token{Literal: s.coords[2], Type: fexpr.TokenNumber},
+				fexpr.Token{Literal: s.coords[3], Type: fexpr.TokenNumber},
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if len(column) != 1 {
-		t.Fatalf("Expected exactly 1 column value as result, got %v", column)
-	}
+			column := []float64{}
+			err = testDB.NewQuery("select " + result.Identifier).Bind(result.Params).Column(&column)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	expected := "17.89"
-	distance := fmt.Sprintf("%.2f", column[0])
-	if distance != expected {
-		t.Fatalf("Expected distance value %s, got %s", expected, distance)
+			if len(column) != 1 {
+				t.Fatalf("Expected exactly 1 column value as result, got %v", column)
+			}
+
+			distance := fmt.Sprintf("%.2f", column[0])
+			if distance != s.expected {
+				t.Fatalf("Expected distance value %s, got %s", s.expected, distance)
+			}
+		})
 	}
 }
 
