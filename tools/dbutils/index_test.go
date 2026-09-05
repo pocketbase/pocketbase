@@ -3,7 +3,6 @@ package dbutils_test
 import (
 	"bytes"
 	"encoding/json/v2"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -12,27 +11,28 @@ import (
 
 func TestParseIndex(t *testing.T) {
 	scenarios := []struct {
+		name     string
 		index    string
 		expected dbutils.Index
 	}{
-		// invalid
 		{
+			"invalid",
 			`invalid`,
 			dbutils.Index{},
 		},
-		// no names
 		{
+			"no names",
 			`create index on ()`,
 			dbutils.Index{},
 		},
-		// invalid index name
 		{
+			"invalid index name",
 			`create index a.b.c on ()`,
 			dbutils.Index{},
 		},
-		// simple (multiple spaces between the table and columns list)
 		{
-			`create index indexname on tablename   (col1)`,
+			"simple (multiple spaces as prefix, suffix, between the table and columns list)",
+			`  create index indexname on tablename   (col1)  `,
 			dbutils.Index{
 				IndexName: "indexname",
 				TableName: "tablename",
@@ -41,8 +41,8 @@ func TestParseIndex(t *testing.T) {
 				},
 			},
 		},
-		// simple (no space between the table and the columns list)
 		{
+			"simple (no space between the table and the columns list)",
 			`create index indexname on tablename(col1)`,
 			dbutils.Index{
 				IndexName: "indexname",
@@ -52,15 +52,15 @@ func TestParseIndex(t *testing.T) {
 				},
 			},
 		},
-		// all fields
 		{
+			"all fields",
 			`CREATE UNIQUE INDEX IF NOT EXISTS "schemaname".[indexname] on 'tablename' (
 				col0,
 				` + "`" + `col1` + "`" + `,
 				json_extract("col2", "$.a") asc,
 				"col3" collate NOCASE,
 				"col4" collate RTRIM desc
-			) where test = 1`,
+			) where cast(test1 as int) = 1 and test2 != ''`,
 			dbutils.Index{
 				Unique:     true,
 				Optional:   true,
@@ -74,13 +74,13 @@ func TestParseIndex(t *testing.T) {
 					{Name: `col3`, Collate: "NOCASE"},
 					{Name: `col4`, Collate: "RTRIM", Sort: "DESC"},
 				},
-				Where: "test = 1",
+				Where: "cast(test1 as int) = 1 and test2 != ''",
 			},
 		},
 	}
 
-	for i, s := range scenarios {
-		t.Run(fmt.Sprintf("scenario_%d", i), func(t *testing.T) {
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
 			result := dbutils.ParseIndex(s.index)
 
 			resultRaw, err := json.Marshal(result)

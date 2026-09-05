@@ -1667,7 +1667,7 @@ const utils = {
         };
 
         const indexRegex =
-            /create\s+(unique\s+)?\s*index\s*(if\s+not\s+exists\s+)?(\S*)\s+on\s+(\S*)\s*\(([\s\S]*)\)(?:\s*where\s+([\s\S]*))?/gim;
+            /\s*create\s+(unique\s+)?\s*index\s*(if\s+not\s+exists\s+)?(\S*)\s+on\s+(\S*)\s*\(([\s\S]*?)\)(?:\s*where\s+([\s\S]*?))?\s*$/gim;
         const matches = indexRegex.exec((idx || "").trim());
 
         if (matches?.length != 7) {

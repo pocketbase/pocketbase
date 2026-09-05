@@ -2,8 +2,10 @@
 
 - Minor UI improvements (updated dark primary btn contrast).
 
-- Writes the status header for JSON responses only if the fields picker succeed or has acceptable fallback.
+- Write the status header for JSON responses only if the fields picker succeed or has acceptable fallback.
     _This is to allow custom response status code in reaction to failed json writes._
+
+- Fixed collection index validator to allow expressions with parenthesis in the optional `WHERE` clause.
 
 - Bumped `golang.org/x/*` dependencies to silence security scanners ([#7829](https://github.com/pocketbase/pocketbase/discussions/7829)).
 
