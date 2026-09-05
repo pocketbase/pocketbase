@@ -2,11 +2,25 @@ package picker_test
 
 import (
 	"encoding/json/v2"
+	"errors"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/picker"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
+
+type brokenModifier struct {
+}
+
+func (m *brokenModifier) Modify(val any) (any, error) {
+	return nil, errors.New("test_error")
+}
+
+func init() {
+	picker.Modifiers["broken"] = func(args ...string) (picker.Modifier, error) {
+		return &brokenModifier{}, nil
+	}
+}
 
 func TestPickFields(t *testing.T) {
 	scenarios := []struct {
@@ -222,6 +236,13 @@ func TestPickFields(t *testing.T) {
 			"id,rel.*,rel.sub.id",
 			false,
 			`{"id":"123","rel":{"id":"456","sub":{"id":"789"},"title":"rel_title"}}`,
+		},
+		{
+			"with modifer.Modify error",
+			map[string]any{"a": 1},
+			"*:broken",
+			true,
+			`{"a":1}`,
 		},
 		{
 			"invalid excerpt modifier",
