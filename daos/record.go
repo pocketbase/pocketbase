@@ -713,11 +713,12 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 			continue // skip missing or view collections
 		}
 
-		for _, field := range fields {
-			recordTableName := inflector.Columnify(refCollection.Name)
-			prefixedFieldName := recordTableName + "." + inflector.Columnify(field.Name)
+		refTableName := inflector.Columnify(refCollection.Name)
 
-			query := dao.RecordQuery(refCollection)
+		for _, field := range fields {
+			prefixedFieldName := refTableName + "." + inflector.Columnify(field.Name)
+
+			query := dao.DB().Select(refTableName + ".id").From(refTableName)
 
 			if opt, ok := field.Options.(schema.MultiValuer); !ok || !opt.IsMultiple() {
 				query.AndWhere(dbx.HashExp{prefixedFieldName: mainRecord.Id})
@@ -731,25 +732,23 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 			}
 
 			if refCollection.Id == mainRecord.Collection().Id {
-				query.AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": mainRecord.Id}))
+				query.AndWhere(dbx.Not(dbx.HashExp{refTableName + ".id": mainRecord.Id}))
 			}
 
 			// trigger cascade for each batchSize rel items until there is none
-			batchSize := 4000
-			rows := make([]dbx.NullStringMap, 0, batchSize)
+			batchSize := 8000
+			refIds := make([]string, 0, batchSize)
 			for {
-				if err := query.Limit(int64(batchSize)).All(&rows); err != nil {
+				if err := query.Limit(int64(batchSize)).Column(&refIds); err != nil {
 					return err
 				}
 
-				total := len(rows)
+				total := len(refIds)
 				if total == 0 {
 					break
 				}
 
-				refRecords := models.NewRecordsFromNullStringMaps(refCollection, rows)
-
-				err := dao.deleteRefRecords(mainRecord, refRecords, field)
+				err := dao.deleteRefRecords(mainRecord, refCollection, refIds, field)
 				if err != nil {
 					return err
 				}
@@ -758,7 +757,7 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 					break // no more items
 				}
 
-				rows = rows[:0] // keep allocated memory
+				refIds = refIds[:0] // keep allocated memory
 			}
 		}
 	}
@@ -771,13 +770,26 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 // just unset the record id from any relation field values (if they are not required).
 //
 // NB! This method is expected to be called inside a transaction.
-func (dao *Dao) deleteRefRecords(mainRecord *models.Record, refRecords []*models.Record, field *schema.SchemaField) error {
+func (dao *Dao) deleteRefRecords(
+	mainRecord *models.Record,
+	refCollection *models.Collection,
+	refIds []string,
+	field *schema.SchemaField,
+) error {
 	options, _ := field.Options.(*schema.RelationOptions)
 	if options == nil {
 		return errors.New("relation field options are not initialized")
 	}
 
-	for _, refRecord := range refRecords {
+	for _, refId := range refIds {
+		refRecord, err := dao.FindRecordById(refCollection.Name, refId)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				continue // already deleted
+			}
+			return err
+		}
+
 		ids := refRecord.GetStringSlice(field.Name)
 
 		// unset the record id

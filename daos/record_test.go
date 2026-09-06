@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -1212,6 +1213,98 @@ func TestDeleteRecord(t *testing.T) {
 	expectedRelOnePart := "SELECT `demo1`.* FROM `demo1` WHERE (`demo1`.`rel_one`='"
 	if !strings.Contains(joinedQueries, expectedRelOnePart) {
 		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelOnePart, calledQueries)
+	}
+}
+
+func TestRecordDeleteWithMultipleRelationCascade(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	// create a mock collection with self referencing multiple relation field
+	// ---
+	collection := &models.Collection{}
+	collection.Name = "test"
+	collection.Type = models.CollectionTypeBase
+	err := app.Dao().SaveCollection(collection)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	collection.Schema.AddField(&schema.SchemaField{
+		Name:     "rels",
+		Type:     schema.FieldTypeRelation,
+		Required: true,
+		Options: &schema.RelationOptions{
+			MaxSelect:     types.Pointer(10),
+			CollectionId:  collection.Id,
+			CascadeDelete: true,
+		},
+	})
+
+	err = app.Dao().SaveCollection(collection)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// create mock records
+	// ---
+	relsData := map[string][]string{
+		"a": nil,
+		"b": {"a"},
+		"c": {"a", "b"},
+		"d": {},
+		"e": {"c", "d"},
+	}
+	for id, rels := range relsData {
+		record := models.NewRecord(collection)
+		record.Set("id", id)
+		record.Set("rels", rels)
+		err = app.Dao().SaveRecord(record)
+		if err != nil {
+			t.Fatalf("failed to create mock record: %v", err)
+		}
+	}
+
+	// trigger cascade delete for the top record
+	// ---
+	aRecord, err := app.Dao().FindRecordById(collection.Name, "a")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = app.Dao().DeleteRecord(aRecord)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// verify cascade delete
+	// ---
+	expectedRels := map[string][]string{
+		"d": {},
+		"e": {"d"},
+	}
+
+	allRecords, err := app.Dao().FindRecordsByExpr(collection.Name, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(allRecords) != len(expectedRels) {
+		t.Fatalf("Expected %d remaining records, got %d", len(expectedRels), len(allRecords))
+	}
+
+	for _, r := range allRecords {
+		expected, ok := expectedRels[r.Id]
+		if !ok {
+			t.Fatalf("Record %q wasn't found in %v", r.Id, expectedRels)
+		}
+
+		rels := r.GetStringSlice("rels")
+		if !slices.Equal(rels, expected) {
+			t.Fatalf("Record %q expected rels\n%v\ngot\n%v", r.Id, expected, rels)
+		}
 	}
 }
 

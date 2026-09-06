@@ -1,6 +1,6 @@
 module github.com/pocketbase/pocketbase
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -28,7 +28,7 @@ require (
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1
 	gocloud.dev v0.40.0
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/net v0.58.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.22.0

@@ -1,3 +1,12 @@
+## v0.22.55
+
+- (_Backported from v0.40.3_) Fixed collection index validator to allow expressions with parenthesis in the optional `WHERE` clause.
+
+- (_Backported from v0.40.3_) Fixed nested cascade delete of self-referenced relation records.
+
+- (_Backported from v0.40.3_) Bumped `golang.org/x/*` dependencies to silence security scanners ([#7829](https://github.com/pocketbase/pocketbase/discussions/7829)).
+
+
 ## v0.22.54
 
 - (_Backported from v0.40.2_) Bumped goja and its related dependencies _(regex unescaped dash error fix and base64 optimizations)_.
