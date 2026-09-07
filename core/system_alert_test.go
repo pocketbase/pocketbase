@@ -19,7 +19,7 @@ func TestSendSystemAlert(t *testing.T) {
 	testApp := NewBaseApp(BaseAppConfig{
 		DataDir: testDataDir,
 	})
-	defer testApp.ResetBootstrapState()
+	defer testApp.ClearBootstrap()
 
 	if err := testApp.Bootstrap(); err != nil {
 		t.Fatal(err)
@@ -72,7 +72,7 @@ func TestSendSystemAlertToAllSuperusers(t *testing.T) {
 	testApp := NewBaseApp(BaseAppConfig{
 		DataDir: testDataDir,
 	})
-	defer testApp.ResetBootstrapState()
+	defer testApp.ClearBootstrap()
 
 	if err := testApp.Bootstrap(); err != nil {
 		t.Fatal(err)

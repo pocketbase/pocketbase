@@ -11,6 +11,13 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
+// contextKey is an alias type to prevent collisions with other log context keys.
+type contextKey int
+
+// BlockKey is a context key usually used to indicate that the
+// batched logs write should block until writes are completed.
+var BlockKey contextKey
+
 var _ slog.Handler = (*BatchHandler)(nil)
 
 // BatchOptions are options for the BatchHandler.

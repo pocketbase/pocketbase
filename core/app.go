@@ -54,11 +54,16 @@ type App interface {
 	// Bootstrap initializes the application
 	// (aka. create data dir, open db connections, load settings, etc.).
 	//
-	// It will call ResetBootstrapState() if the application was already bootstrapped.
+	// It calls ClearBootstrap() if the application was already bootstrapped.
 	Bootstrap() error
 
-	// ResetBootstrapState releases the initialized core app resources
+	// ClearBootstrap releases the initialized core app resources
 	// (closing db connections, stopping cron ticker, etc.).
+	//
+	// This method is no-op if the application is not bootstrapped yet.
+	ClearBootstrap() error
+
+	// Deprecated: use ClearBootstrap().
 	ResetBootstrapState() error
 
 	// DataDir returns the app data directory path.
@@ -712,6 +717,10 @@ type App interface {
 	// OnBootstrap hook is triggered when initializing the main application
 	// resources (db, app settings, etc).
 	OnBootstrap() *hook.Hook[*BootstrapEvent]
+
+	// OnClearBootstrap hook is triggered on unsetting the main application
+	// resources (db, app settings, etc) to their initial nil/empty value.
+	OnClearBootstrap() *hook.Hook[*BootstrapEvent]
 
 	// OnServe hook is triggered when the app web server is started
 	// (after starting the TCP listener but before initializing the blocking serve task),

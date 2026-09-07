@@ -1,3 +1,11 @@
+## v0.40.4 (WIP)
+
+- Fixed migration deadlock if a logs db write is triggered from within the migration ([#7836](https://github.com/pocketbase/pocketbase/issues/7836)).
+
+- `app.ResetBootstrapState()` was deprecated in favour of `app.ClearBootstrap()`.
+    Additionally a new `app.OnClearBootstrap()` hook was added to allow clearing custom `OnBootstrap` resources in case the app us reinitialized without triggering `OnTerminate`.
+
+
 ## v0.40.3
 
 - Write the status header for JSON responses only if the fields picker succeed or has acceptable fallback.

@@ -3,17 +3,24 @@ package core
 import (
 	"context"
 	"database/sql"
+	"io"
 	"log/slog"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/logger"
 )
 
 func TestBaseAppLoggerLevelDevPrint(t *testing.T) {
+	// temp unset to avoid littering the stdout if the test fails when in dev mode
+	colorOutput := color.Output
+	color.Output = io.Discard
+	defer func() { color.Output = colorOutput }()
+
 	testLogLevel := 4
 
 	scenarios := []struct {
@@ -48,7 +55,7 @@ func TestBaseAppLoggerLevelDevPrint(t *testing.T) {
 				DataDir: testDataDir,
 				IsDev:   s.isDev,
 			})
-			defer app.ResetBootstrapState()
+			defer app.ClearBootstrap()
 
 			if err := app.Bootstrap(); err != nil {
 				t.Fatal(err)
@@ -68,7 +75,7 @@ func TestBaseAppLoggerLevelDevPrint(t *testing.T) {
 			var printedLevels []int
 			var persistedLevels []int
 
-			ctx := context.Background()
+			ctx := context.WithValue(context.Background(), logger.BlockKey, true)
 
 			// track printed logs
 			originalPrintLog := printLog
