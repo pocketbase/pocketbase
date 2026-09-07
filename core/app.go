@@ -718,9 +718,12 @@ type App interface {
 	// resources (db, app settings, etc).
 	OnBootstrap() *hook.Hook[*BootstrapEvent]
 
-	// OnClearBootstrap hook is triggered on unsetting the main application
-	// resources (db, app settings, etc) to their initial nil/empty value.
-	OnClearBootstrap() *hook.Hook[*BootstrapEvent]
+	// OnBootstrapClear hook is triggered when clearing the main application
+	// resources (db connections, cron, logger, etc.)
+	//
+	// It is usually invoked automatically right before app termination
+	// or when manually calling app.ClearBootstrap().
+	OnBootstrapClear() *hook.Hook[*BootstrapEvent]
 
 	// OnServe hook is triggered when the app web server is started
 	// (after starting the TCP listener but before initializing the blocking serve task),

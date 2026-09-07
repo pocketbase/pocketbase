@@ -144,9 +144,9 @@ func NewTestAppWithConfig(config core.BaseAppConfig) (*TestApp, error) {
 		Priority: -99999,
 	})
 
-	t.OnClearBootstrap().Bind(&hook.Handler[*core.BootstrapEvent]{
+	t.OnBootstrapClear().Bind(&hook.Handler[*core.BootstrapEvent]{
 		Func: func(e *core.BootstrapEvent) error {
-			t.registerEventCall("OnClearBootstrap")
+			t.registerEventCall("OnBootstrapClear")
 			return e.Next()
 		},
 		Priority: -99999,

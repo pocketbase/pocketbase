@@ -91,7 +91,7 @@ type BaseApp struct {
 
 	// app event hooks
 	onBootstrap      *hook.Hook[*BootstrapEvent]
-	onClearBootstrap *hook.Hook[*BootstrapEvent]
+	onBootstrapClear *hook.Hook[*BootstrapEvent]
 	onServe          *hook.Hook[*ServeEvent]
 	onTerminate      *hook.Hook[*TerminateEvent]
 	onBackupCreate   *hook.Hook[*BackupEvent]
@@ -251,7 +251,7 @@ func NewBaseApp(config BaseAppConfig) *BaseApp {
 func (app *BaseApp) initHooks() {
 	// app event hooks
 	app.onBootstrap = &hook.Hook[*BootstrapEvent]{}
-	app.onClearBootstrap = &hook.Hook[*BootstrapEvent]{}
+	app.onBootstrapClear = &hook.Hook[*BootstrapEvent]{}
 	app.onServe = &hook.Hook[*ServeEvent]{}
 	app.onTerminate = &hook.Hook[*TerminateEvent]{}
 	app.onBackupCreate = &hook.Hook[*BackupEvent]{}
@@ -480,7 +480,7 @@ func (app *BaseApp) ClearBootstrap() error {
 	event := &BootstrapEvent{}
 	event.App = app
 
-	return app.OnClearBootstrap().Trigger(event, func(e *BootstrapEvent) error {
+	return app.OnBootstrapClear().Trigger(event, func(e *BootstrapEvent) error {
 		type closer interface {
 			Close() error
 		}
@@ -877,8 +877,8 @@ func (app *BaseApp) OnBootstrap() *hook.Hook[*BootstrapEvent] {
 	return app.onBootstrap
 }
 
-func (app *BaseApp) OnClearBootstrap() *hook.Hook[*BootstrapEvent] {
-	return app.onClearBootstrap
+func (app *BaseApp) OnBootstrapClear() *hook.Hook[*BootstrapEvent] {
+	return app.onBootstrapClear
 }
 
 func (app *BaseApp) OnServe() *hook.Hook[*ServeEvent] {
@@ -1439,7 +1439,7 @@ func (app *BaseApp) registerBaseHooks() {
 		Priority: 999,
 	})
 
-	app.OnClearBootstrap().Bind(&hook.Handler[*BootstrapEvent]{
+	app.OnBootstrapClear().Bind(&hook.Handler[*BootstrapEvent]{
 		Id: "__pbCronStop__",
 		Func: func(e *BootstrapEvent) error {
 			app.Cron().Stop()
@@ -1587,7 +1587,7 @@ func (app *BaseApp) initLogger() error {
 	app.logger = slog.New(handler)
 
 	// attempt to write all queued logs before clearing the application bootstrap state
-	app.OnClearBootstrap().Bind(&hook.Handler[*BootstrapEvent]{
+	app.OnBootstrapClear().Bind(&hook.Handler[*BootstrapEvent]{
 		Id: "__pbAppLoggerFlushBeforeStop__",
 		Func: func(e *BootstrapEvent) error {
 			// extra precaution in case the hook was manually triggered while inside aux db transaction
