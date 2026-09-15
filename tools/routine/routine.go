@@ -22,8 +22,8 @@ func FireAndForget(f func(), wg ...*sync.WaitGroup) {
 		}
 
 		defer func() {
-			if err := recover(); err != nil {
-				log.Println("[FireAndForget] RECOVERED FROM PANIC:", err)
+			if rec := recover(); rec != nil {
+				log.Println("[FireAndForget] RECOVERED FROM PANIC:", rec)
 
 				stack := make([]byte, 2<<10) // 2 KB
 				length := runtime.Stack(stack, false)
@@ -40,8 +40,10 @@ func FireAndForget(f func(), wg ...*sync.WaitGroup) {
 func SafeWrap(f func() error) func() error {
 	return func() (err error) {
 		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("[SafeWrap] recovered from panic: %v", r)
+			if rec := recover(); rec != nil {
+				stack := make([]byte, 2<<10) // 2 KB
+				length := runtime.Stack(stack, false)
+				err = fmt.Errorf("[SafeWrap] recovered from panic: %v\n%s", rec, string(stack[:length]))
 			}
 		}()
 

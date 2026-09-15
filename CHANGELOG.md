@@ -1,3 +1,10 @@
+## v0.40.5 (WIP)
+
+- Minor improvements for the JSVM migration error handling:
+    - Included the recovered panic stack trace of `routine.SafeWrap` in the returned error (max 2KB).
+    - Wrap the individual `up`/`down` JSVM migration arguments in `routine.SafeWrap` so that in case of panic we can still print the failed js migration filename.
+
+
 ## v0.40.4
 
 - Fixed migration deadlock if a logs db write happens to run while the migration is still executing ([#7836](https://github.com/pocketbase/pocketbase/issues/7836)).

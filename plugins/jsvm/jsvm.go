@@ -218,7 +218,27 @@ func (p *plugin) registerMigrations() error {
 		vm.Set("__hooks", absHooksDir)
 
 		vm.Set("migrate", func(up, down func(txApp core.App) error) {
-			core.AppMigrations.Register(up, down, file)
+			// note: safe wrap to capture any eventual panic and to allow
+			// the error message to print the migration filename
+			core.AppMigrations.Register(
+				func(txApp core.App) error {
+					return routine.SafeWrap(func() error {
+						if up == nil {
+							return nil
+						}
+						return up(txApp)
+					})()
+				},
+				func(txApp core.App) error {
+					return routine.SafeWrap(func() error {
+						if down == nil {
+							return nil
+						}
+						return down(txApp)
+					})()
+				},
+				file,
+			)
 		})
 
 		if p.config.OnInit != nil {
