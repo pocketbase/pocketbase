@@ -20,6 +20,10 @@ type vmsPool struct {
 
 // newPool creates a new pool with pre-warmed vms generated from the specified factory.
 func newPool(size int, factory func() *goja.Runtime) *vmsPool {
+	if size < 0 {
+		size = 0
+	}
+
 	pool := &vmsPool{
 		factory: factory,
 		items:   make([]*poolItem, size),

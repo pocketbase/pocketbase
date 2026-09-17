@@ -6,7 +6,7 @@
 
 - Updated `modernc.org/sqlite` to 1.59.0 _(minor performance improvement by switching to Go's `memmove`)_.
 
-- Other minor changes (godoc typos).
+- Other minor fixes (godoc typos, normalize negative jsvm pool size, etc.).
 
 
 ## v0.40.4
