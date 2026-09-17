@@ -83,10 +83,10 @@ type Config struct {
 	HooksFilesPattern string
 
 	// HooksPoolSize specifies how many goja.Runtime instances to prewarm
-	// and keep for the JS app hooks gorotines execution.
+	// and keep for the JS app hooks goroutine execution to reuse.
 	//
-	// Zero or negative value means that it will create a new goja.Runtime
-	// on every fired goroutine.
+	// Zero or negative value means that no pool will be maintained and
+	// instead it will create a new goja.Runtime on every fired goroutine.
 	HooksPoolSize int
 
 	// MigrationsDir specifies the JS migrations directory.
