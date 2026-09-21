@@ -64,7 +64,7 @@ const Layout = `
             text-align: center;
             padding: 0 20px;
             margin: 5px 0;
-            font-family: Source Sans Pro, sans-serif, emoji;;
+            font-family: Source Sans Pro, sans-serif, emoji;
             font-size: 14px;
             font-weight: bold;
             border-radius: 6px;
