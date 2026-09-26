@@ -4,7 +4,7 @@
     - Included the recovered panic stack trace of `routine.SafeWrap` in the returned error (max 2KB).
     - Wrap the individual `up`/`down` JSVM migration arguments in `routine.SafeWrap` so that in case of panic we can still print the failed js migration filename.
 
-- Updated `modernc.org/sqlite` to 1.59.0 _(minor performance improvement by switching to Go's `memmove`)_.
+- Updated `modernc.org/sqlite` to 1.59.0 _(minor performance improvement by switching to Go's `memmove` on Linux targets)_.
 
 - Other minor fixes (godoc typos, normalized negative jsvm pool size, etc.).
 

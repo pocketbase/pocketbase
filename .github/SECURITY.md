@@ -59,7 +59,7 @@ For the cases where transactions are really needed, users can utilize the [Batch
 <details>
 <summary><strong>List/Search side-channel attacks</strong></summary>
 
-Over the years we've implemented several extra checks to minimize the risk of List/Search side-channel attacks (see especially [v0.32.0](https://github.com/pocketbase/pocketbase/blob/master/CHANGELOG.md#v0320)) but users need to be aware that all client-side filtered fields are technically subject to timing attacks _(whether they are practical or not is a different topic)_.
+Over the years we've implemented several extra checks to minimize the risk of List/Search side-channel attacks (see especially [v0.32.0](https://github.com/pocketbase/pocketbase/blob/master/CHANGELOG_23_39.md#v0320)) but users need to be aware that all client-side filtered fields are technically subject to timing attacks _(whether they are practical or not is a different topic)_.
 
 This is by design and it is accepted tradeoff between performance, security and usability.
 
