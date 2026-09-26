@@ -37,7 +37,7 @@ func (s *SortField) BuildExpr(fieldResolver FieldResolver) (string, error) {
 	result, err := fieldResolver.Resolve(s.Name)
 
 	// invalidate empty fields and non-column identifiers
-	if err != nil || len(result.Params) > 0 || result.Identifier == "" || strings.ToLower(result.Identifier) == "null" {
+	if err != nil || len(result.Params) > 0 || result.Identifier == "" || strings.EqualFold(result.Identifier, "null") {
 		return "", fmt.Errorf("invalid sort field %q", s.Name)
 	}
 
