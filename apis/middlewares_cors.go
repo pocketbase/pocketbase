@@ -211,7 +211,7 @@ func CORS(config CORSConfig) *hook.Handler[*core.RequestEvent] {
 						allowOrigin = o
 						break
 					}
-					if matchSubdomain(origin, o) {
+					if exactWildcardMatch(origin, o) {
 						allowOrigin = origin
 						break
 					}
@@ -283,8 +283,8 @@ func matchScheme(domain, pattern string) bool {
 	return didx != -1 && pidx != -1 && domain[:didx] == pattern[:pidx]
 }
 
-// matchSubdomain compares authority with wildcard
-func matchSubdomain(domain, pattern string) bool {
+// exactWildcardMatch compares domain with a * wildcard pattern
+func exactWildcardMatch(domain, pattern string) bool {
 	if !matchScheme(domain, pattern) {
 		return false
 	}
@@ -312,18 +312,21 @@ func matchSubdomain(domain, pattern string) bool {
 		patComp[i], patComp[opp] = patComp[opp], patComp[i]
 	}
 
+	if len(patComp) != len(domComp) {
+		return false
+	}
+
 	for i, v := range domComp {
-		if len(patComp) <= i {
-			return false
-		}
 		p := patComp[i]
+
 		if p == "*" {
-			return true
+			continue
 		}
+
 		if p != v {
 			return false
 		}
 	}
 
-	return false
+	return true
 }
