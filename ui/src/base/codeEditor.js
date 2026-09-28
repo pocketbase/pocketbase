@@ -145,7 +145,7 @@ window.app.components.codeEditor = function(propsArg = {}) {
         autocomplete: "off",
         autocapitalize: "off",
         role: "textbox",
-        className: "editor-content",
+        className: "code-editor-content",
         "html-data-placeholder": () => props.placeholder,
         onmount: (el) => {
             // auto change change textContent only if it props.value was
