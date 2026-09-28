@@ -187,7 +187,7 @@ window.app.components.codeEditor = function(propsArg = {}) {
                 return;
             }
 
-            autocompleteTimeoutId = setTimeout(() => {
+            autocompleteTimeoutId = setTimeout(async () => {
                 closeAutocompleteDropdown();
 
                 if (!editorContent?.isConnected) {
@@ -209,7 +209,7 @@ window.app.components.codeEditor = function(propsArg = {}) {
 
                 let suggestions = [];
                 if (typeof props.autocomplete == "function") {
-                    suggestions = props.autocomplete(match.prefix || match.word) || [];
+                    suggestions = (await props.autocomplete(match.prefix || match.word)) || [];
                 } else if (!app.utils.isEmpty(props.autocomplete)) {
                     const wordLowercased = (match.prefix || match.word).toLowerCase();
                     suggestions = props.autocomplete.filter((item) => {
@@ -236,36 +236,44 @@ window.app.components.codeEditor = function(propsArg = {}) {
 
                 openAutocompleteDropdown(() => {
                     return suggestions.map((suggestion, i) => {
-                        return t.button({
-                            type: "button",
-                            className: `dropdown-item ${i == 0 ? "active" : ""}`,
-                            textContent: suggestion.label || suggestion.value || suggestion,
-                            onclick: (e) => {
-                                e.preventDefault();
+                        return t.button(
+                            {
+                                type: "button",
+                                className: `dropdown-item ${i == 0 ? "active" : ""}`,
+                                onclick: (e) => {
+                                    e.preventDefault();
 
-                                editorContent.focus();
+                                    editorContent.focus();
 
-                                const word = suggestion.value || suggestion;
+                                    const word = suggestion.value || suggestion;
 
-                                // note: replacing the text doesn't preserve the native "undo" history
-                                // (document.execCommand is being deprecated)
-                                editorContent.textContent = editorContent.textContent.substring(0, match.start)
-                                    + word
-                                    + editorContent.textContent.substring(match.end + 1);
+                                    // note: replacing the text doesn't preserve the native "undo" history
+                                    // (document.execCommand is being deprecated)
+                                    editorContent.textContent = editorContent.textContent.substring(0, match.start)
+                                        + word
+                                        + editorContent.textContent.substring(match.end + 1);
 
-                                updateValue(editorContent.textContent);
+                                    updateValue(editorContent.textContent);
 
-                                try {
-                                    window
-                                        .getSelection()
-                                        .setPosition(editorContent.childNodes[0], match.start + word.length);
-                                } catch (err) {
-                                    console.warn("failed to set caret position", err);
+                                    try {
+                                        window
+                                            .getSelection()
+                                            .setPosition(editorContent.childNodes[0], match.start + word.length);
+                                    } catch (err) {
+                                        console.warn("failed to set caret position", err);
+                                    }
+
+                                    closeAutocompleteDropdown();
+                                },
+                            },
+                            (el) => {
+                                if (typeof suggestion?.label == "function") {
+                                    return suggestion.label(el);
                                 }
 
-                                closeAutocompleteDropdown();
+                                return suggestion?.label || suggestion?.value || suggestion;
                             },
-                        });
+                        );
                     });
                 });
             }, 50);
@@ -420,7 +428,7 @@ window.app.components.codeEditor = function(propsArg = {}) {
     );
 };
 
-const highlightThreshold = 800;
+const highlightThreshold = 850;
 
 function highlight(content, language) {
     content = typeof content == "string" ? content : "";
