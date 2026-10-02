@@ -518,6 +518,7 @@ button {
         > textarea {
             /* Place on top of each other */
             grid-area: 1 / 1 / 2 / 2;
+            scrollbar-gutter: stable; /* prevents misalignments if only one of the element happen to have an active scrollbar */
         }
     }
 

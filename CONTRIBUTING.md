@@ -9,7 +9,7 @@ This document describes how to prepare a PR for a change in the main repository.
 
 - [Prerequisites](#prerequisites)
 - [Making changes in the Go code](#making-changes-in-the-go-code)
-- [Making changes in the Superuser UI](#making-changes-in-the-admin-ui)
+- [Making changes in the Superuser UI](#making-changes-in-the-superuser-ui)
 
 ## Prerequisites
 
