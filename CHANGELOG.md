@@ -1,3 +1,9 @@
+## v0.22.56
+
+- (_Backported from v0.40.5_) Bumped the min Go GitHub action version to 1.27.2 as it includes several [`net/http` security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.27.2).
+    _One of the fixes is for a DoS that could potentially affect PocketBase applications and it is advised to update._
+
+
 ## v0.22.55
 
 - (_Backported from v0.40.3_) Fixed collection index validator to allow expressions with parenthesis in the optional `WHERE` clause.
