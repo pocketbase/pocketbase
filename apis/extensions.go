@@ -23,6 +23,7 @@ func bindUIExtensions(app core.App) {
 
 	app.OnServe().Bind(&hook.Handler[*core.ServeEvent]{
 		Priority: 9999, // execute as latest as possible
+		Id:       "__pbUIExtensions__",
 		Func: func(se *core.ServeEvent) error {
 			uiGroup := se.Router.Group("/_").
 				BindFunc(func(e *core.RequestEvent) error {
