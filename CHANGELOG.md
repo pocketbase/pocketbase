@@ -1,3 +1,8 @@
+## v0.40.6 (WIP)
+
+- Minor grammar fixes.
+
+
 ## v0.40.5
 
 - Minor improvements for the JSVM migration error handling:

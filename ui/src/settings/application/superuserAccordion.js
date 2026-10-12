@@ -65,7 +65,7 @@ export function superuserAccordion(pageData) {
             t.p(null, "A comma separated list of superusers allowed IPs and subnets."),
             t.p(
                 null,
-                "Enabling this option greatly helps hardening the security of your application because even if someone manage to get their hands on a superuser auth token they will not be able to use it.",
+                "Enabling this option greatly helps harden the security of your application because even if someone manages to get their hands on a superuser auth token they will not be able to use it.",
             ),
             t.p(
                 null,
