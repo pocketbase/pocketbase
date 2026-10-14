@@ -5,6 +5,27 @@
 // used gocloud.dev/blob/fileblob, hence many of the below doc comments,
 // struct options and interface implementations are the same.
 //
+// Example:
+//
+//	drv, _ := fileblob.New("/path/to/dir", nil)
+//	bucket := blob.NewBucket(drv)
+//
+// -----
+// Copyright 2018 The Go Cloud Development Kit Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ---
+//
 // To avoid partial writes, fileblob writes to a temporary file and then renames
 // the temporary file to the final path on Close. By default, it creates these
 // temporary files in `os.TempDir`. If `os.TempDir` is on a different mount than
@@ -29,11 +50,6 @@
 //     Additionally, the "/" in "../", the trailing "/" in "//", and a trailing
 //     "/" is key names are escaped in the same way.
 //     On Windows, the characters "<>:"|?*" are also escaped.
-//
-// Example:
-//
-//	drv, _ := fileblob.New("/path/to/dir", nil)
-//	bucket := blob.NewBucket(drv)
 package fileblob
 
 import (
@@ -145,9 +161,26 @@ func (drv *driver) NormalizeError(err error) error {
 	return err
 }
 
+// isEscapingPath checks if path escapes the configured bucket dir.
+// (https://github.com/google/go-cloud/pull/3794)
+func (drv *driver) isEscapingPath(path string, isKey bool) bool {
+	cleanedPath := filepath.Clean(path) + string(os.PathSeparator)
+	bucketRootPath := drv.dir + string(os.PathSeparator) // drv.dir is already Cleaned via Abs in the constructor
+	if isKey && cleanedPath == bucketRootPath {
+		// a key shouldn't point to the bucket itself
+		return true
+	}
+	return drv.dir != string(os.PathSeparator) && !strings.HasPrefix(cleanedPath, bucketRootPath)
+}
+
 // path returns the full path for a key.
 func (drv *driver) path(key string) (string, error) {
 	path := filepath.Join(drv.dir, escapeKey(key))
+
+	// ensure that the key hasn't escaped the bucket root
+	if drv.isEscapingPath(path, true) {
+		return "", fmt.Errorf("fileblob: key %q escapes bucket root", key)
+	}
 
 	if strings.HasSuffix(path, attrsExt) {
 		return "", errAttrsExt
@@ -208,6 +241,11 @@ func (drv *driver) ListPaged(ctx context.Context, opts *blob.ListOptions) (*blob
 		root = filepath.Join(root, opts.Prefix[:i])
 	}
 
+	// ensure that the Prefix hasn't escaped the bucket root
+	if drv.isEscapingPath(root, false) {
+		return nil, fmt.Errorf("fileblob: %q prefix escapes bucket root", opts.Prefix)
+	}
+
 	var result blob.ListPage
 
 	// Do a full recursive scan of the root directory.
@@ -233,6 +271,7 @@ func (drv *driver) ListPaged(ctx context.Context, opts *blob.ListOptions) (*blob
 		if drv.dir != "/" {
 			prefixLen++
 		}
+		absPath := path
 		path = path[prefixLen:]
 
 		// Unescape the path to get the key.
@@ -264,7 +303,7 @@ func (drv *driver) ListPaged(ctx context.Context, opts *blob.ListOptions) (*blob
 		}
 
 		var md5 []byte
-		if xa, err := getAttrs(path); err == nil {
+		if xa, err := getAttrs(absPath); err == nil {
 			// Note: we only have the MD5 hash for blobs that we wrote.
 			// For other blobs, md5 will remain nil.
 			md5 = xa.MD5

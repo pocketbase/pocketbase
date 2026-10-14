@@ -1,6 +1,8 @@
 ## v0.40.6 (WIP)
 
-- Minor grammar fixes.
+- @todo Replaced the GitHub update command with update from the new host.
+
+- Other minor fixes (superuser IPs description grammar fix, additional fileblob bucket escape checks for just in case if the filesystem is used as standalone without the PocketBase validations, etc.)
 
 
 ## v0.40.5
