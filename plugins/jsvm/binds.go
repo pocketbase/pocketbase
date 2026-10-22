@@ -465,7 +465,8 @@ func BindCore(vm *goja.Runtime) {
 		return &v
 	})
 	vm.Set("nullObject", func() *types.JSONMap[any] {
-		var v types.JSONMap[any]
+		// cannot be nil because of https://github.com/dop251/goja/issues/822
+		v := types.JSONMap[any]{}
 		return &v
 	})
 
