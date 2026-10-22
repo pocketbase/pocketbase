@@ -4,7 +4,7 @@
 
 - Updated `modernc.org/sqlite` to 1.61.0 _([SQLite 3.54.1](https://sqlite.org/src/timeline?from=version-3.54.0&to=version-3.54.1&y=ci))_.
 
-- Other minor fixes (superuser IPs description grammar fix, additional fileblob bucket escape checks for just in case if the filesystem is used as standalone without the PocketBase validations, bumped `golang.org/x/` dependencies, bumped min Go GitHub action version to 1.27.3, etc.)
+- Other minor fixes (superuser IPs description grammar fix, additional fileblob bucket escape checks for just in case if the filesystem is used as standalone without the PocketBase validations, bumped `golang.org/x/` dependencies, bumped min Go GitHub action version to 1.27.3, rotating btn loader icon alignment fix, slight dark background correction in attempt to minimize the color profile differences between Chrome and Firefox etc.)
 
 
 ## v0.40.5

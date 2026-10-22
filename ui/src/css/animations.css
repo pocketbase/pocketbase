@@ -9,11 +9,7 @@
 }
 
 @keyframes halfRotate {
-    from {
-        pointer-events: none;
-    }
     to {
-        pointer-events: none;
         transform: rotate(180deg);
     }
 }

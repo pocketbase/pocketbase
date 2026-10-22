@@ -138,7 +138,7 @@
 /* dark */
 [data-color-scheme="dark"],
 [data-color-scheme="dark"] .dropdown {
-    --surfaceColor: #1c1c1c;
+    --surfaceColor: #1b1b1b;
     --surfaceAlt1Color: color-mix(in srgb, var(--surfaceColor), white 2%);
     --surfaceAlt2Color: color-mix(in srgb, var(--surfaceColor), white 7%);
     --surfaceAlt3Color: color-mix(in srgb, var(--surfaceColor), white 12%);

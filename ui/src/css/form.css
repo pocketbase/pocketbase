@@ -282,6 +282,14 @@ button {
         }
     }
 
+    /* hacky visual alignment workaround for the rotating icon since it renders differently in Chrome and Firefox */
+    &.sm .ri-refresh-line {
+        &::before {
+            font-size: 18px;
+            transform: scale(0.85);
+        }
+    }
+
     &[data-rotate="true"],
     &.rotate {
         i {
@@ -307,7 +315,7 @@ button {
             margin-left: calc(var(--size) / -2);
             padding: 0;
             color: inherit;
-            font-size: 1.5em;
+            font-size: 1.4rem;
             font-weight: normal;
             text-align: center;
             font-family: var(--iconFontFamily);
@@ -315,6 +323,10 @@ button {
             animation:
                 fadeIn var(--animationSpeed),
                 rotate var(--loaderAnimationSpeed) infinite linear;
+        }
+        &.lg::after {
+            --size: 26px;
+            font-size: 1.68rem;
         }
         & > * {
             opacity: 0;
