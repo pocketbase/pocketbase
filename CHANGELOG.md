@@ -5,14 +5,16 @@
 
 - Additional fileblob bucket escape checks for just in case if the filesystem abstraction is used as standalone without the PocketBase validations.
 
-- Updated `modernc.org/sqlite` to 1.61.0 _([SQLite 3.54.1](https://sqlite.org/src/timeline?from=version-3.54.0&to=version-3.54.1&y=ci))_.
-
 - Bumped the min Go GitHub action version to 1.27.3 as it includes a [security fix](https://groups.google.com/g/golang-announce/c/66pojueaQek) related to the recent eMudhra CA compromise.
     _I didn't rush a fix 2 days ago as the impact for most PocketBase servers is not that serious and requires to already have a MiTM, but nonetheless it is recommended to update. If you can, check also for OS/Docker image updates to make sure that you have the latest `ca-certificates` bundle._
 
 - Bumped `golang.org/x/` dependencies ([#7865](https://github.com/pocketbase/pocketbase/discussions/7865)).
 
-- Other minor UI fixes (superuser IPs description grammar fix, rotating btn loader icon alignment fix, slight dark background correction in attempt to minimize the color profile differences between Chrome and Firefox, etc.).
+- Bumped goja and its related dependencies _(string allocations optimization, `Date.getYear/setYear` support and other minor correctness fixes)_.
+
+- Bumped `modernc.org/sqlite` to 1.61.0 _([SQLite 3.54.1](https://sqlite.org/src/timeline?from=version-3.54.0&to=version-3.54.1&y=ci))_.
+
+- Minor UI fixes - superuser IPs description grammar fix, rotating btn loader icon alignment fix, slight dark background correction in attempt to minimize the color profile differences between Chrome and Firefox, etc.
 
 
 ## v0.40.5
