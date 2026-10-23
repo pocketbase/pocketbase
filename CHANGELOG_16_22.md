@@ -2,6 +2,17 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.57
+
+- (_Backported from v0.40.6_) Added a global restriction for the max `WxH` pixels size when generating a thumb to reduce the risk of excessive memory usage.
+    The default limit is pretty generous and currently set to max `250<<20 (262144000)` pixels and can be changed with the env `PB_THUMBS_MAX_SOURCE_PIXELS`.
+
+- (_Backported from v0.40.6_) Bumped `golang.org/x/` dependencies ([#7865](https://github.com/pocketbase/pocketbase/discussions/7865)).
+
+- (_Backported from v0.40.6_) Bumped the min Go GitHub action version to 1.27.3 as it includes a [security fix](https://groups.google.com/g/golang-announce/c/66pojueaQek) related to the recent eMudhra CA compromise.
+    _I didn't rush a fix 2 days ago as the impact for most PocketBase servers is not that serious and requires to already have a MiTM, but nonetheless it is recommended to update. Please make sure to also check for OS/Docker image updates to make sure that you have the latest `ca-certificates` bundle._
+
+
 ## v0.22.56
 
 - (_Backported from v0.40.5_) Bumped the min Go GitHub action version to 1.27.2 as it includes several [`net/http` security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.27.2).
