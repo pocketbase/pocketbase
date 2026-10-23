@@ -5,7 +5,7 @@ go 1.27
 require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/domodwyer/mailyak/v3 v3.6.2
-	github.com/dop251/goja v0.0.0-20261021140635-64adc8bb4d51
+	github.com/dop251/goja v0.0.0-20261023121931-6ace4dde0b29
 	github.com/dop251/goja_nodejs v0.0.0-20260212111938-1f56ff5bcf14
 	github.com/fatih/color v1.19.0
 	github.com/fsnotify/fsnotify v1.10.1
