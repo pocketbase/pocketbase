@@ -3,6 +3,7 @@ package filesystem
 import (
 	"context"
 	"errors"
+	"fmt"
 	"image"
 	"io"
 	"mime/multipart"
@@ -25,6 +26,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/routine"
+	"github.com/spf13/cast"
 
 	// manually register the webp decoder because disintegration/imaging does not support webp
 	_ "golang.org/x/image/webp"
@@ -284,7 +286,10 @@ func (s *System) UploadFile(file *File, fileKey string) error {
 	}
 
 	// rewind
-	f.Seek(0, io.SeekStart)
+	_, err = f.Seek(0, io.SeekStart)
+	if err != nil {
+		return fmt.Errorf("failed to rewind: %w", err)
+	}
 
 	originalName := file.OriginalName
 	if len(originalName) > 255 {
@@ -326,7 +331,10 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 	}
 
 	// rewind
-	f.Seek(0, io.SeekStart)
+	_, err = f.Seek(0, io.SeekStart)
+	if err != nil {
+		return fmt.Errorf("failed to rewind: %w", err)
+	}
 
 	originalName := fh.Filename
 	if len(originalName) > 255 {
@@ -637,6 +645,28 @@ func (s *System) createThumb(originalKey, thumbKey, thumbSize string) error {
 		return readErr
 	}
 	defer r.Close()
+
+	// check image dimensions to minimize excessive memory usage
+	config, _, err := image.DecodeConfig(r)
+	if err != nil {
+		return fmt.Errorf("image headers decoding failed: %w", err)
+	}
+
+	maxPixels := cast.ToInt64(os.Getenv("PB_THUMBS_MAX_SOURCE_PIXELS"))
+	if maxPixels <= 0 {
+		maxPixels = 250 << 20
+	}
+
+	currentDimensions := int64(config.Width) * int64(config.Height)
+	if currentDimensions > maxPixels {
+		return fmt.Errorf("the original image is too large (%dx%d) and exceeds the total max allowed %d pixels", config.Width, config.Height, maxPixels)
+	}
+
+	// rewind
+	_, err = r.Seek(0, io.SeekStart)
+	if err != nil {
+		return fmt.Errorf("failed to rewind reader after config decode: %w", err)
+	}
 
 	// create imaging object from the original reader
 	// (note: only the first frame for animated image formats)

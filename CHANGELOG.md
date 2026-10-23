@@ -5,8 +5,13 @@
 
 - Additional fileblob bucket escape checks for just in case if the filesystem abstraction is used as standalone without the PocketBase validations.
 
+- Added a global restriction for the max `WxH` pixels size when generating a thumb to reduce the risk of excessive memory usage.
+    The issue was initially privately reported by [@reload3d](https://github.com/reload3d) but it is treated as regular public issue since it is a [known Go caveat](https://github.com/golang/go/issues/27830).
+    The default limit is pretty generous and currently set to max `250<<20 (262144000)` pixels and can be changed with the env `PB_THUMBS_MAX_SOURCE_PIXELS`.
+    **The workaround is not bulletproof and thumbs generation remains one of the main culprit for potential OOMs in PocketBase**, so better solutions will have to be investigated in the future, including eventually switching to [libvips](https://github.com/libvips/libvips) or other similar library once there is [better CGO portability](https://github.com/golang/go/issues/81450) _(if you have better suggestions, please open a discussion)_.
+
 - Bumped the min Go GitHub action version to 1.27.3 as it includes a [security fix](https://groups.google.com/g/golang-announce/c/66pojueaQek) related to the recent eMudhra CA compromise.
-    _I didn't rush a fix 2 days ago as the impact for most PocketBase servers is not that serious and requires to already have a MiTM, but nonetheless it is recommended to update. If you can, check also for OS/Docker image updates to make sure that you have the latest `ca-certificates` bundle._
+    _I didn't rush a fix 2 days ago as the impact for most PocketBase servers is not that serious and requires to already have a MiTM, but nonetheless it is recommended to update. Please make sure to also check for OS/Docker image updates to make sure that you have the latest `ca-certificates` bundle._
 
 - Bumped `golang.org/x/` dependencies ([#7865](https://github.com/pocketbase/pocketbase/discussions/7865)).
 
