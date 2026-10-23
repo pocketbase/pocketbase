@@ -487,7 +487,7 @@ func TestFilesystemServe(t *testing.T) {
 			map[string]string{
 				"Content-Disposition":     `inline; filename="test_name.png"`,
 				"Content-Type":            "image/png",
-				"Content-Length":          "77",
+				"Content-Length":          "78",
 				"Content-Security-Policy": csp,
 				"Cache-Control":           cacheControl,
 			},
@@ -502,7 +502,7 @@ func TestFilesystemServe(t *testing.T) {
 			map[string]string{
 				"Content-Disposition":     `attachment; filename="test_name_download.png"`,
 				"Content-Type":            "image/png",
-				"Content-Length":          "77",
+				"Content-Length":          "78",
 				"Content-Security-Policy": csp,
 				"Cache-Control":           cacheControl,
 			},
@@ -847,8 +847,8 @@ func TestFilesystemCopy(t *testing.T) {
 	}
 	defer f.Close()
 
-	if f.Size() != 77 {
-		t.Fatalf("Expected file size %d, got %d", 77, f.Size())
+	if f.Size() != 78 {
+		t.Fatalf("Expected file size %d, got %d", 78, f.Size())
 	}
 
 	checkHooks(t, hookCalls, map[string]int{"OnDelete": 0, "OnNewWriter": 0})
@@ -958,7 +958,7 @@ func TestFilesystemServeSingleRange(t *testing.T) {
 		t.Fatalf("Expected StatusCode %d, got %d", http.StatusPartialContent, result.StatusCode)
 	}
 
-	expectedRange := "bytes 0-20/77"
+	expectedRange := "bytes 0-20/78"
 	if cr := result.Header.Get("Content-Range"); cr != expectedRange {
 		t.Fatalf("Expected Content-Range %q, got %q", expectedRange, cr)
 	}
